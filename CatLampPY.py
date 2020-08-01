@@ -27,7 +27,7 @@ client.remove_command("help")
 helpEmbed = None
 colors = tables.getColors()
 admins = [
-    142664159048368128 # hpenney2/hp, bot creator and host
+    142664159048368128  # hpenney2/hp, bot creator and host
 ]
 
 class CheckFailureMsg(commands.CheckFailure):
@@ -46,7 +46,7 @@ def isAdmin(user):
 
 def hasPermissions(perm):
     async def predicate(ctx):
-        if not getattr(ctx.author.permissions_in(ctx.channel), perm): #or not ctx.author.permissions_in(ctx.channel).administrator
+        if not getattr(ctx.author.permissions_in(ctx.channel), perm): # or not ctx.author.permissions_in(ctx.channel).administrator
             raise CheckFailureMsg(f"You don't have the Manage Messages permission!")
         elif not getattr(ctx.guild.me.permissions_in(ctx.channel), perm):
             raise CheckFailureMsg(f"The bot doesn't have the Manage Messages permission!")
@@ -139,9 +139,9 @@ async def help(ctx):
         for command in client.commands:
             if not command.hidden:
                 name = "+" + command.name
-                #parms = inspect.getfullargspec(command.callback)
+                # parms = inspect.getfullargspec(command.callback)
                 parms = command.clean_params
-                #parms.args.pop(0)
+                # parms.args.pop(0)
                 for param in parms:
                     name += f" <{param}>"
                 #for param in parms.kwonlyargs:
@@ -183,8 +183,8 @@ async def guess(ctx):
     guesses = 3
     await ctx.send(f"<@{ctx.author.id}> Guess a number between 1 and 10. You have {guesses} guesses left.")
     while guesses > 0:
-        #allowed_mentions=discord.AllowedMentions(users=False)
-        #discord.AllowedMentions doesn't exist in the latest PyPi package, only available in >=1.4.0
+        # allowed_mentions=discord.AllowedMentions(users=False)
+        # discord.AllowedMentions doesn't exist in the latest PyPi package, only available in >=1.4.0
         try:
             guess = await client.wait_for("message", check=check, timeout=15.0)
         except asyncio.TimeoutError:
@@ -240,11 +240,11 @@ async def pull(ctx):
         code = process.wait()
         (_, err) = process.communicate()
 
-        #if 'fatal' in stdoutput:
-        #    await ctx.send(embed=await errorEmbed(ctx.message.content, "Error while attempting a git pull. Check output for further details."))
-        #    return
-        #else:
-        #print(stdoutput, err, code)
+        # if 'fatal' in stdoutput:
+        #     await ctx.send(embed=await errorEmbed(ctx.message.content, "Error while attempting a git pull. Check output for further details."))
+        #     return
+        # else:
+        #     print(stdoutput, err, code)
         if code > 0:
             await ctx.send(embed=await errorEmbed(ctx.message.content, f"Error while attempting a git pull: {str(err)}"))
             return
