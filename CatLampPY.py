@@ -1,6 +1,6 @@
 import discord
 from discord.ext import commands
-from tables import getColors
+import tables
 import logging
 import json
 # import inspect
@@ -25,7 +25,7 @@ except (FileNotFoundError, json.JSONDecodeError):
 client = commands.AutoShardedBot(command_prefix="+", case_insensitive=True)
 client.remove_command("help")
 helpEmbed = None
-colors = getColors()
+colors = tables.getColors()
 admins = [
     142664159048368128  # hpenney2/hp, bot creator and host
 ]
