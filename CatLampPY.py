@@ -30,11 +30,14 @@ admins = [
     142664159048368128  # hpenney2/hp, bot creator and host
 ]
 
+
 class CheckFailureMsg(commands.CheckFailure):
     pass
 
+
 class CommandErrorMsg(commands.CommandError):
     pass
+
 
 ### Functions ###
 def isAdmin(user):
@@ -44,37 +47,47 @@ def isAdmin(user):
     else:
         return False
 
+
 def hasPermissions(perm):
     async def predicate(ctx):
-        if not getattr(ctx.author.permissions_in(ctx.channel), perm): # or not ctx.author.permissions_in(ctx.channel).administrator
+        if not getattr(ctx.author.permissions_in(ctx.channel),
+                       perm):  # or not ctx.author.permissions_in(ctx.channel).administrator
             raise CheckFailureMsg(f"You don't have the Manage Messages permission!")
         elif not getattr(ctx.guild.me.permissions_in(ctx.channel), perm):
-            raise CheckFailureMsg(f"The bot doesn't have the Manage Messages permission!")
+            raise CheckFailureMsg(f"The bot does'nt have the Manage Messages permission!")
         return True
+
     return commands.check(predicate)
+
 
 def isGuild():
     async def predicate(ctx):
         if not ctx.guild:
             raise CheckFailureMsg("This command only works in a server!")
         return True
+
     return commands.check(predicate)
+
 
 def isPrivate():
     async def predicate(ctx):
         if ctx.guild:
             raise CheckFailureMsg("This command only works in a DM!")
         return True
+
     return commands.check(predicate)
+
 
 async def errorEmbed(cmd, error):
     embed = discord.Embed(title="Error",
-    description=f"An error occoured while trying to run `{cmd}`!\n```{error}```",
-    color=colors["error"])
+                          description=f"An error occoured while trying to run `{cmd}`!\n```{error}```",
+                          color=colors["error"])
     user = await client.fetch_user(142664159048368128)
-    embed.set_footer(text=f"If think this shouldn't happen, go tell {user.name}#{user.discriminator} to not be a dumb dumb and fix it.")
+    embed.set_footer(
+        text=f"If think this shouldn't happen, go tell {user.name}#{user.discriminator} to not be a dumb dumb and fix it.")
     print(f"An error occoured while trying to run '{cmd}'!\n{error}")
     return embed
+
 
 ### Events ###
 @client.event
@@ -82,16 +95,20 @@ async def on_ready():
     print(f"Successfully logged in as {client.user.name} ({client.user.id})")
     await client.change_presence(activity=None)
 
+
 @client.event
 async def on_command_error(ctx, error):
     if not isinstance(error, commands.CommandNotFound):
         embed = discord.Embed(title="Error",
-        description=f"An error occoured while trying to run `{ctx.message.content}`!\n```{error}```",
-        color=colors["error"])
+                              description=f"An error occoured while trying to run `{ctx.message.content}`!\n```{error}```",
+                              color=colors["error"])
         user = await client.fetch_user(142664159048368128)
-        embed.set_footer(text=f"If think this shouldn't happen, go tell {user.name}#{user.discriminator} to not be a dumb dumb and fix it.")
+        embed.set_footer(
+            text=f"If think this shouldn't happen, go tell {user.name}#{user.discriminator} "
+                 f"to not be a dumb dumb and fix it.")
         await ctx.send(embed=embed)
         print(f"An error occoured while trying to run '{ctx.message.content}'!\n{error}")
+
 
 @client.event
 async def on_message(msg):
@@ -100,6 +117,7 @@ async def on_message(msg):
     if msg.content.lower() in "do not the sex":
         await msg.channel.send("do not the sex")
     await client.process_commands(msg)
+
 
 @client.event
 async def on_guild_join(guild):
@@ -115,6 +133,7 @@ async def on_guild_join(guild):
     if channel:
         await channel.send(embed=embed)
 
+
 @client.event
 async def on_guild_remove(guild):
     embed = discord.Embed(title="Left guild", description=f"{guild.name} ({guild.id})", color=colors["error"])
@@ -126,6 +145,7 @@ async def on_guild_remove(guild):
     if channel:
         await channel.send(embed=embed)
 
+
 ### Commands ###
 @client.command(aliases=["cmds", "commands"])
 async def help(ctx):
@@ -133,7 +153,8 @@ async def help(ctx):
     global helpEmbed
     if not helpEmbed:
         print("Generating helpEmbed!")
-        embed = discord.Embed(title="Commands", description="List of available commands for CatLamp.", color=colors["message"])
+        embed = discord.Embed(title="Commands", description="List of available commands for CatLamp.",
+                              color=colors["message"])
         user = await client.fetch_user(142664159048368128)
         embed.set_footer(text=f"CatLamp Discord bot, created by {user.name}#{user.discriminator}")
         for command in client.commands:
@@ -150,10 +171,12 @@ async def help(ctx):
         helpEmbed = embed
     await ctx.send(embed=helpEmbed)
 
+
 @client.command()
 async def ping(ctx):
     """Gets the current latency between the bot and Discord."""
     await ctx.send(f"Pong!\nLatency: {round(client.latency * 1000)}ms")
+
 
 @client.command(aliases=["flip"])
 async def coinflip(ctx):
@@ -167,14 +190,17 @@ async def coinflip(ctx):
     elif rand == 1:
         await ctx.send("The coin landed on tails.")
 
+
 @client.command()
 async def guess(ctx):
     """Plays a number guessing game. Guess a random number between 1 and 10."""
+
     def check(m):
         b = m.author == ctx.message.author and m.channel == ctx.channel and m.content.isdigit()
         if b:
-            b = int(m.content) >= 1 and int(m.content) <= 10
+            b = 1 <= int(m.content) <= 10
         return b
+
     num = random.randint(1, 10)
     guesses = 3
     await ctx.send(f"<@{ctx.author.id}> Guess a number between 1 and 10. You have {guesses} guesses left.")
@@ -182,12 +208,12 @@ async def guess(ctx):
         # allowed_mentions=discord.AllowedMentions(users=False)
         # discord.AllowedMentions doesn't exist in the latest PyPi package, only available in >=1.4.0
         try:
-            guess = await client.wait_for("message", check=check, timeout=15.0)
+            Guess = await client.wait_for("message", check=check, timeout=15.0)
         except asyncio.TimeoutError:
             await ctx.send(f"You took too long, the correct number was {num}.")
             return
-        
-        if int(guess.content) == num:
+
+        if int(Guess.content) == num:
             await ctx.send(f"Correct! The number was {num}.")
             return
         else:
@@ -197,6 +223,7 @@ async def guess(ctx):
                 msg += f"\n<@{ctx.author.id}> Guess a number between 1 and 10. You have {guesses} guesses left."
             await ctx.send(msg)
     await ctx.send(f"You're out of guesses! The correct number was {num}.")
+
 
 @client.command(aliases=["bulkdelete"])
 @isGuild()
@@ -212,14 +239,16 @@ async def purge(ctx, number_of_messages: int):
     msg = await ctx.send(f"Deleted {len(msgsDeleted)} messages.")
     try:
         await msg.delete(delay=5)
-    except:
+    except:  # oy using a bare except is bad practice, as you could ignore important things
         pass
+
 
 @client.command(hidden=True, aliases=["stop"])
 async def restart(ctx):
     """Restarts the bot. Only runnable by admins."""
     if isAdmin(ctx.author):
-        embed = discord.Embed(title="Restarting...", description="CatLamp will restart shortly.", color=colors["success"])
+        embed = discord.Embed(title="Restarting...", description="CatLamp will restart shortly.",
+                              color=colors["success"])
         embed.set_footer(text=f"Restart initiated by {ctx.author.name}#{ctx.author.discriminator} ({ctx.author.id})")
         await ctx.send(embed=embed)
         await client.change_presence(activity=discord.Game("Restarting..."))
@@ -227,6 +256,7 @@ async def restart(ctx):
         print("Bot connection closed.")
         print("Restarting...")
         os.execv(sys.executable, ['python'] + sys.argv)
+
 
 @client.command(hidden=True)
 async def pull(ctx):
@@ -236,19 +266,18 @@ async def pull(ctx):
         code = process.wait()
         (_, err) = process.communicate()
 
-        # if 'fatal' in stdoutput:
-        #     await ctx.send(embed=await errorEmbed(ctx.message.content, "Error while attempting a git pull. Check output for further details."))
-        #     return
-        # else:
-        #     print(stdoutput, err, code)
         if code > 0:
-            await ctx.send(embed=await errorEmbed(ctx.message.content, f"Error while attempting a git pull: {str(err)}"))
+            await ctx.send(
+                embed=await errorEmbed(ctx.message.content, f"Error while attempting a git pull: {str(err)}"))
             return
         else:
-            embed = discord.Embed(title="Pull successful", description="`git pull` executed successfully!\n`+restart` if `CatLampPY.py` was changed.", color=colors["success"])
+            embed = discord.Embed(title="Pull successful",
+                                  description="`git pull` executed successfully!\n`+restart` if `CatLampPY.py` "
+                                              "was changed.",
+                                  color=colors["success"])
             await ctx.send(embed=embed)
             print(f"Pull successfully executed by {ctx.author.name} ({ctx.author.id})")
-        
+
 
 client.run(config["token"])
 
