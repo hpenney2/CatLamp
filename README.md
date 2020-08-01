@@ -3,9 +3,9 @@
 
 # Getting the bot running
  1. Preferably, but not necessary, be running a Linux system.
- 2. Run `py -m pip install -r requirements.txt`.
+ 2. Run `python3 -m pip install -r requirements.txt`.
  3. Set up a `config.json` file in the repository root with the format below.
- 3. Start the bot with `py CatLampPY.py.`
+ 3. Start the bot with `python3 CatLampPY.py.`
 
 # `config.json` format (subject to change)
 ```json
