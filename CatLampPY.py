@@ -38,7 +38,7 @@ class CommandErrorMsg(commands.CommandError):
 
 ### Functions ###
 def isAdmin(user):
-    """Checks if a user is an admin or not. Returns True or False respecitively."""
+    """Checks if a user is an admin or not. Returns True or False respectively."""
     if user.id in admins:
         return True
     else:
