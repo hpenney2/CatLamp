@@ -3,7 +3,7 @@ from discord.ext import commands
 import tables
 import logging
 import json
-#import inspect
+# import inspect
 import sys
 import os
 import subprocess
@@ -97,7 +97,7 @@ async def on_command_error(ctx, error):
 async def on_message(msg):
     if msg.author.id == client.user.id:
         return
-    if "do not the sex" in msg.content.lower():
+    if msg.content.lower() in "do not the sex":
         await msg.channel.send("do not the sex")
     await client.process_commands(msg)
 
@@ -139,13 +139,9 @@ async def help(ctx):
         for command in client.commands:
             if not command.hidden:
                 name = "+" + command.name
-                # parms = inspect.getfullargspec(command.callback)
                 parms = command.clean_params
-                # parms.args.pop(0)
                 for param in parms:
                     name += f" <{param}>"
-                #for param in parms.kwonlyargs:
-                #    name += f" <{param}>"
                 desc = command.short_doc or "No description."
                 if command.aliases:
                     desc += "\nAliases: "
