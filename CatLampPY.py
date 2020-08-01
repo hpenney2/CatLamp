@@ -84,7 +84,8 @@ async def errorEmbed(cmd, error):
                           color=colors["error"])
     user = await client.fetch_user(142664159048368128)
     embed.set_footer(
-        text=f"If think this shouldn't happen, go tell {user.name}#{user.discriminator} to not be a dumb dumb and fix it.")
+        text=f"If think this shouldn't happen, go tell {user.name}#{user.discriminator} to not be a dumb dumb "
+             f"and fix it.")
     print(f"An error occoured while trying to run '{cmd}'!\n{error}")
     return embed
 
@@ -100,7 +101,8 @@ async def on_ready():
 async def on_command_error(ctx, error):
     if not isinstance(error, commands.CommandNotFound):
         embed = discord.Embed(title="Error",
-                              description=f"An error occoured while trying to run `{ctx.message.content}`!\n```{error}```",
+                              description=f"An error occoured while trying to run `{ctx.message.content}`!\n"
+                                          f"```{error}```",
                               color=colors["error"])
         user = await client.fetch_user(142664159048368128)
         embed.set_footer(
