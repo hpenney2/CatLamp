@@ -128,3 +128,6 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# Pycharm coz it's the big dumb and doesn't know how to generate gitignores
+.idea/
