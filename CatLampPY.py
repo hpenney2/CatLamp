@@ -281,8 +281,8 @@ async def pull(ctx):
             return
         else:
             embed = discord.Embed(title="Pull successful",
-                                  description="`git pull` executed successfully!\n`+restart` if `CatLampPY.py` "
-                                              "was changed.",
+                                  description="`git pull` executed successfully!\n`+restart` if any `*.py` "
+                                              "were changed.",
                                   color=colors["success"])
             await ctx.send(embed=embed)
             print(f"Pull successfully executed by {ctx.author.name} ({ctx.author.id})")
