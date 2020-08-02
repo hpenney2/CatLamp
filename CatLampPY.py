@@ -11,6 +11,7 @@ import random
 import asyncio
 import datetime
 from hastebin import get_key
+import ast
 
 logging.basicConfig(level=logging.INFO, format="[%(asctime)s] %(levelname)s %(name)s | %(message)s")
 
@@ -94,6 +95,20 @@ async def errorEmbed(cmd, error):
     print(f"An error occurred while trying to run '{cmd}'!\n{error}")
     return embed
 
+def insert_returns(body):
+    # insert return stmt if the last expression is a expression statement
+    if isinstance(body[-1], ast.Expr):
+        body[-1] = ast.Return(body[-1].value)
+        ast.fix_missing_locations(body[-1])
+
+    # for if statements, we insert returns into the body and the orelse
+    if isinstance(body[-1], ast.If):
+        insert_returns(body[-1].body)
+        insert_returns(body[-1].orelse)
+
+    # for with blocks, again we insert returns into the body
+    if isinstance(body[-1], ast.With):
+        insert_returns(body[-1].body)
 
 ### Events ###
 @client.event
@@ -287,11 +302,35 @@ async def pull(ctx):
             await ctx.send(embed=embed)
             print(f"Pull successfully executed by {ctx.author.name} ({ctx.author.id})")
 
+
+# Code partially used from https://gist.github.com/nitros12/2c3c265813121492655bc95aa54da6b9
 @client.command(hidden=True, name="eval")
 async def evaluate(ctx, *, code):
     if isAdmin(ctx.author):
         try:
-            result = eval(code)
+            fn_name = "_eval_expr"
+
+            code = code.strip("` ")
+
+            # add a layer of indentation
+            code = "\n".join(f"    {i}" for i in code.splitlines())
+
+            # wrap in async def body
+            body = f"async def {fn_name}():\n{code}"
+
+            parsed = ast.parse(body)
+            body = parsed.body[0].body
+
+            insert_returns(body)
+
+            env = {
+                'client': client,
+                'discord': discord,
+                'commands': commands,
+                'ctx': ctx
+            }
+            exec(compile(parsed, filename="<ast>", mode="exec"), env)
+            result = (await eval(f"{fn_name}()", env))
             if len(str(result)) > 2048:
                 embed = discord.Embed(title="Result too long",
                 description=f"The result was too long, so it was uploaded to Hastebin.\nhttps://hastebin.com/{get_key(result)}",
@@ -305,7 +344,7 @@ async def evaluate(ctx, *, code):
         except Exception as e:
             if len(str(e)) > 2048: # I doubt this is needed, but just in case
                 embed = discord.Embed(title="Error too long",
-                description=f"The error was too long, so it was uploaded to Hastebin.\nhttps://hastebin.com/{get_key(result)}",
+                description=f"The error was too long, so it was uploaded to Hastebin.\nhttps://hastebin.com/{get_key(str(e))}",
                 color=colors["error"])
                 embed.set_footer(text="Errored while executing.")
                 await ctx.send(embed=embed)
