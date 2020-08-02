@@ -105,6 +105,8 @@ async def on_ready():
 @client.event
 async def on_command_error(ctx, error):
     if not isinstance(error, commands.CommandNotFound):
+        if ctx.command.hidden and not isAdmin(ctx.author):
+            return
         embed = discord.Embed(title="Error",
                               description=f"An error occurred while trying to run `{ctx.message.content}`!\n"
                                           f"```{error}```",
