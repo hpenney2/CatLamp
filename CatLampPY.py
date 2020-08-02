@@ -278,12 +278,13 @@ async def restart(ctx):
         embed.set_footer(text=f"Restart initiated by {ctx.author.name}#{ctx.author.discriminator} ({ctx.author.id})")
         await ctx.send(embed=embed)
         await client.change_presence(activity=discord.Game("Restarting..."))
-        #await client.logout()
-        #print("Bot connection closed.")
-        # yes, I understand not logging out and closing the connection is bad practice,
-        # however I believe it's what is causing issues with the bot not restarting properly on EC2
+        await client.logout()
+        print("Bot connection closed.")
         print("Restarting...")
-        os.execv(sys.executable, ['python'] + sys.argv)
+        try:
+            os.execv(sys.executable, ['python3'] + sys.argv)
+        except FileNotFoundError:
+            os.execv(sys.executable, ['python'] + sys.argv)
 
 @client.command(hidden=True)
 async def pull(ctx):
