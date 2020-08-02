@@ -1,4 +1,6 @@
 import discord
+
+
 def getColors():
     """Returns table of colors for use with embeds."""
     return {

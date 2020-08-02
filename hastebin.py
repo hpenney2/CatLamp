@@ -4,6 +4,7 @@
 import requests
 import json
 
+
 def get_key(data):
     req = requests.post('https://hastebin.com/documents',
                         # headers={},
