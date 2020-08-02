@@ -95,13 +95,14 @@ async def errorEmbed(cmd, error):
     print(f"An error occurred while trying to run '{cmd}'!\n{error}")
     return embed
 
+
 def insert_returns(body):
     # insert return stmt if the last expression is a expression statement
     if isinstance(body[-1], ast.Expr):
         body[-1] = ast.Return(body[-1].value)
         ast.fix_missing_locations(body[-1])
 
-    # for if statements, we insert returns into the body and the orelse
+    # for if statements, we insert returns into the body and the or else
     if isinstance(body[-1], ast.If):
         insert_returns(body[-1].body)
         insert_returns(body[-1].orelse)
@@ -110,7 +111,10 @@ def insert_returns(body):
     if isinstance(body[-1], ast.With):
         insert_returns(body[-1].body)
 
+
 ### Events ###
+
+
 @client.event
 async def on_ready():
     print(f"Successfully logged in as {client.user.name} ({client.user.id})")
@@ -184,8 +188,8 @@ async def help(ctx):
         for command in client.commands:
             if not command.hidden:
                 name = "+" + command.name
-                parms = command.clean_params
-                for param in parms:
+                Params = command.clean_params
+                for param in Params:
                     name += f" <{param}>"
                 desc = command.short_doc or "No description."
                 if command.aliases:
@@ -203,7 +207,7 @@ async def ping(ctx):
 
 
 @client.command(aliases=["flip"])
-async def coinflip(ctx):
+async def coinFlip(ctx):
     """Flips a coin."""
     rand = random.randint(0, 1)
     side = random.randint(1, 20)
@@ -250,7 +254,7 @@ async def guess(ctx):
             await ctx.send(msg)
 
 
-@client.command(aliases=["bulkdelete"])
+@client.command(aliases=["bulkDelete"])
 @isGuild()
 @hasPermissions("manage_messages")
 async def purge(ctx, number_of_messages: int):
@@ -273,7 +277,8 @@ async def restart(ctx):
     """Restarts the bot. Only runnable by admins."""
     if isAdmin(ctx.author):
         embed = discord.Embed(title="Restarting...",
-                              description="CatLamp will restart shortly. Check the bot's status for updates (will take a minute to return to normal).",
+                              description="CatLamp will restart shortly. Check the bot's status for updates "
+                                          "(will take a minute to return to normal).",
                               color=colors["success"])
         embed.set_footer(text=f"Restart initiated by {ctx.author.name}#{ctx.author.discriminator} ({ctx.author.id})")
         await ctx.send(embed=embed)
@@ -286,11 +291,14 @@ async def restart(ctx):
         except FileNotFoundError:
             os.execv(sys.executable, ['python'] + sys.argv)
 
+
 @client.command(hidden=True)
 async def pull(ctx):
     """Executes a git pull in the current directory. Will fail if not a repo."""
     if isAdmin(ctx.author):
-        process = subprocess.Popen(['git', 'pull', f'https://{config["githubUser"]}:{config["githubPAT"]}@github.com/hpenney2/CatLamp.git'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        process = subprocess.Popen(['git', 'pull', f'https://{config["githubUser"]}:{config["githubPAT"]}@github.com/'
+                                                   f'hpenney2/CatLamp.git'],
+                                   stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         code = process.wait()
         (_, err) = process.communicate()
 
@@ -337,8 +345,9 @@ async def evaluate(ctx, *, code):
             result = (await eval(f"{fn_name}()", env))
             if len(str(result)) > 2048:
                 embed = discord.Embed(title="Result too long",
-                description=f"The result was too long, so it was uploaded to Hastebin.\nhttps://hastebin.com/{get_key(result)}",
-                color=colors["success"])
+                                      description=f"The result was too long, so it was uploaded to Hastebin.\n"
+                                                  f"https://hastebin.com/{get_key(result)}",
+                                      color=colors["success"])
                 embed.set_footer(text="Executed successfully.")
                 await ctx.send(embed=embed)
             else:
@@ -346,15 +355,16 @@ async def evaluate(ctx, *, code):
                 embed.set_footer(text="Executed successfully.")
                 await ctx.send(embed=embed)
         except Exception as e:
-            if len(str(e)) > 2048: # I doubt this is needed, but just in case
+            if len(str(e)) > 2048:  # I doubt this is needed, but just in case
                 embed = discord.Embed(title="Error too long",
-                description=f"The error was too long, so it was uploaded to Hastebin.\nhttps://hastebin.com/{get_key(str(e))}",
-                color=colors["error"])
-                embed.set_footer(text="Errored while executing.")
+                                      description=f"The error was too long, so it was uploaded to Hastebin.\n"
+                                                  f"https://hastebin.com/{get_key(str(e))}",
+                                      color=colors["error"])
+                embed.set_footer(text="Error occurred while executing.")
                 await ctx.send(embed=embed)
             else:
                 embed = discord.Embed(description=f"```python\n{str(e)}\n```", color=colors["error"])
-                embed.set_footer(text="Errored while executing.")
+                embed.set_footer(text="Error occurred while executing.")
                 await ctx.send(embed=embed)
 
 
