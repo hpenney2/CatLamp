@@ -10,6 +10,7 @@ import subprocess
 import random
 import asyncio
 import datetime
+from hastebin import get_key
 
 logging.basicConfig(level=logging.INFO, format="[%(asctime)s] %(levelname)s %(name)s | %(message)s")
 
@@ -17,8 +18,8 @@ logging.basicConfig(level=logging.INFO, format="[%(asctime)s] %(levelname)s %(na
 try:
     config = open("config.json", "r")
     config = json.load(config)
-    if not config["token"] or not config["githubUser"] or not config["githubPAT"]:
-        print("The config.json file is missing an entry! Please make sure the format matches the README.md.")
+    if "token" not in config or "githubUser" not in config or "githubPAT" not in config:
+        print("The config.json file is missing at least one entry! Please make sure the format matches the README.md.")
         input("Press enter to close, then restart the bot when fixed.")
         sys.exit(1)
 except (FileNotFoundError, json.JSONDecodeError):
@@ -283,6 +284,33 @@ async def pull(ctx):
                                   color=colors["success"])
             await ctx.send(embed=embed)
             print(f"Pull successfully executed by {ctx.author.name} ({ctx.author.id})")
+
+@client.command(hidden=True, name="eval")
+async def evaluate(ctx, *, code):
+    if isAdmin(ctx.author):
+        try:
+            result = eval(code)
+            if len(str(result)) > 2048:
+                embed = discord.Embed(title="Result too long",
+                description=f"The result was too long, so it was uploaded to Hastebin.\nhttps://hastebin.com/{get_key(result)}",
+                color=colors["success"])
+                embed.set_footer(text="Executed successfully.")
+                await ctx.send(embed=embed)
+            else:
+                embed = discord.Embed(description=f"```python\n{str(result)}\n```", color=colors["success"])
+                embed.set_footer(text="Executed successfully.")
+                await ctx.send(embed=embed)
+        except Exception as e:
+            if len(str(e)) > 2048: # I doubt this is needed, but just in case
+                embed = discord.Embed(title="Error too long",
+                description=f"The error was too long, so it was uploaded to Hastebin.\nhttps://hastebin.com/{get_key(result)}",
+                color=colors["error"])
+                embed.set_footer(text="Errored while executing.")
+                await ctx.send(embed=embed)
+            else:
+                embed = discord.Embed(description=f"```python\n{str(e)}\n```", color=colors["error"])
+                embed.set_footer(text="Errored while executing.")
+                await ctx.send(embed=embed)
 
 
 client.run(config["token"])
