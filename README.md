@@ -10,6 +10,9 @@
 # `config.json` format (subject to change)
 ```json
 {
-	"token":"bot_token_here"
+	"token":"bot_token_here",
+	"githubUser":"github_username_here",
+	"githubPAT":"github_personal_access_token_here"
 }
 ```
+`githubPAT` can be your password or a personal access token generated in settings (that has the repo scope).

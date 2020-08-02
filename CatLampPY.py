@@ -17,6 +17,10 @@ logging.basicConfig(level=logging.INFO, format="[%(asctime)s] %(levelname)s %(na
 try:
     config = open("config.json", "r")
     config = json.load(config)
+    if not config["token"] or not config["githubUser"] or not config["githubPAT"]:
+        print("The config.json file is missing an entry! Please make sure the format matches the README.md.")
+        input("Press enter to close, then restart the bot when fixed.")
+        sys.exit(1)
 except (FileNotFoundError, json.JSONDecodeError):
     print("There was an error trying to get the config.json file! It doesn't exist or isn't formatted properly!")
     input("Press enter to close, then restart the bot when fixed.")
@@ -264,7 +268,7 @@ async def restart(ctx):
 async def pull(ctx):
     """Executes a git pull in the current directory. Will fail if not a repo."""
     if isAdmin(ctx.author):
-        process = subprocess.Popen(['git', 'pull'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        process = subprocess.Popen(['git', 'pull', f'https://{config["githubUser"]}:{config["githubPAT"]}@github.com/hpenney2/CatLamp.git'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         code = process.wait()
         (_, err) = process.communicate()
 
