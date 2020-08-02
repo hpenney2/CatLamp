@@ -277,8 +277,7 @@ async def restart(ctx):
     """Restarts the bot. Only runnable by admins."""
     if isAdmin(ctx.author):
         embed = discord.Embed(title="Restarting...",
-                              description="CatLamp will restart shortly. Check the bot's status for updates "
-                                          "(will take a minute to return to normal).",
+                              description="CatLamp will restart shortly. Check the bot's status for updates.",
                               color=colors["success"])
         embed.set_footer(text=f"Restart initiated by {ctx.author.name}#{ctx.author.discriminator} ({ctx.author.id})")
         await ctx.send(embed=embed)
