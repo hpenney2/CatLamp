@@ -1,33 +1,36 @@
-import discord
-from discord.ext import commands
-import tables
-import logging
-import json
-# import inspect
-import sys
-import os
-import subprocess
-import random
-import asyncio
-import datetime
-from hastebin import get_key
-import ast
-
-logging.basicConfig(level=logging.INFO, format="[%(asctime)s] %(levelname)s %(name)s | %(message)s")
-
 ### Startup ###
 try:
+    import discord
+    from discord.ext import commands
+    import tables
+    import logging
+    import json
+    import sys
+    import os
+    import subprocess
+    import random
+    import asyncio
+    import datetime
+    from hastebin import get_key
+    import ast
     config = open("config.json", "r")
     config = json.load(config)
     if "token" not in config or "githubUser" not in config or "githubPAT" not in config:
         print("The config.json file is missing at least one entry! Please make sure the format matches the README.md.")
         input("Press enter to close, then restart the bot when fixed.")
         sys.exit(1)
-except (FileNotFoundError, json.JSONDecodeError):
+except (FileNotFoundError, json.JSONDecodeError) as e:
     print("There was an error trying to get the config.json file! It doesn't exist or isn't formatted properly!")
+    print(f"Full error: {e}")
+    input("Press enter to close, then restart the bot when fixed.")
+    sys.exit(1)
+except ModuleNotFoundError as mod:
+    print(f"One or more modules are missing! Please make sure to run the command:\npython3 -m pip install -r requirements.txt")
+    print(f"Full error: {mod}")
     input("Press enter to close, then restart the bot when fixed.")
     sys.exit(1)
 
+logging.basicConfig(level=logging.INFO, format="[%(asctime)s] %(levelname)s %(name)s | %(message)s")
 client = commands.AutoShardedBot(command_prefix="+", case_insensitive=True)
 client.remove_command("help")
 helpEmbed = None
