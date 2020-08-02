@@ -245,8 +245,9 @@ async def guess(ctx):
             msg = "Incorrect!"
             if guesses > 0:
                 msg += f"\n<@{ctx.author.id}> Guess a number between 1 and 10. You have {guesses} guesses left."
+            else:
+                msg += f"\nYou're out of guesses! The correct number was {num}."
             await ctx.send(msg)
-    await ctx.send(f"You're out of guesses! The correct number was {num}.")
 
 
 @client.command(aliases=["bulkdelete"])
@@ -263,7 +264,7 @@ async def purge(ctx, number_of_messages: int):
     msg = await ctx.send(f"Deleted {len(msgsDeleted)} messages.")
     try:
         await msg.delete(delay=5)
-    except:  # oy using a bare except is bad practice, as you could ignore important things
+    except discord.NotFound:
         pass
 
 
@@ -271,16 +272,18 @@ async def purge(ctx, number_of_messages: int):
 async def restart(ctx):
     """Restarts the bot. Only runnable by admins."""
     if isAdmin(ctx.author):
-        embed = discord.Embed(title="Restarting...", description="CatLamp will restart shortly.",
+        embed = discord.Embed(title="Restarting...",
+                              description="CatLamp will restart shortly. Check the bot's status for updates (will take a minute to return to normal).",
                               color=colors["success"])
         embed.set_footer(text=f"Restart initiated by {ctx.author.name}#{ctx.author.discriminator} ({ctx.author.id})")
         await ctx.send(embed=embed)
         await client.change_presence(activity=discord.Game("Restarting..."))
-        await client.logout()
-        print("Bot connection closed.")
+        #await client.logout()
+        #print("Bot connection closed.")
+        # yes, I understand not logging out and closing the connection is bad practice,
+        # however I believe it's what is causing issues with the bot not restarting properly on EC2
         print("Restarting...")
         os.execv(sys.executable, ['python'] + sys.argv)
-
 
 @client.command(hidden=True)
 async def pull(ctx):
