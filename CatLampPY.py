@@ -13,9 +13,11 @@ try:
     import datetime
     from hastebin import get_key
     import ast
+    import praw
     config = open("config.json", "r")
     config = json.load(config)
-    if "token" not in config or "githubUser" not in config or "githubPAT" not in config:
+    if "token" not in config or "githubUser" not in config or "githubPAT" not in config or "redditCID" not in config or "redditSecret" not in config:
+        # yes I know the if statement line is hideous but shut up
         print("The config.json file is missing at least one entry! Please make sure the format matches the README.md.")
         input("Press enter to close, then restart the bot when fixed.")
         sys.exit(1)
@@ -35,6 +37,9 @@ client = commands.AutoShardedBot(command_prefix="+", case_insensitive=True)
 client.remove_command("help")
 helpEmbed = None
 colors = tables.getColors()
+reddit = praw.Reddit(client_id=config["redditCID"],
+                    client_secret=config["redditSecret"],
+                    user_agent="CatLamp (by /u/hpenney2)")
 admins = [
     142664159048368128  # hpenney2/hp, bot creator and host
 ]
@@ -275,6 +280,30 @@ async def purge(ctx, number_of_messages: int):
         pass
 
 
+@client.command()
+async def copypasta(ctx):
+    """Retrieves a random copypasta from /r/copypasta."""
+    subreddit = reddit.subreddit("copypasta")
+    msg = await ctx.send("Getting a random copypasta...")
+    satisfied = False
+    tries = 0
+    while not satisfied:
+        if tries >= 50:
+            await msg.edit(content="Failed to get a copypasta.")
+            return
+        randPost = subreddit.random()
+        if (not randPost or randPost.over_18 or not randPost.is_self or randPost.distinguished
+        or len(randPost.title) > 256 or len(randPost.selftext) > 2048):
+            tries += 1
+            continue
+        embed = discord.Embed(title=randPost.title, description=randPost.selftext, url=f"https://www.reddit.com{randPost.permalink}")
+        embed.set_author(name=f"Posted by /u/{randPost.author.name}")
+        embed.set_footer(text=f"{str(round(randPost.upvote_ratio * 100))}% upvoted")
+        satisfied = True
+    await msg.edit(content=None, embed=embed)
+
+
+### Admin-only Commands ###
 @client.command(hidden=True, aliases=["stop"])
 async def restart(ctx):
     """Restarts the bot. Only runnable by admins."""
