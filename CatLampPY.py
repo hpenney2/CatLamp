@@ -135,6 +135,12 @@ async def on_command_error(ctx, error):
     if not isinstance(error, commands.CommandNotFound):
         if ctx.command.hidden and not isAdmin(ctx.author):
             return
+        # Exception-specific error handling, more may be added later.
+        if isinstance(error, commands.BadArgument):
+            if "int" in str(error):
+                param = str(error).split("parameter ", 1)[1][:-1]
+                error = f"{param} must be a number."
+
         embed = discord.Embed(title="Error",
                               description=f"An error occurred while trying to run `{ctx.message.content}`!\n"
                                           f"```{error}```",
@@ -144,7 +150,7 @@ async def on_command_error(ctx, error):
             text=f"If think this shouldn't happen, go tell {user.name}#{user.discriminator} "
                  f"to not be a dumb dumb and fix it.")
         await ctx.send(embed=embed)
-        print(f"An error occurred while trying to run '{ctx.message.content}'!\n{error}")
+        print(f"An error occurred while trying to run '{ctx.message.content}'!\n{str(error)}")
 
 
 @client.event
