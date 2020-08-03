@@ -284,12 +284,13 @@ async def purge(ctx, number_of_messages: int):
 async def copypasta(ctx):
     """Retrieves a random copypasta from /r/copypasta."""
     subreddit = reddit.subreddit("copypasta")
-    msg = await ctx.send("Getting a random copypasta...")
+    # msg = await ctx.send("Getting a random copypasta...")
     satisfied = False
     tries = 0
     while not satisfied:
         if tries >= 50:
-            await msg.edit(content="Failed to get a copypasta.")
+            # await msg.edit(content="Failed to get a copypasta.")
+            await ctx.send("Failed to get a copypasta.")
             return
         randPost = subreddit.random()
         if (not randPost or randPost.over_18 or not randPost.is_self or randPost.distinguished
@@ -300,7 +301,8 @@ async def copypasta(ctx):
         embed.set_author(name=f"Posted by /u/{randPost.author.name}")
         embed.set_footer(text=f"{str(round(randPost.upvote_ratio * 100))}% upvoted")
         satisfied = True
-    await msg.edit(content=None, embed=embed)
+    # await msg.edit(content=None, embed=embed)
+    await ctx.send(embed=embed)
 
 
 ### Admin-only Commands ###
