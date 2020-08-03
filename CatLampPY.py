@@ -14,6 +14,7 @@ try:
     from hastebin import get_key
     import ast
     import praw
+    import math
     config = open("config.json", "r")
     config = json.load(config)
     if "token" not in config or "githubUser" not in config or "githubPAT" not in config or "redditCID" not in config or "redditSecret" not in config:
@@ -35,7 +36,7 @@ except ModuleNotFoundError as mod:
 logging.basicConfig(level=logging.INFO, format="[%(asctime)s] %(levelname)s %(name)s | %(message)s")
 client = commands.AutoShardedBot(command_prefix="+", case_insensitive=True)
 client.remove_command("help")
-helpEmbed = None
+# helpEmbed = None
 colors = tables.getColors()
 reddit = praw.Reddit(client_id=config["redditCID"],
                     client_secret=config["redditSecret"],
@@ -184,28 +185,35 @@ async def on_guild_remove(guild):
 
 ### Commands ###
 @client.command(aliases=["cmds", "commands"])
-async def help(ctx):
+async def help(ctx, page: int = 1):
     """Displays this message."""
-    global helpEmbed
-    if not helpEmbed:
-        print("Generating helpEmbed!")
-        embed = discord.Embed(title="Commands", description="List of available commands for CatLamp.",
-                              color=colors["message"])
-        user = await client.fetch_user(142664159048368128)
-        embed.set_footer(text=f"CatLamp Discord bot, created by {user.name}#{user.discriminator}")
-        for command in client.commands:
-            if not command.hidden:
-                name = "+" + command.name
-                Params = command.clean_params
-                for param in Params:
-                    name += f" <{param}>"
-                desc = command.short_doc or "No description."
-                if command.aliases:
-                    desc += "\nAliases: "
-                    desc += ", ".join(command.aliases)
-                embed.add_field(name=name, value=desc, inline=False)
-        helpEmbed = embed
-    await ctx.send(embed=helpEmbed)
+    cmds = []
+    for cmd in client.commands:
+        if not cmd.hidden:
+            cmds.append(cmd)
+    maxPages = round(math.ceil(len(cmds) / 25))
+    if page < 1:
+        page = 1
+    elif page > maxPages:
+        page = maxPages
+    embed = discord.Embed(title="Commands", color=colors["message"])
+    embed.set_footer(text=f"Page {page}/{maxPages}")
+    pageIndex = (page - 1) * 25
+    for i in range(len(cmds)):
+        if i + pageIndex > len(cmds):
+            break
+        command = cmds[i + pageIndex]
+        if not len(embed.fields) >= 25:
+            name = "+" + command.name
+            Params = command.clean_params
+            for param in Params:
+                name += f" <{param}>"
+            desc = command.short_doc or "No description."
+            if command.aliases:
+                desc += "\nAliases: "
+                desc += ", ".join(command.aliases)
+            embed.add_field(name=name, value=desc, inline=False)
+    await ctx.send(embed=embed)
 
 
 @client.command()
