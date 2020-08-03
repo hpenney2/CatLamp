@@ -196,6 +196,7 @@ async def help(ctx, page: int = 1):
         page = 1
     elif page > maxPages:
         page = maxPages
+    
     embed = discord.Embed(title="Commands", color=colors["message"])
     embed.set_footer(text=f"Page {page}/{maxPages}")
     pageIndex = (page - 1) * 25
@@ -234,11 +235,14 @@ async def coinFlip(ctx):
     elif rand == 1:
         await ctx.send("The coin landed on tails.")
 
-
+inGame = []
 @client.command()
 async def guess(ctx):
     """Plays a number guessing game. Guess a random number between 1 and 10."""
-
+    global inGame
+    if ctx.author.id in inGame:
+        return
+    inGame.append(ctx.author.id)
     def check(m):
         b = m.author == ctx.message.author and m.channel == ctx.channel and m.content.isdigit()
         if b:
@@ -255,10 +259,12 @@ async def guess(ctx):
             Guess = await client.wait_for("message", check=check, timeout=15.0)
         except asyncio.TimeoutError:
             await ctx.send(f"You took too long, the correct number was {num}.")
+            inGame.remove(ctx.author.id)
             return
 
         if int(Guess.content) == num:
             await ctx.send(f"Correct! The number was {num}.")
+            inGame.remove(ctx.author.id)
             return
         else:
             guesses += -1
@@ -267,6 +273,7 @@ async def guess(ctx):
                 msg += f"\n<@{ctx.author.id}> Guess a number between 1 and 10. You have {guesses} guesses left."
             else:
                 msg += f"\nYou're out of guesses! The correct number was {num}."
+                inGame.remove(ctx.author.id)
             await ctx.send(msg)
 
 
