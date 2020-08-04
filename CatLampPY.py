@@ -17,7 +17,8 @@ try:
     import math
     config = open("config.json", "r")
     config = json.load(config)
-    if "token" not in config or "githubUser" not in config or "githubPAT" not in config or "redditCID" not in config or "redditSecret" not in config:
+    if "token" not in config or "githubUser" not in config or "githubPAT" not in config or "redditCID" not in config \
+            or "redditSecret" not in config:
         # yes I know the if statement line is hideous but shut up
         print("The config.json file is missing at least one entry! Please make sure the format matches the README.md.")
         input("Press enter to close, then restart the bot when fixed.")
@@ -28,7 +29,8 @@ except (FileNotFoundError, json.JSONDecodeError) as e:
     input("Press enter to close, then restart the bot when fixed.")
     sys.exit(1)
 except ModuleNotFoundError as mod:
-    print(f"One or more modules are missing! Please make sure to run the command:\npython3 -m pip install -r requirements.txt")
+    print(f"One or more modules are missing! Please make sure to run the command:\npython3 -m pip install -r "
+          f"requirements.txt")
     print(f"Full error: {mod}")
     input("Press enter to close, then restart the bot when fixed.")
     sys.exit(1)
@@ -40,11 +42,11 @@ client.remove_command("help")
 cmds = []
 colors = tables.getColors()
 reddit = praw.Reddit(client_id=config["redditCID"],
-                    client_secret=config["redditSecret"],
-                    user_agent="CatLamp (by /u/hpenney2)")
+                     client_secret=config["redditSecret"],
+                     user_agent="CatLamp (by /u/hpenney2)")
 admins = [
-    142664159048368128, # hpenney2/hp, bot creator and host
-    474328006588891157  # TheEgghead27, contributor
+    142664159048368128,  # hpenney2/hp, bot creator and host
+    474328006588891157   # TheEgghead27, contributor
 ]
 
 
@@ -76,6 +78,7 @@ def hasPermissions(perm):
 
     return commands.check(predicate)
 
+
 def userHasPermissions(perm):
     """Check for if a user has a permission."""
     async def predicate(ctx):
@@ -84,6 +87,7 @@ def userHasPermissions(perm):
         return True
 
     return commands.check(predicate)
+
 
 def isGuild():
     """Check for if the command was invoked in a guild."""
@@ -161,7 +165,7 @@ async def on_command_error(ctx, error):
         user = await client.fetch_user(142664159048368128)
         embed.set_footer(
             text=f"If think this shouldn't happen, contact a developer for help "
-                  "in the CatLamp server. (+server)")
+                 f"in the CatLamp server. (+server)")
         await ctx.send(embed=embed)
         print(f"An error occurred while trying to run '{ctx.message.content}'!\n{str(error)}")
 
@@ -212,8 +216,8 @@ async def on_guild_remove(guild):
 @client.command(aliases=["cmds", "commands"])
 async def help(ctx, page: int = 1):
     """Displays this message."""
-    #cmds = []
-    #for cmd in client.commands:
+    # cmds = []
+    # for cmd in client.commands:
     #    if not cmd.hidden:
     #        cmds.append(cmd)
     global cmds
