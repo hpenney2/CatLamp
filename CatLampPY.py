@@ -1,3 +1,5 @@
+# TODO: Clean out (unused) commented code
+
 ### Startup ###
 try:
     import discord
