@@ -43,7 +43,8 @@ reddit = praw.Reddit(client_id=config["redditCID"],
                     client_secret=config["redditSecret"],
                     user_agent="CatLamp (by /u/hpenney2)")
 admins = [
-    142664159048368128  # hpenney2/hp, bot creator and host
+    142664159048368128, # hpenney2/hp, bot creator and host
+    474328006588891157  # TheEgghead27, contributor
 ]
 
 
