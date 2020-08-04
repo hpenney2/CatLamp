@@ -37,6 +37,7 @@ logging.basicConfig(level=logging.INFO, format="[%(asctime)s] %(levelname)s %(na
 client = commands.AutoShardedBot(command_prefix="+", case_insensitive=True)
 client.remove_command("help")
 # helpEmbed = None
+cmds = []
 colors = tables.getColors()
 reddit = praw.Reddit(client_id=config["redditCID"],
                     client_secret=config["redditSecret"],
@@ -54,7 +55,7 @@ class CommandErrorMsg(commands.CommandError):
     pass
 
 
-### Functions ###
+### Functions and Checks ###
 def isAdmin(user):
     """Checks if a user is an admin or not. Returns True or False respectively."""
     if user.id in admins:
@@ -64,18 +65,27 @@ def isAdmin(user):
 
 
 def hasPermissions(perm):
+    """Check for if a user and the bot has a permission."""
     async def predicate(ctx):
-        if not getattr(ctx.author.permissions_in(ctx.channel),
-                       perm):  # or not ctx.author.permissions_in(ctx.channel).administrator
-            raise CheckFailureMsg(f"You don't have the Manage Messages permission!")
+        if not getattr(ctx.author.permissions_in(ctx.channel), perm):
+            raise CheckFailureMsg(f"You don't have the '{perm}' permission!")
         elif not getattr(ctx.guild.me.permissions_in(ctx.channel), perm):
-            raise CheckFailureMsg(f"The bot does'nt have the Manage Messages permission!")
+            raise CheckFailureMsg(f"The bot doesn't have the '{perm}' permission!")
         return True
 
     return commands.check(predicate)
 
+def userHasPermissions(perm):
+    """Check for if a user has a permission."""
+    async def predicate(ctx):
+        if not getattr(ctx.author.permissions_in(ctx.channel), perm):
+            raise CheckFailureMsg(f"You don't have the '{perm}' permission!")
+        return True
+
+    return commands.check(predicate)
 
 def isGuild():
+    """Check for if the command was invoked in a guild."""
     async def predicate(ctx):
         if not ctx.guild:
             raise CheckFailureMsg("This command only works in a server!")
@@ -85,6 +95,7 @@ def isGuild():
 
 
 def isPrivate():
+    """Check for if the command was invoded in a private channel (DMs)."""
     async def predicate(ctx):
         if ctx.guild:
             raise CheckFailureMsg("This command only works in a DM!")
@@ -94,6 +105,7 @@ def isPrivate():
 
 
 async def errorEmbed(cmd, error):
+    """Generates an error embed. Please use 'raise CommandErrorMsg("error message")' instead."""
     embed = discord.Embed(title="Error",
                           description=f"An error occurred while trying to run `{cmd}`!\n```{error}```",
                           color=colors["error"])
@@ -190,13 +202,17 @@ async def on_guild_remove(guild):
 
 
 ### Commands ###
+# All commands should have
+# cmds.append(command)
+# under them, or else they won't appear in +help.
 @client.command(aliases=["cmds", "commands"])
 async def help(ctx, page: int = 1):
     """Displays this message."""
-    cmds = []
-    for cmd in client.commands:
-        if not cmd.hidden:
-            cmds.append(cmd)
+    #cmds = []
+    #for cmd in client.commands:
+    #    if not cmd.hidden:
+    #        cmds.append(cmd)
+    global cmds
     maxPages = round(math.ceil(len(cmds) / 25))
     if page < 1:
         page = 1
@@ -221,12 +237,13 @@ async def help(ctx, page: int = 1):
                 desc += ", ".join(command.aliases)
             embed.add_field(name=name, value=desc, inline=False)
     await ctx.send(embed=embed)
-
+cmds.append(help)
 
 @client.command()
 async def ping(ctx):
     """Gets the current latency between the bot and Discord."""
     await ctx.send(f"Pong!\nLatency: {round(client.latency * 1000)}ms")
+cmds.append(ping)
 
 
 @client.command(aliases=["flip"])
@@ -240,6 +257,8 @@ async def coinFlip(ctx):
         await ctx.send("The coin landed on heads.")
     elif rand == 1:
         await ctx.send("The coin landed on tails.")
+cmds.append(coinFlip)
+
 
 inGame = []
 @client.command()
@@ -281,6 +300,34 @@ async def guess(ctx):
                 msg += f"\nYou're out of guesses! The correct number was {num}."
                 inGame.remove(ctx.author.id)
             await ctx.send(msg)
+cmds.append(guess)
+
+
+@client.command()
+async def copypasta(ctx):
+    """Retrieves a random copypasta from /r/copypasta."""
+    async with ctx.channel.typing():
+        subreddit = reddit.subreddit("copypasta")
+        # msg = await ctx.send("Getting a random copypasta...")
+        satisfied = False
+        tries = 0
+        while not satisfied:
+            if tries >= 50:
+                # await msg.edit(content="Failed to get a copypasta.")
+                await ctx.send("Failed to get a copypasta.")
+                return
+            randPost = subreddit.random()
+            if (not randPost or randPost.over_18 or not randPost.is_self or randPost.distinguished
+            or len(randPost.title) > 256 or len(randPost.selftext) > 2048):
+                tries += 1
+                continue
+            embed = discord.Embed(title=randPost.title, description=randPost.selftext, url=f"https://www.reddit.com{randPost.permalink}")
+            embed.set_author(name=f"Posted by /u/{randPost.author.name}")
+            embed.set_footer(text=f"{str(round(randPost.upvote_ratio * 100))}% upvoted")
+            satisfied = True
+        # await msg.edit(content=None, embed=embed)
+        await ctx.send(embed=embed)
+cmds.append(copypasta)
 
 
 @client.command(aliases=["bulkDelete"])
@@ -299,34 +346,44 @@ async def purge(ctx, number_of_messages: int):
         await msg.delete(delay=5)
     except discord.NotFound:
         pass
+cmds.append(purge)
 
 
-@client.command()
-async def copypasta(ctx):
-    """Retrieves a random copypasta from /r/copypasta."""
-    subreddit = reddit.subreddit("copypasta")
-    # msg = await ctx.send("Getting a random copypasta...")
-    satisfied = False
-    tries = 0
-    while not satisfied:
-        if tries >= 50:
-            # await msg.edit(content="Failed to get a copypasta.")
-            await ctx.send("Failed to get a copypasta.")
-            return
-        randPost = subreddit.random()
-        if (not randPost or randPost.over_18 or not randPost.is_self or randPost.distinguished
-        or len(randPost.title) > 256 or len(randPost.selftext) > 2048):
-            tries += 1
-            continue
-        embed = discord.Embed(title=randPost.title, description=randPost.selftext, url=f"https://www.reddit.com{randPost.permalink}")
-        embed.set_author(name=f"Posted by /u/{randPost.author.name}")
-        embed.set_footer(text=f"{str(round(randPost.upvote_ratio * 100))}% upvoted")
-        satisfied = True
-    # await msg.edit(content=None, embed=embed)
-    await ctx.send(embed=embed)
+@client.command(aliases=["announcement"])
+@isGuild()
+async def announce(ctx, channel: discord.TextChannel, *, message: str):
+    """Sends a nicely formatted announcement embed to the specified channel, or if none, the current channel."""
+    if channel == None:
+        channel = ctx.channel
+    if not channel.guild.id or channel.guild.id != ctx.guild.id:
+        raise CommandErrorMsg("That channel isn't even in the same server!")
+    # The reason I didn't just implement the below with checks is because the channel isn't
+    # always the same as ctx.channel
+    perms = ctx.author.permissions_in(channel)
+    botPerms = ctx.guild.me.permissions_in(channel)
+    if not perms.read_messages:
+        raise CommandErrorMsg("You don't have the Read Messages permission for that channel!")
+    elif not perms.send_messages:
+        raise CommandErrorMsg("You don't have the Send Messages permission for that channel!")
+    elif not perms.manage_messages: # adding this one so people aren't just making announcements in general chats lol
+        raise CommandErrorMsg("You don't have the Manage Messages permission for that channel!")
+    # elif not botPerms.read_messages:
+    #     raise CommandErrorMsg("The bot doesn't have the Read Messages permission for that channel!")
+    elif not botPerms.send_messages:
+        raise CommandErrorMsg("The bot doesn't have the Send Messages permission for that channel!")
+    embed = discord.Embed(title="Announcement", description=message, color=colors["message"])
+    embed.set_author(name=ctx.author.mention, icon_url=str(ctx.author.avatar_url))
+    embed.timestamp = datetime.datetime.utcnow()
+    await channel.send(embed=embed)
+    try:
+        await ctx.message.add_reaction("✅")
+    except discord.Forbidden:
+        pass
+cmds.append(announce)
 
 
 ### Admin-only Commands ###
+# Commands here should NOT be added to cmds.
 @client.command(hidden=True, aliases=["stop"])
 async def restart(ctx):
     """Restarts the bot. Only runnable by admins."""
@@ -423,7 +480,3 @@ async def evaluate(ctx, *, code):
 
 
 client.run(config["token"])
-
-### Notes ###
-# Todo:
-# - Implement @commandName.error decorators for single-command error handlers
