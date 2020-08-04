@@ -105,7 +105,7 @@ def isPrivate():
 
 
 async def errorEmbed(cmd, error):
-    """Generates an error embed. Please use 'raise CommandErrorMsg("error message")' instead."""
+    """[deprecated] Generates an error embed. Please use 'raise CommandErrorMsg("error message")' instead."""
     embed = discord.Embed(title="Error",
                           description=f"An error occurred while trying to run `{cmd}`!\n```{error}```",
                           color=colors["error"])
@@ -159,8 +159,8 @@ async def on_command_error(ctx, error):
                               color=colors["error"])
         user = await client.fetch_user(142664159048368128)
         embed.set_footer(
-            text=f"If think this shouldn't happen, go tell {user.name}#{user.discriminator} "
-                 f"to not be a dumb dumb and fix it.")
+            text=f"If think this shouldn't happen, contact a developer for help "
+                  "in the CatLamp server. (+server)")
         await ctx.send(embed=embed)
         print(f"An error occurred while trying to run '{ctx.message.content}'!\n{str(error)}")
 
@@ -238,6 +238,33 @@ async def help(ctx, page: int = 1):
             embed.add_field(name=name, value=desc, inline=False)
     await ctx.send(embed=embed)
 cmds.append(help)
+
+
+@client.command()
+async def invite(ctx):
+    """Sends CatLamp's invite link."""
+    await ctx.send("You can add CatLamp to your server using the link below.\nhttps://bit.ly/CatLampBot")
+cmds.append(invite)
+
+
+@client.command()
+async def server(ctx):
+    """Sends CatLamp's server invite to your DMs."""
+    officialServer = client.get_guild(712487389121216584)
+    if officialServer and ctx.guild.id == officialServer.id:
+        await ctx.send("You're already here! If you need an invite, you can get it from <#712489819334246441>.")
+        return
+    dm = ctx.author.dm_channel
+    if not dm:
+        await ctx.author.create_dm()
+        dm = ctx.author.dm_channel
+    try:
+        await dm.send("You can join the official CatLamp server below.\nhttps://discord.gg/5p8bQcy")
+        await ctx.send("Sent CatLamp's server invite to your DMs!")
+    except discord.Forbidden:
+        await ctx.send("I can't DM you! Make sure to enable your DMs so I can.")
+cmds.append(server)
+
 
 @client.command()
 async def ping(ctx):
