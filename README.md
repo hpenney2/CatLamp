@@ -11,11 +11,11 @@
 You can either copy the format below or run the included `gen_config.py` file included (recommended).
 ```json
 {
-	"token":"bot_token_here",
-	"githubUser":"github_username_here",
-	"githubPAT":"github_personal_access_token_here",
-	"redditCID":"client_id_here",
-	"redditSecret":"client_secret_here"
+	"token": "bot_token_here",
+	"githubUser": "github_username_here",
+	"githubPAT": "github_personal_access_token_here",
+	"redditCID": "client_id_here",
+	"redditSecret": "client_secret_here"
 }
 ```
 `githubPAT` can be your password or a personal access token generated in settings (that has the repo scope).
