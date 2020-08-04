@@ -149,8 +149,6 @@ def insert_returns(body):
 
 
 ### Events ###
-
-
 @client.event
 async def on_ready():
     print(f"Successfully logged in as {client.user.name} ({client.user.id})")
@@ -172,7 +170,6 @@ async def on_command_error(ctx, error):
                               description=f"An error occurred while trying to run `{ctx.message.content}`!\n"
                                           f"```{error}```",
                               color=colors["error"])
-        user = await client.fetch_user(142664159048368128)
         embed.set_footer(
             text=f"If think this shouldn't happen, contact a developer for help "
                  f"in the CatLamp server. (+server)")
@@ -184,12 +181,8 @@ async def on_command_error(ctx, error):
 async def on_message(msg):
     if msg.author.id == client.user.id or msg.author.bot:
         return
-    if msg.content.lower().startswith("do not the sex"):
-        if not msg.content == "python":
-            await msg.channel.send("do not the sex")
-        # keeping this here *just in case*
-        else:
-            await msg.channel.send("bruh")
+    if msg.content != "python" and msg.content.lower().startswith("do not the sex")::
+        await msg.channel.send("do not the sex")
     await client.process_commands(msg)
 
 
