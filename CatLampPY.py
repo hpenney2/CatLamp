@@ -19,8 +19,8 @@ try:
     config = open("config.json", "r")
     config = json.load(config)
     a = []  # make a list of everything in config
-    for i in config:
-        a.append(i)
+    for configuration in config:
+        a.append(configuration)
     a.sort()  # sort the list for consistency
     # make sure the sorted list has everything we need (also in a sorted list), no more, no less
     if a != ['githubPAT', 'githubUser', 'redditCID', 'redditSecret', 'token']:
