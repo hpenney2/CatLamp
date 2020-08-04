@@ -244,7 +244,11 @@ cmds.append(help)
 @client.command()
 async def invite(ctx):
     """Sends CatLamp's invite link."""
-    await ctx.send("You can add CatLamp to your server using the link below.\nhttps://bit.ly/CatLampBot")
+    msg = await ctx.send("You can add CatLamp to your server using the link below.\nhttps://bit.ly/CatLampBot")
+    try:
+        await msg.edit(suppress=True)
+    except discord.Forbidden:
+        pass
 cmds.append(invite)
 
 
