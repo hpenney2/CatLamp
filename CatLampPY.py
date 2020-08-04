@@ -279,12 +279,9 @@ async def server(ctx):
     if ctx.guild.id == 712487389121216584:
         await ctx.send("You're already here! If you need an invite, you can get it from <#712489819334246441>.")
         return
-    dm = ctx.author.dm_channel
-    if not dm:
-        await ctx.author.create_dm()
-        dm = ctx.author.dm_channel
     try:
-        await dm.send("You can join the official CatLamp server below.\nhttps://discord.gg/5p8bQcy")
+        # user.send() method is better than getting a dm channel
+        await ctx.author.send("You can join the official CatLamp server below.\nhttps://discord.gg/5p8bQcy")
         await ctx.send("Sent CatLamp's server invite to your DMs!")
     except discord.Forbidden:
         await ctx.send("I can't DM you! Make sure to enable your DMs so I can.")
