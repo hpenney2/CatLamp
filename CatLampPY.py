@@ -173,6 +173,8 @@ async def on_message(msg):
     if msg.content.lower() in "do not the sex":
         if not msg.content == "python":
             await msg.channel.send("do not the sex")
+        else:
+            await msg.channel.send("bruh")
     await client.process_commands(msg)
 
 
