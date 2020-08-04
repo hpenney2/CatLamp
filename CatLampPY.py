@@ -372,7 +372,7 @@ async def announce(ctx, channel: discord.TextChannel, *, message: str):
     elif not botPerms.send_messages:
         raise CommandErrorMsg("The bot doesn't have the Send Messages permission for that channel!")
     embed = discord.Embed(title="Announcement", description=message, color=colors["message"])
-    embed.set_author(name=ctx.author.mention, icon_url=str(ctx.author.avatar_url))
+    embed.set_author(name=ctx.author.name, icon_url=str(ctx.author.avatar_url))
     embed.timestamp = datetime.datetime.utcnow()
     await channel.send(embed=embed)
     try:
