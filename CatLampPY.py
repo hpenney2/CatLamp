@@ -179,7 +179,7 @@ async def on_command_error(ctx, error):
 async def on_message(msg):
     if msg.author.id == client.user.id or msg.author.bot:
         return
-    if msg.content.lower() in "do not the sex":
+    if msg.content.lower().startswith("do not the sex"):
         if not msg.content == "python":
             await msg.channel.send("do not the sex")
         else:
