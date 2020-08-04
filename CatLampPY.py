@@ -18,9 +18,12 @@ try:
 
     config = open("config.json", "r")
     config = json.load(config)
-    if "token" not in config or "githubUser" not in config or "githubPAT" not in config or "redditCID" not in config \
-            or "redditSecret" not in config:
-        # yes I know the if statement line is hideous but shut up
+    a = []  # make a list of everything in config
+    for i in config:
+        a.append(i)
+    a.sort()  # sort the list for consistency
+    # make sure the sorted list has everything we need (also in a sorted list), no more, no less
+    if a != ['githubPAT', 'githubUser', 'redditCID', 'redditSecret', 'token']:
         print("The config.json file is missing at least one entry! Please make sure the format matches the README.md.")
         input("Press enter to close, then restart the bot when fixed.")
         sys.exit(1)
@@ -182,6 +185,7 @@ async def on_message(msg):
     if msg.content.lower().startswith("do not the sex"):
         if not msg.content == "python":
             await msg.channel.send("do not the sex")
+        # keeping this here *just in case*
         else:
             await msg.channel.send("bruh")
     await client.process_commands(msg)
