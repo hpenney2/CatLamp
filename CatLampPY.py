@@ -1,5 +1,3 @@
-# TODO: Clean out (unused) commented code
-
 ### Startup ###
 try:
     import discord
@@ -220,10 +218,6 @@ async def on_guild_remove(guild):
 @client.command(aliases=["cmds", "commands"])
 async def help(ctx, page: int = 1):
     """Displays this message."""
-    # cmds = []
-    # for cmd in client.commands:
-    #    if not cmd.hidden:
-    #        cmds.append(cmd)
     global cmds
     maxPages = round(math.ceil(len(cmds) / 25))
     if page < 1:
@@ -362,12 +356,10 @@ async def copypasta(ctx):
     """Retrieves a random copypasta from /r/copypasta."""
     async with ctx.channel.typing():
         subreddit = reddit.subreddit("copypasta")
-        # msg = await ctx.send("Getting a random copypasta...")
         satisfied = False
         tries = 0
         while not satisfied:
             if tries >= 50:
-                # await msg.edit(content="Failed to get a copypasta.")
                 await ctx.send("Failed to get a copypasta.")
                 return
             randPost = subreddit.random()
@@ -380,7 +372,6 @@ async def copypasta(ctx):
             embed.set_author(name=f"Posted by /u/{randPost.author.name}")
             embed.set_footer(text=f"{str(round(randPost.upvote_ratio * 100))}% upvoted")
             satisfied = True
-        # await msg.edit(content=None, embed=embed)
         await ctx.send(embed=embed)
 
 
@@ -426,8 +417,6 @@ async def announce(ctx, channel: discord.TextChannel, *, message: str):
         raise CommandErrorMsg("You don't have the Send Messages permission for that channel!")
     elif not perms.manage_messages:  # adding this one so people aren't just making announcements in general chats lol
         raise CommandErrorMsg("You don't have the Manage Messages permission for that channel!")
-    # elif not botPerms.read_messages:
-    #     raise CommandErrorMsg("The bot doesn't have the Read Messages permission for that channel!")
     elif not botPerms.send_messages:
         raise CommandErrorMsg("The bot doesn't have the Send Messages permission for that channel!")
     embed = discord.Embed(title="Announcement", description=message, color=colors["message"])
