@@ -14,6 +14,7 @@ try:
     from hastebin import get_key
     import ast
     import praw
+    import prawcore  # because praw exceptions inherit from here
     import math
 
     config = open("config.json", "r")
@@ -363,36 +364,39 @@ async def redditRandom(ctx, subreddit_name: str):
     if subreddit_name.startswith('r/'):
         subreddit_name = subreddit_name[2:]
     async with ctx.channel.typing():
-        subreddit = reddit.subreddit(subreddit_name)
-        print()
-        if not ctx.message.channel.is_nsfw() and subreddit.over18:
-            await ctx.send("This subreddit is marked as NSFW. Please move to an NSFW channel.")
-            return
-        satisfied = False
-        tries = 0
-        while not satisfied:
-            if tries >= 15:
-                await ctx.send("Failed to get a post.")
+        try:
+            subreddit = reddit.subreddit(subreddit_name)
+            print()
+            if not ctx.message.channel.is_nsfw() and subreddit.over18:
+                await ctx.send("This subreddit is marked as NSFW. Please move to an NSFW channel.")
                 return
-            randPost = subreddit.random()
-            if (not randPost or randPost.distinguished or len(randPost.title) > 256 or len(randPost.selftext) > 2048) \
-                    or (randPost.over_18 and not ctx.message.channel.is_nsfw()):
-                tries += 1
-                continue
-            if not randPost.url or not randPost.selftext:  # just because i'm a nervous idiot so i need to check
-                pass
-            embed = discord.Embed(title=randPost.title, description=randPost.selftext,
-                                  url=f"https://www.reddit.com{randPost.permalink}")
-            if randPost.url:
-                if randPost.url[-4:] in ('.gif', '.png', '.jpg', 'jpeg'):
-                    embed.set_image(url=randPost.url)
-                else:
+            satisfied = False
+            tries = 0
+            while not satisfied:
+                if tries >= 15:
+                    await ctx.send("Failed to get a post.")
+                    return
+                randPost = subreddit.random()
+                if (not randPost or randPost.distinguished or len(randPost.title) > 256 or
+                        len(randPost.selftext) > 2048) or (randPost.over_18 and not ctx.message.channel.is_nsfw()):
                     tries += 1
                     continue
-            embed.set_author(name=f"Posted by /u/{randPost.author.name}")
-            embed.set_footer(text=f"{str(round(randPost.upvote_ratio * 100))}% upvoted")
-            satisfied = True
-        await ctx.send(embed=embed)
+                if not randPost.url or not randPost.selftext:  # just because i'm a nervous idiot so i need to check
+                    pass
+                embed = discord.Embed(title=randPost.title, description=randPost.selftext,
+                                      url=f"https://www.reddit.com{randPost.permalink}")
+                if randPost.url:
+                    if randPost.url[-4:] in ('.gif', '.png', '.jpg', 'jpeg'):
+                        embed.set_image(url=randPost.url)
+                    else:
+                        tries += 1
+                        continue
+                embed.set_author(name=f"Posted by /u/{randPost.author.name}")
+                embed.set_footer(text=f"{str(round(randPost.upvote_ratio * 100))}% upvoted")
+                satisfied = True
+            await ctx.send(embed=embed)
+        except(prawcore.BadRequest, prawcore.Redirect, prawcore.NotFound):
+            await ctx.send('Failed to get a post.')
 
 
 cmds.append(redditRandom)
