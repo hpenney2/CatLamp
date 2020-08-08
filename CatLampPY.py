@@ -155,6 +155,7 @@ async def on_ready():
 
 @client.event
 async def on_command_error(ctx, error):
+    commandName = ctx.message.content.split(' ')[0]
     if not isinstance(error, commands.CommandNotFound):
         if ctx.command.hidden and not isAdmin(ctx.author):
             return
@@ -163,16 +164,19 @@ async def on_command_error(ctx, error):
             if "int" in str(error):
                 param = str(error).split("parameter ", 1)[1][:-1]
                 error = f"{param} must be a number."
-
+        elif isinstance(error, commands.MissingRequiredArgument):
+            error = "This command requires more arguments. Check +help for details."
         embed = discord.Embed(title="Error",
-                              description=f"An error occurred while trying to run `{ctx.message.content}`!\n"
+                              description=f"An error occurred while trying to run `{commandName}`!\n"
                                           f"```{error}```",
                               color=colors["error"])
         embed.set_footer(
             text=f"If think this shouldn't happen, contact a developer for help "
                  f"in the CatLamp server. (+server)")
         await ctx.send(embed=embed)
-        print(f"An error occurred while trying to run '{ctx.message.content}'!\n{str(error)}")
+        print(f"An error occurred while trying to run '{ctx.message.content}'!")
+        if not type(error) is str:
+            raise error
 
 
 @client.event
@@ -236,6 +240,7 @@ async def help(ctx, page: int = 1):
             name = "+" + command.name
             Params = command.clean_params
             for param in Params:
+                param = param.replace('_', ' ')
                 name += f" <{param}>"
             desc = command.short_doc or "No description."
             if command.aliases:
@@ -351,54 +356,27 @@ async def guess(ctx):
 cmds.append(guess)
 
 
-@client.command()
-async def copypasta(ctx):
-    """Retrieves a random copypasta from /r/copypasta."""
+@client.command(name='reddit', aliases=['randomReddit', 'redditRandom', 'randomPost'])
+async def redditRandom(ctx, subreddit_name: str):
+    """Sends a random post from the specified subreddit"""
+    # in case someone types it with r/ at the start
+    if subreddit_name.startswith('r/'):
+        subreddit_name = subreddit_name[2:]
     async with ctx.channel.typing():
-        subreddit = reddit.subreddit("copypasta")
+        subreddit = reddit.subreddit(subreddit_name)
+        print()
+        if not ctx.message.channel.is_nsfw() and subreddit.over18:
+            await ctx.send("This subreddit is marked as NSFW. Please move to an NSFW channel.")
+            return
         satisfied = False
         tries = 0
         while not satisfied:
-            if tries >= 50:
-                await ctx.send("Failed to get a copypasta.")
+            if tries >= 15:
+                await ctx.send("Failed to get a post.")
                 return
             randPost = subreddit.random()
-            print(randPost)
-            if (not randPost or randPost.over_18 or not randPost.is_self or randPost.distinguished
-                    or len(randPost.title) > 256 or len(randPost.selftext) > 2048):
-                tries += 1
-                continue
-            embed = discord.Embed(title=randPost.title, description=randPost.selftext,
-                                  url=f"https://www.reddit.com{randPost.permalink}")
-            embed.set_author(name=f"Posted by /u/{randPost.author.name}")
-            embed.set_footer(text=f"{str(round(randPost.upvote_ratio * 100))}% upvoted")
-            satisfied = True
-        await ctx.send(embed=embed)
-
-
-cmds.append(copypasta)
-
-
-@client.command()
-async def redditTest(ctx):
-    """Test of general reddit command"""
-    async with ctx.channel.typing():
-        # subreddit = reddit.subreddit("copypasta")
-        subreddit = reddit.subreddit("dankmemes")
-        satisfied = False
-        tries = 0
-        while not satisfied:
-            if tries >= 50:
-                await ctx.send("Failed to get a copypasta.")
-                return
-            randPost = subreddit.random()
-            print(type(randPost))
-            print(randPost.selftext)
-            print(randPost.is_self)
-            print(randPost.url)
-
-            if (not randPost or randPost.over_18 or randPost.distinguished or len(randPost.title) > 256 or
-                    len(randPost.selftext) > 2048):
+            if (not randPost or randPost.distinguished or len(randPost.title) > 256 or len(randPost.selftext) > 2048) \
+                    or (randPost.over_18 and not ctx.message.channel.is_nsfw()):
                 tries += 1
                 continue
             if not randPost.url or not randPost.selftext:  # just because i'm a nervous idiot so i need to check
@@ -406,13 +384,18 @@ async def redditTest(ctx):
             embed = discord.Embed(title=randPost.title, description=randPost.selftext,
                                   url=f"https://www.reddit.com{randPost.permalink}")
             if randPost.url:
-                if randPost.url[-4:] not in ('gifv', '.mp4', 'webm'):
-                    # those files don't work in discord 100% of the time
+                if randPost.url[-4:] in ('.gif', '.png', '.jpg', 'jpeg'):
                     embed.set_image(url=randPost.url)
+                else:
+                    tries += 1
+                    continue
             embed.set_author(name=f"Posted by /u/{randPost.author.name}")
             embed.set_footer(text=f"{str(round(randPost.upvote_ratio * 100))}% upvoted")
             satisfied = True
         await ctx.send(embed=embed)
+
+
+cmds.append(redditRandom)
 
 
 @client.command(aliases=["bulkDelete"])
