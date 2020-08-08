@@ -399,7 +399,7 @@ async def redditRandom(ctx, subreddit_name: str):
                 embed.set_footer(text=f"{str(round(randPost.upvote_ratio * 100))}% upvoted")
                 satisfied = True
             await ctx.send(embed=embed)
-        except(prawcore.BadRequest, prawcore.Redirect, prawcore.NotFound):
+        except(prawcore.BadRequest, prawcore.Redirect, prawcore.NotFound, prawcore.Forbidden):
             await ctx.send('Failed to get a post.')
 
 
