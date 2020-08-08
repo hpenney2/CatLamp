@@ -388,6 +388,10 @@ async def redditRandom(ctx, subreddit_name: str):
                 if randPost.url:
                     if randPost.url[-4:] in ('.gif', '.png', '.jpg', 'jpeg'):
                         embed.set_image(url=randPost.url)
+                    elif randPost.url.startswith("https://www.reddit.com/"):
+                        pass
+                    elif not randPost.url.startswith("https://i.redd.it/"):
+                        embed.description = f"[(Link)]({randPost.url})"
                     else:
                         tries += 1
                         continue
