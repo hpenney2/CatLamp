@@ -363,6 +363,7 @@ async def copypasta(ctx):
                 await ctx.send("Failed to get a copypasta.")
                 return
             randPost = subreddit.random()
+            print(randPost)
             if (not randPost or randPost.over_18 or not randPost.is_self or randPost.distinguished
                     or len(randPost.title) > 256 or len(randPost.selftext) > 2048):
                 tries += 1
@@ -376,6 +377,42 @@ async def copypasta(ctx):
 
 
 cmds.append(copypasta)
+
+
+@client.command()
+async def redditTest(ctx):
+    """Test of general reddit command"""
+    async with ctx.channel.typing():
+        # subreddit = reddit.subreddit("copypasta")
+        subreddit = reddit.subreddit("dankmemes")
+        satisfied = False
+        tries = 0
+        while not satisfied:
+            if tries >= 50:
+                await ctx.send("Failed to get a copypasta.")
+                return
+            randPost = subreddit.random()
+            print(type(randPost))
+            print(randPost.selftext)
+            print(randPost.is_self)
+            print(randPost.url)
+
+            if (not randPost or randPost.over_18 or randPost.distinguished or len(randPost.title) > 256 or
+                    len(randPost.selftext) > 2048):
+                tries += 1
+                continue
+            if not randPost.url or not randPost.selftext:  # just because i'm a nervous idiot so i need to check
+                pass
+            embed = discord.Embed(title=randPost.title, description=randPost.selftext,
+                                  url=f"https://www.reddit.com{randPost.permalink}")
+            if randPost.url:
+                if randPost.url[-4:] not in ('gifv', '.mp4', 'webm'):
+                    # those files don't work in discord 100% of the time
+                    embed.set_image(url=randPost.url)
+            embed.set_author(name=f"Posted by /u/{randPost.author.name}")
+            embed.set_footer(text=f"{str(round(randPost.upvote_ratio * 100))}% upvoted")
+            satisfied = True
+        await ctx.send(embed=embed)
 
 
 @client.command(aliases=["bulkDelete"])
