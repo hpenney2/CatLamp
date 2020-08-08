@@ -500,7 +500,9 @@ async def evaluate(ctx, *, code):
                 'client': client,
                 'discord': discord,
                 'commands': commands,
-                'ctx': ctx
+                'cmds': cmds,
+                'ctx': ctx,
+                'reddit': reddit,
             }
             exec(compile(parsed, filename="<ast>", mode="exec"), env)
             result = (await eval(f"{fn_name}()", env))
