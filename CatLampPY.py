@@ -366,7 +366,6 @@ async def redditRandom(ctx, subreddit_name: str):
     async with ctx.channel.typing():
         try:
             subreddit = reddit.subreddit(subreddit_name)
-            print()
             if not ctx.message.channel.is_nsfw() and subreddit.over18:
                 await ctx.send("This subreddit is marked as NSFW. Please move to an NSFW channel.")
                 return
@@ -385,11 +384,9 @@ async def redditRandom(ctx, subreddit_name: str):
                     pass
                 embed = discord.Embed(title=randPost.title, description=randPost.selftext,
                                       url=f"https://www.reddit.com{randPost.permalink}")
-                if randPost.url:
+                if randPost.url and not randPost.is_self:
                     if randPost.url[-4:] in ('.gif', '.png', '.jpg', 'jpeg'):
                         embed.set_image(url=randPost.url)
-                    elif randPost.url.startswith("https://www.reddit.com/"):
-                        pass
                     elif not randPost.url.startswith("https://i.redd.it/"):
                         embed.description = f"[(Link)]({randPost.url})"
                     else:
