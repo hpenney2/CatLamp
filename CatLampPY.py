@@ -157,7 +157,7 @@ async def timer(ctx: commands.Context, time, o, unit: str):
         await ctx.send(f"{ctx.author.mention} Your reminder for {o} {unit} is up!")
         reminders.pop(ctx.author.id)
     except asyncio.CancelledError:
-        print(f"{str(ctx.author)} has cancelled their timer.")
+        pass
 
 
 ### Events ###
@@ -171,7 +171,7 @@ async def on_ready():
         reminders_setup = True
         global reminders
         if os.path.isfile("reminders.json"):
-            print("reminders.json exists, loading reminders")
+            print("reminders.json exists, loading reminders from file")
             with open("reminders.json", "r") as file:
                 reminders = json.load(file)
                 for tab in reminders:
@@ -180,17 +180,10 @@ async def on_ready():
                     tab["task"] = task
                     reminders[tab["ctx"].author.id] = tab
             os.remove("reminders.json")
-        def save(s, f):
-            if len(reminders) > 0:
-                # file doesn't get to finish writing here before it is cut off
-                # i haven't figured out a way to make this async with signal.signal
-                print("Saving current reminders...")
-                with open("reminders.json", "w") as file:
-                    json.dump(reminders, file)
-            else:
-                print("No reminders to save.")
-            sys.exit(0)
-        signal.signal(signal.SIGINT, save)
+        #def save(s, f):
+        #    print("WARNING: Reminders will not be saved!")
+        #    sys.exit(0)
+        #signal.signal(signal.SIGINT, save)
 
 
 @client.event
@@ -564,6 +557,13 @@ async def restart(ctx):
         embed.set_footer(text=f"Restart initiated by {ctx.author.name}#{ctx.author.discriminator} ({ctx.author.id})")
         await ctx.send(embed=embed)
         await client.change_presence(activity=discord.Game("Restarting..."))
+        if len(reminders) > 0:
+            print("Saving current reminders...")
+            with open("reminders.json", "w") as file:
+                json.dump(reminders, file)
+                print("Done saving reminders!")
+        else:
+            print("No reminders to save, not creating a reminders.json file.")
         await client.logout()
         print("Bot connection closed.")
         print("Restarting...")
