@@ -131,3 +131,9 @@ dmypy.json
 
 # Pycharm coz it's the big dumb and doesn't know how to generate gitignores
 .idea/
+
+# VSCode coz it's the big dumb and doesn't know how to generate gitignores
+.vscode/
+
+# Reminders
+reminders.json

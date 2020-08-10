@@ -16,6 +16,9 @@ try:
     import praw
     import prawcore  # because praw exceptions inherit from here
     import math
+    import signal
+    import time as timeMod
+    # giant import chain but shhhhhhh
 
     config = open("config.json", "r")
     config = json.load(config)
@@ -45,6 +48,7 @@ client = commands.AutoShardedBot(command_prefix="+", case_insensitive=True)
 client.remove_command("help")
 # helpEmbed = None
 cmds = []
+reminders = {}
 colors = tables.getColors()
 reddit = praw.Reddit(client_id=config["redditCID"],
                      client_secret=config["redditSecret"],
@@ -147,11 +151,46 @@ def insert_returns(body):
         insert_returns(body[-1].body)
 
 
+async def timer(ctx: commands.Context, time, o, unit: str):
+    try:
+        await asyncio.sleep(time)
+        await ctx.send(f"{ctx.author.mention} Your reminder for {o} {unit} is up!")
+        reminders.pop(ctx.author.id)
+    except asyncio.CancelledError:
+        print(f"{str(ctx.author)} has cancelled their timer.")
+
+
 ### Events ###
+reminders_setup = False
 @client.event
 async def on_ready():
     print(f"Successfully logged in as {client.user.name} ({client.user.id})")
     await client.change_presence(activity=None)
+    global reminders_setup
+    if not reminders_setup: # this is because on_ready may be called multiple times, sooo debounce
+        reminders_setup = True
+        global reminders
+        if os.path.isfile("reminders.json"):
+            print("reminders.json exists, loading reminders")
+            with open("reminders.json", "r") as file:
+                reminders = json.load(file)
+                for tab in reminders:
+                    remainingTime = timeMod.ctime() - tab["startTime"]
+                    task = asyncio.ensure_future(timer(tab["ctx"], remainingTime, tab["originalTime"], tab["unit"]))
+                    tab["task"] = task
+                    reminders[tab["ctx"].author.id] = tab
+            os.remove("reminders.json")
+        def save(s, f):
+            if len(reminders) > 0:
+                # file doesn't get to finish writing here before it is cut off
+                # i haven't figured out a way to make this async with signal.signal
+                print("Saving current reminders...")
+                with open("reminders.json", "w") as file:
+                    json.dump(reminders, file)
+            else:
+                print("No reminders to save.")
+            sys.exit(0)
+        signal.signal(signal.SIGINT, save)
 
 
 @client.event
@@ -294,6 +333,59 @@ async def ping(ctx):
 cmds.append(ping)
 
 
+@client.command(aliases=["reminder", "timer"])
+async def remind(ctx, time: int, unit: str = "minutes", *, reminder_note: str = ""):
+    """Sets a reminder, optionally with a note. Valid time units are seconds, minutes, and hours."""
+    global reminders
+    if ctx.author.id in reminders:
+        await ctx.send("You already have a reminder set! Use `+cancelReminder` to cancel it.")
+        return
+    if time < 1:
+        time = 1
+    # Unit checking
+    originalTime = time
+    if unit.lower() == "second" or unit.lower() == "seconds":
+        time = originalTime
+    elif unit.lower() == "minute" or unit.lower() == "minutes":
+        time = 60 * time
+    elif unit.lower() == "hour" or unit.lower() == "hours":
+        time = 3600 * time
+    else:
+        raise CommandErrorMsg("Invalid time unit!")
+
+    if time == 1 and unit.endswith('s'):
+        unit = unit[:-1]
+    elif time > 1 and not unit.endswith('s'):
+        unit += "s"
+    if reminder_note.strip(): # If not empty or whitespace
+        reminder_note = f" about `{reminder_note}`"
+    task = asyncio.ensure_future(timer(ctx, time, originalTime, unit))
+    reminders[ctx.author.id] = {
+        "task": task,
+        "startTime": timeMod.ctime(),
+        "timeSeconds": time,
+        "originalTime": originalTime,
+        "unit": unit,
+        "ctx": ctx
+    }
+    await ctx.send(f"Reminder set! I'll remind you in {originalTime} {unit}{reminder_note}.")
+cmds.append(remind)
+
+
+@client.command(aliases=["cancelRemind", "cancelTimer"])
+async def cancelReminder(ctx):
+    global reminders
+    if not ctx.author.id in reminders:
+        await ctx.send("You don't have a reminder! Use `+remind` to set one.")
+        return
+    else:
+        task = reminders[ctx.author.id]["task"]
+        task.cancel()
+        reminders.pop(ctx.author.id)
+        await ctx.send("Reminder cancelled.")
+cmds.append(cancelReminder)
+
+
 @client.command(aliases=["flip"])
 async def coinFlip(ctx):
     """Flips a coin."""
@@ -387,6 +479,9 @@ async def redditRandom(ctx, subreddit_name: str):
                 if randPost.url and not randPost.is_self:
                     if randPost.url[-4:] in ('.gif', '.png', '.jpg', 'jpeg'):
                         embed.set_image(url=randPost.url)
+                    elif randPost.url.startswith("https://v.redd.it/"):
+                        embed.description = f"[(Video)]({randPost.url})"
+                        # Currently, it's impossible to add custom videos to embeds, so this is my solution for now.
                     elif not randPost.url.startswith("https://i.redd.it/"):
                         embed.description = f"[(Link)]({randPost.url})"
                     else:
@@ -509,6 +604,8 @@ async def evaluate(ctx, *, code):
             fn_name = "_eval_expr"
 
             code = code.strip("` ")
+            if code.startswith("py"):
+                code = code[2:]
 
             # add a layer of indentation
             code = "\n".join(f"    {i}" for i in code.splitlines())
@@ -528,6 +625,7 @@ async def evaluate(ctx, *, code):
                 'cmds': cmds,
                 'ctx': ctx,
                 'reddit': reddit,
+                'reminders': reminders
             }
             exec(compile(parsed, filename="<ast>", mode="exec"), env)
             result = (await eval(f"{fn_name}()", env))
