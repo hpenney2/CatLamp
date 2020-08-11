@@ -156,7 +156,7 @@ async def timer(channelId, userId, time, o, unit: str, note: str):
         await asyncio.sleep(time)
         channel = client.get_channel(channelId)
         if channel:
-            await channel.send(f"<@{userId}> Your reminder for {o} {unit}{note} is up!")
+            await channel.send(f"<@{userId}> Your reminder for {o} {unit} is up!{note}")
         reminders.pop(userId)
     except asyncio.CancelledError:
         pass
@@ -360,7 +360,7 @@ async def remind(ctx, time: int, unit: str = "minutes", *, reminder_note: str = 
     elif originalTime > 1 and not unit.endswith('s'):
         unit += "s"
     if reminder_note.strip(): # If not empty or whitespace
-        reminder_note = f" about `{reminder_note}`"
+        reminder_note = f" Note: `{reminder_note}`"
     task = asyncio.ensure_future(timer(ctx.channel.id, ctx.author.id, time, originalTime, unit, reminder_note))
     reminders[ctx.author.id] = {
         "task": task,
@@ -372,7 +372,7 @@ async def remind(ctx, time: int, unit: str = "minutes", *, reminder_note: str = 
         "userId": ctx.author.id,
         "note": reminder_note
     }
-    await ctx.send(f"Reminder set! I'll remind you in {originalTime} {unit}{reminder_note}.")
+    await ctx.send(f"Reminder set! I'll @ you in {originalTime} {unit}.{reminder_note}")
 cmds.append(remind)
 
 
