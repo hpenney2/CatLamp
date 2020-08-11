@@ -31,15 +31,15 @@ try:
         print("The config.json file is missing at least one entry! Please make sure the format matches the README.md.")
         input("Press enter to close, then restart the bot when fixed.")
         sys.exit(1)
-except (FileNotFoundError, json.JSONDecodeError) as e:
-    print("There was an error trying to get the config.json file! It doesn't exist or isn't formatted properly!")
-    print(f"Full error: {e}")
-    input("Press enter to close, then restart the bot when fixed.")
-    sys.exit(1)
 except ModuleNotFoundError as mod:
     print(f"One or more modules are missing! Please make sure to run the command:\npython3 -m pip install -r "
           f"requirements.txt")
     print(f"Full error: {mod}")
+    input("Press enter to close, then restart the bot when fixed.")
+    sys.exit(1)
+except (FileNotFoundError, json.JSONDecodeError) as e:
+    print("There was an error trying to get the config.json file! It doesn't exist or isn't formatted properly!")
+    print(f"Full error: {e}")
     input("Press enter to close, then restart the bot when fixed.")
     sys.exit(1)
 
@@ -151,11 +151,13 @@ def insert_returns(body):
         insert_returns(body[-1].body)
 
 
-async def timer(ctx: commands.Context, time, o, unit: str):
+async def timer(channelId, userId, time, o, unit: str, note: str):
     try:
         await asyncio.sleep(time)
-        await ctx.send(f"{ctx.author.mention} Your reminder for {o} {unit} is up!")
-        reminders.pop(ctx.author.id)
+        channel = client.get_channel(channelId)
+        if channel:
+            await channel.send(f"<@{userId}> Your reminder for {o} {unit}{note} is up!")
+        reminders.pop(userId)
     except asyncio.CancelledError:
         pass
 
@@ -172,13 +174,20 @@ async def on_ready():
         global reminders
         if os.path.isfile("reminders.json"):
             print("reminders.json exists, loading reminders from file")
+            tempReminders = None
             with open("reminders.json", "r") as file:
-                reminders = json.load(file)
-                for tab in reminders:
-                    remainingTime = timeMod.ctime() - tab["startTime"]
-                    task = asyncio.ensure_future(timer(tab["ctx"], remainingTime, tab["originalTime"], tab["unit"]))
+                tempReminders = json.load(file)
+            for tab in tempReminders.values():
+                remainingTime = round((tab["startTime"] + tab["timeSeconds"]) - datetime.datetime.utcnow().timestamp())
+                if remainingTime <= 0:
+                    reminders[int(tab["userId"])] = tab
+                    asyncio.ensure_future(timer(tab["channelId"], tab["userId"], 0, tab["originalTime"], tab["unit"], tab["note"]))
+                else:
+                    reminders[int(tab["userId"])] = tab
+                    task = asyncio.ensure_future(timer(tab["channelId"], tab["userId"], remainingTime, tab["originalTime"], tab["unit"], tab["note"]))
                     tab["task"] = task
-                    reminders[tab["ctx"].author.id] = tab
+                    reminders[int(tab["userId"])] = tab
+            print("Done!")
             os.remove("reminders.json")
         #def save(s, f):
         #    print("WARNING: Reminders will not be saved!")
@@ -346,20 +355,22 @@ async def remind(ctx, time: int, unit: str = "minutes", *, reminder_note: str = 
     else:
         raise CommandErrorMsg("Invalid time unit!")
 
-    if time == 1 and unit.endswith('s'):
+    if originalTime == 1 and unit.endswith('s'):
         unit = unit[:-1]
-    elif time > 1 and not unit.endswith('s'):
+    elif originalTime > 1 and not unit.endswith('s'):
         unit += "s"
     if reminder_note.strip(): # If not empty or whitespace
         reminder_note = f" about `{reminder_note}`"
-    task = asyncio.ensure_future(timer(ctx, time, originalTime, unit))
+    task = asyncio.ensure_future(timer(ctx.channel.id, ctx.author.id, time, originalTime, unit, reminder_note))
     reminders[ctx.author.id] = {
         "task": task,
-        "startTime": timeMod.ctime(),
+        "startTime": datetime.datetime.utcnow().timestamp(),
         "timeSeconds": time,
         "originalTime": originalTime,
         "unit": unit,
-        "ctx": ctx
+        "channelId": ctx.channel.id,
+        "userId": ctx.author.id,
+        "note": reminder_note
     }
     await ctx.send(f"Reminder set! I'll remind you in {originalTime} {unit}{reminder_note}.")
 cmds.append(remind)
@@ -550,6 +561,7 @@ cmds.append(announce)
 @client.command(hidden=True, aliases=["stop"])
 async def restart(ctx):
     """Restarts the bot. Only runnable by admins."""
+    global reminders
     if isAdmin(ctx.author):
         embed = discord.Embed(title="Restarting...",
                               description="CatLamp will restart shortly. Check the bot's status for updates.",
@@ -559,6 +571,9 @@ async def restart(ctx):
         await client.change_presence(activity=discord.Game("Restarting..."))
         if len(reminders) > 0:
             print("Saving current reminders...")
+            for tab in reminders.values():
+                tab.pop("task")
+                reminders[tab["userId"]] = tab
             with open("reminders.json", "w") as file:
                 json.dump(reminders, file)
                 print("Done saving reminders!")
