@@ -378,6 +378,7 @@ cmds.append(remind)
 
 @client.command(aliases=["cancelRemind", "cancelTimer"])
 async def cancelReminder(ctx):
+    """Cancels your current reminder."""
     global reminders
     if not ctx.author.id in reminders:
         await ctx.send("You don't have a reminder! Use `+remind` to set one.")
