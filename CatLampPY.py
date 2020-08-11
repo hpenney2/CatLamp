@@ -16,6 +16,9 @@ try:
     import praw
     import prawcore  # because praw exceptions inherit from here
     import math
+    import signal
+    import time as timeMod
+    # giant import chain but shhhhhhh
 
     config = open("config.json", "r")
     config = json.load(config)
@@ -28,15 +31,15 @@ try:
         print("The config.json file is missing at least one entry! Please make sure the format matches the README.md.")
         input("Press enter to close, then restart the bot when fixed.")
         sys.exit(1)
-except (FileNotFoundError, json.JSONDecodeError) as e:
-    print("There was an error trying to get the config.json file! It doesn't exist or isn't formatted properly!")
-    print(f"Full error: {e}")
-    input("Press enter to close, then restart the bot when fixed.")
-    sys.exit(1)
 except ModuleNotFoundError as mod:
     print(f"One or more modules are missing! Please make sure to run the command:\npython3 -m pip install -r "
           f"requirements.txt")
     print(f"Full error: {mod}")
+    input("Press enter to close, then restart the bot when fixed.")
+    sys.exit(1)
+except (FileNotFoundError, json.JSONDecodeError) as e:
+    print("There was an error trying to get the config.json file! It doesn't exist or isn't formatted properly!")
+    print(f"Full error: {e}")
     input("Press enter to close, then restart the bot when fixed.")
     sys.exit(1)
 
@@ -45,6 +48,7 @@ client = commands.AutoShardedBot(command_prefix="+", case_insensitive=True)
 client.remove_command("help")
 # helpEmbed = None
 cmds = []
+reminders = {}
 colors = tables.getColors()
 reddit = praw.Reddit(client_id=config["redditCID"],
                      client_secret=config["redditSecret"],
@@ -147,11 +151,48 @@ def insert_returns(body):
         insert_returns(body[-1].body)
 
 
+async def timer(channelId, userId, time, o, unit: str, note: str):
+    try:
+        await asyncio.sleep(time)
+        channel = client.get_channel(channelId)
+        if channel:
+            await channel.send(f"<@{userId}> Your reminder for {o} {unit}{note} is up!")
+        reminders.pop(userId)
+    except asyncio.CancelledError:
+        pass
+
+
 ### Events ###
+reminders_setup = False
 @client.event
 async def on_ready():
     print(f"Successfully logged in as {client.user.name} ({client.user.id})")
     await client.change_presence(activity=None)
+    global reminders_setup
+    if not reminders_setup: # this is because on_ready may be called multiple times, sooo debounce
+        reminders_setup = True
+        global reminders
+        if os.path.isfile("reminders.json"):
+            print("reminders.json exists, loading reminders from file")
+            tempReminders = None
+            with open("reminders.json", "r") as file:
+                tempReminders = json.load(file)
+            for tab in tempReminders.values():
+                remainingTime = round((tab["startTime"] + tab["timeSeconds"]) - datetime.datetime.utcnow().timestamp())
+                if remainingTime <= 0:
+                    reminders[int(tab["userId"])] = tab
+                    asyncio.ensure_future(timer(tab["channelId"], tab["userId"], 0, tab["originalTime"], tab["unit"], tab["note"]))
+                else:
+                    reminders[int(tab["userId"])] = tab
+                    task = asyncio.ensure_future(timer(tab["channelId"], tab["userId"], remainingTime, tab["originalTime"], tab["unit"], tab["note"]))
+                    tab["task"] = task
+                    reminders[int(tab["userId"])] = tab
+            print("Done!")
+            os.remove("reminders.json")
+        #def save(s, f):
+        #    print("WARNING: Reminders will not be saved!")
+        #    sys.exit(0)
+        #signal.signal(signal.SIGINT, save)
 
 
 @client.event
@@ -294,6 +335,62 @@ async def ping(ctx):
 cmds.append(ping)
 
 
+@client.command(aliases=["reminder", "timer"])
+async def remind(ctx, time: int, unit: str = "minutes", *, reminder_note: str = ""):
+    """Sets a reminder, optionally with a note. Valid time units are seconds, minutes, and hours."""
+    global reminders
+    if ctx.author.id in reminders:
+        await ctx.send("You already have a reminder set! Use `+cancelReminder` to cancel it.")
+        return
+    if time < 1:
+        time = 1
+    # Unit checking
+    originalTime = time
+    if unit.lower() == "second" or unit.lower() == "seconds":
+        time = originalTime
+    elif unit.lower() == "minute" or unit.lower() == "minutes":
+        time = 60 * time
+    elif unit.lower() == "hour" or unit.lower() == "hours":
+        time = 3600 * time
+    else:
+        raise CommandErrorMsg("Invalid time unit!")
+
+    if originalTime == 1 and unit.endswith('s'):
+        unit = unit[:-1]
+    elif originalTime > 1 and not unit.endswith('s'):
+        unit += "s"
+    if reminder_note.strip(): # If not empty or whitespace
+        reminder_note = f" about `{reminder_note}`"
+    task = asyncio.ensure_future(timer(ctx.channel.id, ctx.author.id, time, originalTime, unit, reminder_note))
+    reminders[ctx.author.id] = {
+        "task": task,
+        "startTime": datetime.datetime.utcnow().timestamp(),
+        "timeSeconds": time,
+        "originalTime": originalTime,
+        "unit": unit,
+        "channelId": ctx.channel.id,
+        "userId": ctx.author.id,
+        "note": reminder_note
+    }
+    await ctx.send(f"Reminder set! I'll remind you in {originalTime} {unit}{reminder_note}.")
+cmds.append(remind)
+
+
+@client.command(aliases=["cancelRemind", "cancelTimer"])
+async def cancelReminder(ctx):
+    """Cancels your current reminder."""
+    global reminders
+    if not ctx.author.id in reminders:
+        await ctx.send("You don't have a reminder! Use `+remind` to set one.")
+        return
+    else:
+        task = reminders[ctx.author.id]["task"]
+        task.cancel()
+        reminders.pop(ctx.author.id)
+        await ctx.send("Reminder cancelled.")
+cmds.append(cancelReminder)
+
+
 @client.command(aliases=["flip"])
 async def coinFlip(ctx):
     """Flips a coin."""
@@ -387,6 +484,9 @@ async def redditRandom(ctx, subreddit_name: str):
                 if randPost.url and not randPost.is_self:
                     if randPost.url[-4:] in ('.gif', '.png', '.jpg', 'jpeg'):
                         embed.set_image(url=randPost.url)
+                    elif randPost.url.startswith("https://v.redd.it/"):
+                        embed.description = f"[(Video)]({randPost.url})"
+                        # Currently, it's impossible to add custom videos to embeds, so this is my solution for now.
                     elif not randPost.url.startswith("https://i.redd.it/"):
                         embed.description = f"[(Link)]({randPost.url})"
                     else:
@@ -462,6 +562,7 @@ cmds.append(announce)
 @client.command(hidden=True, aliases=["stop"])
 async def restart(ctx):
     """Restarts the bot. Only runnable by admins."""
+    global reminders
     if isAdmin(ctx.author):
         embed = discord.Embed(title="Restarting...",
                               description="CatLamp will restart shortly. Check the bot's status for updates.",
@@ -469,6 +570,16 @@ async def restart(ctx):
         embed.set_footer(text=f"Restart initiated by {ctx.author.name}#{ctx.author.discriminator} ({ctx.author.id})")
         await ctx.send(embed=embed)
         await client.change_presence(activity=discord.Game("Restarting..."))
+        if len(reminders) > 0:
+            print("Saving current reminders...")
+            for tab in reminders.values():
+                tab.pop("task")
+                reminders[tab["userId"]] = tab
+            with open("reminders.json", "w") as file:
+                json.dump(reminders, file)
+                print("Done saving reminders!")
+        else:
+            print("No reminders to save, not creating a reminders.json file.")
         await client.logout()
         print("Bot connection closed.")
         print("Restarting...")
@@ -509,6 +620,8 @@ async def evaluate(ctx, *, code):
             fn_name = "_eval_expr"
 
             code = code.strip("` ")
+            if code.startswith("py"):
+                code = code[2:]
 
             # add a layer of indentation
             code = "\n".join(f"    {i}" for i in code.splitlines())
@@ -528,6 +641,7 @@ async def evaluate(ctx, *, code):
                 'cmds': cmds,
                 'ctx': ctx,
                 'reddit': reddit,
+                'reminders': reminders
             }
             exec(compile(parsed, filename="<ast>", mode="exec"), env)
             result = (await eval(f"{fn_name}()", env))
