@@ -281,7 +281,7 @@ async def on_guild_remove(guild):
 async def help(ctx, page: int = 1):
     """Displays this message."""
     global cmds
-    maxPages = round(math.ceil(len(cmds) / 25))
+    maxPages = round(math.ceil(len(cmds) / 10))
     if page < 1:
         page = 1
     elif page > maxPages:
@@ -289,12 +289,12 @@ async def help(ctx, page: int = 1):
 
     embed = discord.Embed(title="Commands", color=colors["message"])
     embed.set_footer(text=f"Page {page}/{maxPages}")
-    pageIndex = (page - 1) * 25
+    pageIndex = (page - 1) * 10
     for i in range(len(cmds)):
-        if i + pageIndex > len(cmds):
+        if i + pageIndex >= len(cmds):
             break
         command = cmds[i + pageIndex]
-        if not len(embed.fields) >= 25:
+        if not len(embed.fields) >= 10:
             name = "+" + command.name
             Params = command.clean_params
             for param in Params:
