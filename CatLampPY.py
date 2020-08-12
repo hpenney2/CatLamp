@@ -44,8 +44,8 @@ while True:
                 subprocess.check_call(sys.executable, "-m", "pip", "install", "-r", "requirements.txt")
                 print("Done installed modules! Retrying...")
                 continue
-            except:
-                print(f"Error while trying to install modules!\nFull error: {mod}")
+            except Exception as e:
+                print(f"Error while trying to install modules!\nFull error: {e}")
                 input("Press enter to close, then restart the bot when fixed.")
                 sys.exit(1)
         else:
