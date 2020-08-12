@@ -35,9 +35,9 @@ while True:
             print("The config.json file is missing at least one entry! Please make sure the format matches the README.md.")
             input("Press enter to close, then restart the bot when fixed.")
             sys.exit(1)
-    except ModuleNotFoundError as mod:
+    except (ModuleNotFoundError, ImportError) as mod:
         if importAttempts <= 0:
-            print(f"One or more modules are missing!\nFull error: {mod}")
+            print(f"One or more modules are missing or an error occured trying to import one!\nFull error: {mod}")
             print("Attempting to install from requirements.txt now.")
             importAttempts += 1
             try:
