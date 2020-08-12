@@ -41,7 +41,7 @@ while True:
             print("Attempting to install from requirements.txt now.")
             importAttempts += 1
             try:
-                subprocess.check_call(sys.executable, "-m", "pip", "install", "-r", "requirements.txt")
+                subprocess.check_call([sys.executable, "-m", "pip", "install", "-r", "requirements.txt"])
                 print("Done installed modules! Retrying...")
                 continue
             except Exception as e:
