@@ -20,6 +20,9 @@ while True:
         import math
         import signal
         import time as timeMod
+        import deeppyer
+        from PIL import Image
+        import io
 
         config = open("config.json", "r")
         config = json.load(config)
@@ -514,6 +517,24 @@ async def redditRandom(ctx, subreddit_name: str):
 
 
 cmds.append(redditRandom)
+
+
+@client.command(cooldown_after_parsing=True)
+@commands.cooldown(1, 5, commands.BucketType.user)
+async def deepfry(ctx, user: discord.User = None):
+    """Deepfries the attached image or your/the mentioned user's avatar."""
+    async with ctx.channel.typing():
+        image = Image.open(io.BytesIO(await ctx.author.avatar_url_as(format="png").read()))
+        if len(ctx.message.attachments) > 0 and ctx.message.attachments[0].url[-4:] in ('.png', '.jpg', 'jpeg'):
+            image = Image.open(io.BytesIO(await ctx.message.attachments[0].read(use_cached=True)))
+        elif user:
+            image = Image.open(io.BytesIO(await user.avatar_url_as(format="png").read()))
+        deepImg = await deeppyer.deepfry(image, flares=False)
+        img = io.BytesIO()
+        deepImg.save(img, "png")
+        img.seek(0)
+        await ctx.send(file=discord.File(img, "deepfry.png"))
+cmds.append(deepfry)
 
 
 @client.command(aliases=["bulkDelete"])
