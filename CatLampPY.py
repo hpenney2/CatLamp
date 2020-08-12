@@ -1,47 +1,60 @@
 ### Startup ###
-try:
-    import discord
-    from discord.ext import commands
-    import tables
-    import logging
-    import json
-    import sys
-    import os
-    import subprocess
-    import random
-    import asyncio
-    import datetime
-    from hastebin import get_key
-    import ast
-    import praw
-    import prawcore  # because praw exceptions inherit from here
-    import math
-    import signal
-    import time as timeMod
-    # giant import chain but shhhhhhh
+importAttempts = 0
+while True:
+    try:
+        import discord
+        from discord.ext import commands
+        import tables
+        import logging
+        import json
+        import sys
+        import os
+        import subprocess
+        import random
+        import asyncio
+        import datetime
+        from hastebin import get_key
+        import ast
+        import praw
+        import prawcore  # because praw exceptions inherit from here
+        import math
+        import signal
+        import time as timeMod
 
-    config = open("config.json", "r")
-    config = json.load(config)
-    a = []  # make a list of everything in config
-    for configuration in config:
-        a.append(configuration)
-    a.sort()  # sort the list for consistency
-    # make sure the sorted list has everything we need (also in a sorted list), no more, no less
-    if a != ['githubPAT', 'githubUser', 'redditCID', 'redditSecret', 'token']:
-        print("The config.json file is missing at least one entry! Please make sure the format matches the README.md.")
+        config = open("config.json", "r")
+        config = json.load(config)
+        a = []  # make a list of everything in config
+        for configuration in config:
+            a.append(configuration)
+        a.sort()  # sort the list for consistency
+        # make sure the sorted list has everything we need (also in a sorted list), no more, no less
+        if a != ['githubPAT', 'githubUser', 'redditCID', 'redditSecret', 'token']:
+            print("The config.json file is missing at least one entry! Please make sure the format matches the README.md.")
+            input("Press enter to close, then restart the bot when fixed.")
+            sys.exit(1)
+    except ModuleNotFoundError as mod:
+        if importAttempts <= 0:
+            print(f"One or more modules are missing!\nFull error: {mod}")
+            print("Attempting to install from requirements.txt now.")
+            importAttempts += 1
+            try:
+                subprocess.check_call(sys.executable, "-m", "pip", "install", "-r", "requirements.txt")
+                print("Done installed modules! Retrying...")
+                continue
+            except:
+                print(f"Error while trying to install modules!\nFull error: {mod}")
+                input("Press enter to close, then restart the bot when fixed.")
+                sys.exit(1)
+        else:
+            print(f"Still unable to import a module!\nFull error: {mod}")
+            input("Press enter to close, then restart the bot when fixed.")
+            sys.exit(1)
+    except (FileNotFoundError, json.JSONDecodeError) as e:
+        print("There was an error trying to get the config.json file! It doesn't exist or isn't formatted properly!")
+        print(f"Full error: {e}")
         input("Press enter to close, then restart the bot when fixed.")
         sys.exit(1)
-except ModuleNotFoundError as mod:
-    print(f"One or more modules are missing! Please make sure to run the command:\npython3 -m pip install -r "
-          f"requirements.txt")
-    print(f"Full error: {mod}")
-    input("Press enter to close, then restart the bot when fixed.")
-    sys.exit(1)
-except (FileNotFoundError, json.JSONDecodeError) as e:
-    print("There was an error trying to get the config.json file! It doesn't exist or isn't formatted properly!")
-    print(f"Full error: {e}")
-    input("Press enter to close, then restart the bot when fixed.")
-    sys.exit(1)
+    break
 
 logging.basicConfig(level=logging.INFO, format="[%(asctime)s] %(levelname)s %(name)s | %(message)s")
 client = commands.AutoShardedBot(command_prefix="+", case_insensitive=True)
