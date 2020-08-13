@@ -19,8 +19,10 @@ while True:
         import prawcore  # because praw exceptions inherit from here
         import math
         import signal
+        # noinspection PyPep8Naming
         import time as timeMod
         import deeppyer
+        # noinspection PyPackageRequirements
         from PIL import Image
         import io
 
@@ -32,12 +34,13 @@ while True:
         a.sort()  # sort the list for consistency
         # make sure the sorted list has everything we need (also in a sorted list), no more, no less
         if a != ['githubPAT', 'githubUser', 'redditCID', 'redditSecret', 'token']:
-            print("The config.json file is missing at least one entry! Please make sure the format matches the README.md.")
+            print("The config.json file is missing at least one entry! Please make sure the format matches the "
+                  "README.md.")
             input("Press enter to close, then restart the bot when fixed.")
             sys.exit(1)
     except (ModuleNotFoundError, ImportError) as mod:
         if importAttempts <= 0:
-            print(f"One or more modules are missing or an error occured trying to import one!\nFull error: {mod}")
+            print(f"One or more modules are missing or an error occurred trying to import one!\nFull error: {mod}")
             print("Attempting to install from requirements.txt now.")
             importAttempts += 1
             try:
@@ -180,16 +183,19 @@ async def timer(channelId, userId, time, o, unit: str, note: str):
 
 ### Events ###
 reminders_setup = False
+
+
 @client.event
 async def on_ready():
     print(f"Successfully logged in as {client.user.name} ({client.user.id})")
     await client.change_presence(activity=None)
     global reminders_setup
-    if not reminders_setup: # this is because on_ready may be called multiple times, sooo debounce
+    if not reminders_setup:  # this is because on_ready may be called multiple times, sooo debounce
         reminders_setup = True
         global reminders
         if os.path.isfile("reminders.json"):
             print("reminders.json exists, loading reminders from file")
+            # noinspection PyUnusedLocal
             tempReminders = None
             with open("reminders.json", "r") as file:
                 tempReminders = json.load(file)
@@ -197,18 +203,16 @@ async def on_ready():
                 remainingTime = round((tab["startTime"] + tab["timeSeconds"]) - datetime.datetime.utcnow().timestamp())
                 if remainingTime <= 0:
                     reminders[int(tab["userId"])] = tab
-                    asyncio.ensure_future(timer(tab["channelId"], tab["userId"], 0, tab["originalTime"], tab["unit"], tab["note"]))
+                    asyncio.ensure_future(timer(tab["channelId"], tab["userId"], 0, tab["originalTime"], tab["unit"],
+                                                tab["note"]))
                 else:
                     reminders[int(tab["userId"])] = tab
-                    task = asyncio.ensure_future(timer(tab["channelId"], tab["userId"], remainingTime, tab["originalTime"], tab["unit"], tab["note"]))
+                    task = asyncio.ensure_future(timer(tab["channelId"], tab["userId"], remainingTime,
+                                                       tab["originalTime"], tab["unit"], tab["note"]))
                     tab["task"] = task
                     reminders[int(tab["userId"])] = tab
             print("Done!")
             os.remove("reminders.json")
-        #def save(s, f):
-        #    print("WARNING: Reminders will not be saved!")
-        #    sys.exit(0)
-        #signal.signal(signal.SIGINT, save)
 
 
 @client.event
@@ -375,7 +379,7 @@ async def remind(ctx, time: int, unit: str = "minutes", *, reminder_note: str = 
         unit = unit[:-1]
     elif originalTime > 1 and not unit.endswith('s'):
         unit += "s"
-    if reminder_note.strip(): # If not empty or whitespace
+    if reminder_note.strip():  # If not empty or whitespace
         reminder_note = f" Note: `{reminder_note}`"
     task = asyncio.ensure_future(timer(ctx.channel.id, ctx.author.id, time, originalTime, unit, reminder_note))
     reminders[ctx.author.id] = {
@@ -389,6 +393,8 @@ async def remind(ctx, time: int, unit: str = "minutes", *, reminder_note: str = 
         "note": reminder_note
     }
     await ctx.send(f"Reminder set! I'll @ you in {originalTime} {unit}.{reminder_note}")
+
+
 cmds.append(remind)
 
 
@@ -396,7 +402,7 @@ cmds.append(remind)
 async def cancelReminder(ctx):
     """Cancels your current reminder."""
     global reminders
-    if not ctx.author.id in reminders:
+    if ctx.author.id not in reminders:
         await ctx.send("You don't have a reminder! Use `+remind` to set one.")
         return
     else:
@@ -404,6 +410,8 @@ async def cancelReminder(ctx):
         task.cancel()
         reminders.pop(ctx.author.id)
         await ctx.send("Reminder cancelled.")
+
+
 cmds.append(cancelReminder)
 
 
@@ -534,6 +542,8 @@ async def deepfry(ctx, user: discord.User = None):
         deepImg.save(img, "png")
         img.seek(0)
         await ctx.send(file=discord.File(img, "deepfry.png"))
+
+
 cmds.append(deepfry)
 
 
