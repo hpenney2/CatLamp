@@ -566,16 +566,21 @@ cmds.append(redditRandom)
 async def deepfry(ctx, user: discord.User = None):
     """Deepfries the attached image or your/the mentioned user's avatar."""
     async with ctx.channel.typing():
-        image = Image.open(io.BytesIO(await ctx.author.avatar_url_as(format="png").read()))
-        if len(ctx.message.attachments) > 0 and ctx.message.attachments[0].url[-4:] in ('.png', '.jpg', 'jpeg'):
-            image = Image.open(io.BytesIO(await ctx.message.attachments[0].read(use_cached=True)))
-        elif user:
-            image = Image.open(io.BytesIO(await user.avatar_url_as(format="png").read()))
+        image = await getImage(ctx, user)
         deepImg = await deeppyer.deepfry(image, flares=False)
         img = io.BytesIO()
         deepImg.save(img, "png")
         img.seek(0)
         await ctx.send(file=discord.File(img, "deepfry.png"))
+
+
+async def getImage(ctx, user: discord.User = None):
+    image = Image.open(io.BytesIO(await ctx.author.avatar_url_as(format="png").read()))
+    if len(ctx.message.attachments) > 0 and ctx.message.attachments[0].url[-4:] in ('.png', '.jpg', 'jpeg', '.gif'):
+        image = Image.open(io.BytesIO(await ctx.message.attachments[0].read(use_cached=True)))
+    elif user:
+        image = Image.open(io.BytesIO(await user.avatar_url_as(format="png").read()))
+    return image
 
 
 cmds.append(deepfry)
