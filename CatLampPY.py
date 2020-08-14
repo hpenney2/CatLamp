@@ -8,11 +8,24 @@ while True:
         import logging
         import json
         import sys
+        import os
         import subprocess
+        import random
+        import asyncio
+        import datetime
+        from hastebin import get_key
         import ast
         import praw
+        import prawcore  # because praw exceptions inherit from here
+        import math
+        import signal
         # noinspection PyPep8Naming
         import time as timeMod
+        import deeppyer
+        # noinspection PyPackageRequirements
+        from PIL import Image
+        import io
+        import re as regex
 
         config = open("config.json", "r")
         config = json.load(config)
