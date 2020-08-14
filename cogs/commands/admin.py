@@ -2,7 +2,6 @@ from ast import parse
 import os
 import subprocess
 import sys
-
 import discord
 from discord.ext import commands
 from json import dump
@@ -21,7 +20,6 @@ class Administration(commands.Cog):
     @commands.command(hidden=True, aliases=["stop"])
     async def restart(self, ctx):
         """Restarts the bot. Only runnable by admins."""
-        global reminders  # TODO import this from utility
         if isAdmin(ctx.author):
             embed = discord.Embed(title="Restarting...",
                                   description="CatLamp will restart shortly. Check the bot's status for updates.",
@@ -30,13 +28,13 @@ class Administration(commands.Cog):
                 text=f"Restart initiated by {ctx.author.name}#{ctx.author.discriminator} ({ctx.author.id})")
             await ctx.send(embed=embed)
             await self.client.change_presence(activity=discord.Game("Restarting..."))
-            if len(reminders) > 0:
+            if len(self.client.reminders) > 0:
                 print("Saving current reminders...")
-                for tab in reminders.values():
+                for tab in self.client.reminders.values():
                     tab.pop("task")
-                    reminders[tab["userId"]] = tab
+                    self.client.reminders[tab["userId"]] = tab
                 with open("reminders.json", "w") as file:
-                    dump(reminders, file)
+                    dump(self.client.reminders, file)
                     print("Done saving reminders!")
             else:
                 print("No reminders to save, not creating a reminders.json file.")
@@ -101,7 +99,7 @@ class Administration(commands.Cog):
                     'cmds': self.client.cmds,
                     'ctx': ctx,
                     'reddit': reddit,
-                    'reminders': reminders
+                    'reminders': self.client.reminders
                 }
                 exec(compile(parsed, filename="<ast>", mode="exec"), env)
                 result = (await eval(f"{fn_name}()", env))

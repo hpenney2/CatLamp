@@ -20,9 +20,6 @@ class Images(commands.Cog, name="Image Manipulation"):
         self.bot = bot
         self.bot.cmds.append(self.deepfry)
 
-    # @commands.Cog.listener() for a listener event
-
-    # @commands.command() for a command
     @commands.command(cooldown_after_parsing=True)
     @commands.cooldown(1, 5, commands.BucketType.user)
     async def deepfry(self, ctx, user: discord.User = None):

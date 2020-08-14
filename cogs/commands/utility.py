@@ -16,7 +16,6 @@ class Utility(commands.Cog):
         self.client.cmds.append(self.cancelReminder)
         self.client.cmds.append(self.remind)
         self.client.cmds.append(self.purge)
-        self.reminders = {}
         self.reminders_setup = False
 
     # @commands.Cog.listener() for a listener event
@@ -71,7 +70,7 @@ class Utility(commands.Cog):
     @commands.command(aliases=["reminder", "timer"])
     async def remind(self, ctx, time: int, unit: str = "minutes", *, reminder_note: str = ""):
         """Sets a reminder, optionally with a note. Valid time units are seconds, minutes, and hours."""
-        if ctx.author.id in self.reminders:
+        if ctx.author.id in self.client.reminders:
             await ctx.send("You already have a reminder set! Use `+cancelReminder` to cancel it.")
             return
         if time < 1:
@@ -94,7 +93,7 @@ class Utility(commands.Cog):
         if reminder_note.strip():  # If not empty or whitespace
             reminder_note = f" Note: `{reminder_note}`"
         task = asyncio.ensure_future(self.timer(ctx.channel.id, ctx.author.id, time, originalTime, unit, reminder_note))
-        self.reminders[ctx.author.id] = {
+        self.client.reminders[ctx.author.id] = {
             "task": task,
             "startTime": datetime.datetime.utcnow().timestamp(),
             "timeSeconds": time,
@@ -112,20 +111,20 @@ class Utility(commands.Cog):
             channel = self.client.get_channel(channelId)
             if channel:
                 await channel.send(f"<@{userId}> Your reminder for {o} {unit} is up!{note}")
-            self.reminders.pop(userId)
+            self.client.reminders.pop(userId)
         except asyncio.CancelledError:
             pass
 
     @commands.command(aliases=["cancelRemind", "cancelTimer"])
     async def cancelReminder(self, ctx):
         """Cancels your current reminder."""
-        if ctx.author.id not in self.reminders:
+        if ctx.author.id not in self.client.reminders:
             await ctx.send("You don't have a reminder! Use `+remind` to set one.")
             return
         else:
-            task = self.reminders[ctx.author.id]["task"]
+            task = self.client.reminders[ctx.author.id]["task"]
             task.cancel()
-            self.reminders.pop(ctx.author.id)
+            self.client.reminders.pop(ctx.author.id)
             await ctx.send("Reminder cancelled.")
 
     # stuffing this here for the timer reloading
@@ -145,16 +144,16 @@ class Utility(commands.Cog):
                     remainingTime = round(
                         (tab["startTime"] + tab["timeSeconds"]) - datetime.datetime.utcnow().timestamp())
                     if remainingTime <= 0:
-                        self.reminders[int(tab["userId"])] = tab
+                        self.client.reminders[int(tab["userId"])] = tab
                         asyncio.ensure_future(
                             self.timer(tab["channelId"], tab["userId"], 0, tab["originalTime"], tab["unit"],
                                        tab["note"]))
                     else:
-                        self.reminders[int(tab["userId"])] = tab
+                        self.client.reminders[int(tab["userId"])] = tab
                         task = asyncio.ensure_future(self.timer(tab["channelId"], tab["userId"], remainingTime,
                                                                 tab["originalTime"], tab["unit"], tab["note"]))
                         tab["task"] = task
-                        self.reminders[int(tab["userId"])] = tab
+                        self.client.reminders[int(tab["userId"])] = tab
                 print("Done!")
                 os.remove("reminders.json")
 

@@ -13,7 +13,6 @@ while True:
         import praw
         # noinspection PyPep8Naming
         import time as timeMod
-        from cogs.commands.utility import Utility
 
         config = open("config.json", "r")
         config = json.load(config)
@@ -56,7 +55,7 @@ client = commands.AutoShardedBot(command_prefix="+", case_insensitive=True)
 client.remove_command("help")
 # helpEmbed = None
 client.cmds = []
-Utility(bot=client)
+client.reminders = {}
 colors = tables.getColors()
 reddit = praw.Reddit(client_id=config["redditCID"],
                      client_secret=config["redditSecret"],
@@ -155,5 +154,6 @@ for cogDir in cogDirectories:
         if cog.endswith('.py'):  # bot tries to load all .py files in said folders, use cogs/misc for non-cog things
             client.load_extension(loadDir + cog[:-3])
 
-
-client.run(config["token"])
+if __name__ == "__main__":
+    print('aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
+    client.run(config["token"])

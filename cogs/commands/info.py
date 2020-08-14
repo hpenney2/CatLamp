@@ -13,9 +13,6 @@ class Info(commands.Cog, name="Bot Info"):
         self.client.cmds.append(self.ping)
         self.client.cmds.append(self.server)
 
-    # @commands.Cog.listener() for a listener event
-
-    # @commands.command() for a command
     @commands.command(aliases=["cmds", "commands"])
     async def help(self, ctx, page: int = 1):
         """Displays this message."""
