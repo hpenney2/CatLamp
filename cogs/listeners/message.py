@@ -11,7 +11,6 @@ class Message(commands.Cog):
             return
         if msg.content != "python" and msg.content.lower().startswith("do not the sex"):
             await msg.channel.send("do not the sex")
-        await self.bot.process_commands(msg)
 
 
 def setup(bot):
