@@ -27,6 +27,6 @@ If you are involved in the development of CatLamp or are listed as an Administra
 ### Locked Command Usage
 If a command locked to CatLamp Administrators is used, the terminal may log the username and identifier of the invoker.
 
-## Note:
+## Note
 We reserve the right to revise this privacy policy without notice, as needed.
  
