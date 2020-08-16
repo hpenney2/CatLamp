@@ -48,6 +48,31 @@ class Administration(commands.Cog):
                 os.execv(sys.executable, ['python'] + sys.argv)
 
     @commands.command(hidden=True)
+    async def reload(self, ctx):
+        """Reloads the bot commands and listeners. Only runnable by admins."""
+        if isAdmin(ctx.author):
+            print(f"Reload initiated by {str(ctx.author)} ({ctx.author.id})")
+            embed = discord.Embed(title="Reloading...",
+                                  description="CatLamp will reload shortly. Check the bot's status for updates.",
+                                  color=colors["success"])
+            embed.set_footer(
+                text=f"Reload initiated by {str(ctx.author)} ({ctx.author.id})")
+            await ctx.send(embed=embed)
+            await self.client.change_presence(activity=discord.Game("Reloading..."))
+            print("Reloading...")
+            self.client.cmds = []
+            # *reload commands and listeners
+            from os import listdir
+            cogDirectories = ['cogs/commands/',
+                              'cogs/listeners/']  # bot will look for python files in these directories
+            for cogDir in cogDirectories:
+                loadDir = cogDir.replace('/', '.')
+                for cog in listdir(cogDir):
+                    if cog.endswith('.py'):  # tries to reload all .py files in the folders, use cogs/misc instead
+                        self.client.reload_extension(loadDir + cog[:-3])  # from load_extension to reload_extension xD
+            await self.client.change_presence(activity=None)
+
+    @commands.command(hidden=True)
     async def pull(self, ctx):
         """Executes a git pull in the current directory. Will fail if not a repo."""
         if isAdmin(ctx.author):
