@@ -168,5 +168,4 @@ for cogDir in cogDirectories:
             client.load_extension(loadDir + cog[:-3])
 
 if __name__ == "__main__":
-    print('aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
     client.run(config["token"])

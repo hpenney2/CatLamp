@@ -21,11 +21,12 @@ class Administration(commands.Cog):
     async def restart(self, ctx):
         """Restarts the bot. Only runnable by admins."""
         if isAdmin(ctx.author):
+            print(f"Restart initiated by {str(ctx.author)} ({ctx.author.id})")
             embed = discord.Embed(title="Restarting...",
                                   description="CatLamp will restart shortly. Check the bot's status for updates.",
                                   color=colors["success"])
             embed.set_footer(
-                text=f"Restart initiated by {ctx.author.name}#{ctx.author.discriminator} ({ctx.author.id})")
+                text=f"Restart initiated by {str(ctx.author)} ({ctx.author.id})")
             await ctx.send(embed=embed)
             await self.client.change_presence(activity=discord.Game("Restarting..."))
             if len(self.client.reminders) > 0:
