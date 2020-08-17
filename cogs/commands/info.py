@@ -3,6 +3,7 @@ from discord.ext import commands
 import math
 
 from CatLampPY import colors
+from cogs.misc.mdbed import uh
 
 
 class Info(commands.Cog, name="Bot Info"):
@@ -12,6 +13,7 @@ class Info(commands.Cog, name="Bot Info"):
         self.client.cmds.append(self.invite)
         self.client.cmds.append(self.ping)
         self.client.cmds.append(self.server)
+        # TODO self.client.cmds.append(self.privacy)
 
     @commands.command(aliases=["cmds", "commands"])
     async def help(self, ctx, page: int = 1):
@@ -64,6 +66,16 @@ class Info(commands.Cog, name="Bot Info"):
             await ctx.send("Sent CatLamp's server invite to your DMs!")
         except discord.Forbidden:
             await ctx.send("I can't DM you! Make sure to enable your DMs so I can.")
+
+    @commands.command()
+    async def privacy(self, ctx):
+        """Displays the CatLamp privacy policy."""
+        try:
+            privacy = self.client.privacy
+        except (NameError, AttributeError):
+            self.client.privacy = uh()
+            privacy = self.client.privacy
+        await ctx.send(embed=privacy)
 
     @commands.command()
     async def ping(self, ctx):
