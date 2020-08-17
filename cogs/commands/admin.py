@@ -90,8 +90,8 @@ class Administration(commands.Cog):
                 return
             else:
                 embed = discord.Embed(title="Pull successful",
-                                      description="`git pull` executed successfully!\n`+restart` if any `*.py` "
-                                                  "were changed.",
+                                      description="`git pull` executed successfully!\n`+reload` if changes were "
+                                                  "only made to cogs. Otherwise, run `+restart`.",
                                       color=colors["success"])
                 await ctx.send(embed=embed)
                 print(f"Pull successfully executed by {ctx.author.name} ({ctx.author.id})")
