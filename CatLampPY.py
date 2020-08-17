@@ -24,6 +24,7 @@ while True:
         import deeppyer
         # noinspection PyPackageRequirements
         from PIL import Image
+        from os import listdir
         import io
         import re as regex
 
@@ -159,7 +160,6 @@ def insert_returns(body):
 
 
 # load commands and listeners
-from os import listdir
 cogDirectories = ['cogs/commands/', 'cogs/listeners/']  # bot will look for python files in these directories
 for cogDir in cogDirectories:
     loadDir = cogDir.replace('/', '.')
