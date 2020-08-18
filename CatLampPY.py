@@ -65,7 +65,7 @@ while True:
     break
 
 logging.basicConfig(level=logging.INFO, format="[%(asctime)s] %(levelname)s %(name)s | %(message)s")
-client = commands.AutoShardedBot(command_prefix="+", case_insensitive=True)
+client = commands.AutoShardedBot(command_prefix=commands.when_mentioned_or('+'), case_insensitive=True)
 client.remove_command("help")
 # helpEmbed = None
 client.cmds = []
