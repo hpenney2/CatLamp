@@ -7,7 +7,7 @@ chardet==3.0.4
 cleverbotfree==1.2.2
 colorama==0.4.3
 deeppyer==1.0.1
-discord.py==1.3.4
+discord.py~=1.4.1
 idna==2.10
 isort==4.3.21
 lazy-object-proxy==1.4.3
