@@ -35,7 +35,6 @@ class Info(commands.Cog, name="Bot Info"):
         # set the things to find
         # pageIndex = (page - 1) * 10
         if len(self.client.helpEmbeds) == 0:
-
             Page = 1
             # set initial title and footer based on page no.
             embed = discord.Embed(title="Commands", color=colors["message"])
@@ -43,7 +42,6 @@ class Info(commands.Cog, name="Bot Info"):
 
             for i in range(len(self.client.cmds)):
                 # don't overflow, dumb
-                print(i >= 10)
                 if i >= (Page * 10):
                     self.client.helpEmbeds.append(embed.to_dict())
                     Page += 1

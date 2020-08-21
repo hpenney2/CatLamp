@@ -16,31 +16,38 @@ class Pagination(commands.Cog):
         if reaction.message.id in self.bot.paginated:
             if user.id != self.bot.user.id:
                 data = self.bot.paginated[reaction.message.id]
-                if reaction.emoji == '▶':
-                    try:
-                        await reaction.remove(user)
-                    except (discord.Forbidden, discord.NotFound):
-                        pass
-                    embeds = data[1]
-                    data[2] += 1
-                    if data[2] >= len(embeds):
-                        data[2] = 0
-                    await data[0].edit(embed=discord.Embed.from_dict(embeds[data[2]]))
+                print(not data[3] and data[4])
+                print(data[3] and data[4])
+                print(data[3] or data[4])
+                print(not (data[3] or data[4]))
+
+                if data[3]:  # data[3] is on coolDown, data[4] is queued
+                    if data[4]:
+                        return
+                    else:
+                        data[4] = True
+                        await sleep(1)
+                        data[4] = False
+                try:
+                    await reaction.remove(user)
+                except (discord.Forbidden, discord.NotFound):
+                    pass
+                embeds = data[1]
                 if reaction.emoji == '◀':
-                    try:
-                        await reaction.remove(user)
-                    except (discord.Forbidden, discord.NotFound):
-                        pass
-                    embeds = data[1]
                     data[2] -= 1
                     if data[2] < 0:
                         data[2] = len(embeds) - 1
-                    await data[0].edit(embed=discord.Embed.from_dict(embeds[data[2]]))
-            else:
-                return
+                elif reaction.emoji == '▶':
+                    data[2] += 1
+                    if data[2] >= len(embeds):
+                        data[2] = 0
+                await data[0].edit(embed=discord.Embed.from_dict(embeds[data[2]]))
+                data[3] = True
+                await sleep(1.5)
+                data[3] = False
 
     async def paginate(self, message, embeds, number, timeout):
-        self.bot.paginated[message.id] = [message, embeds, number]
+        self.bot.paginated[message.id] = [message, embeds, number, False, False]
         await message.add_reaction('◀')
         await message.add_reaction('▶')
         try:
