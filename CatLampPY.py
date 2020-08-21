@@ -69,6 +69,7 @@ client = commands.AutoShardedBot(command_prefix=commands.when_mentioned_or('+'),
 client.remove_command("help")
 # helpEmbed = None
 client.cmds = []
+client.helpEmbeds = []
 client.reminders = {}
 colors = tables.getColors()
 reddit = praw.Reddit(client_id=config["redditCID"],
