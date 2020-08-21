@@ -13,24 +13,36 @@ class Info(commands.Cog, name="Bot Info"):
         self.client.cmds.append(self.invite)
         self.client.cmds.append(self.ping)
         self.client.cmds.append(self.server)
-        # TODO self.client.cmds.append(self.privacy)
+        self.client.cmds.append(self.privacy)
 
     @commands.command(aliases=["cmds", "commands"])
     async def help(self, ctx, page: int = 1):
         """Displays this message."""
+        # 10 per page, can't just have half a page of commands go bye-bye
         maxPages = round(math.ceil(len(self.client.cmds) / 10))
+        # underflow bad
         if page < 1:
             page = 1
+        # overflow bad
         elif page > maxPages:
             page = maxPages
 
+        # set title and footer based on page no.
         embed = discord.Embed(title="Commands", color=colors["message"])
         embed.set_footer(text=f"Page {page}/{maxPages}")
+
+        # set the things to find
         pageIndex = (page - 1) * 10
+
         for i in range(len(self.client.cmds)):
+            # don't overflow, dumb
             if i + pageIndex >= len(self.client.cmds):
                 break
+
+            # get command from index
             command = self.client.cmds[i + pageIndex]
+
+            # generate help field for command
             if not len(embed.fields) >= 10:
                 name = "+" + command.name
                 Params = command.clean_params
@@ -42,6 +54,7 @@ class Info(commands.Cog, name="Bot Info"):
                     desc += "\nAliases: "
                     desc += ", ".join(command.aliases)
                 embed.add_field(name=name, value=desc, inline=False)
+        # send the embed lol
         await ctx.send(embed=embed)
 
     @commands.command()
