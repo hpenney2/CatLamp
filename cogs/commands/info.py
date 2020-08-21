@@ -66,7 +66,7 @@ class Info(commands.Cog, name="Bot Info"):
             self.client.helpEmbeds.append(embed.to_dict())
         # send the embed lol
         helpMess = await ctx.send(embed=discord.Embed.from_dict(self.client.helpEmbeds[page]))
-        await self.pagination.paginate(helpMess, self.client.helpEmbeds, page, 300)
+        await self.pagination.paginate(helpMess, self.client.helpEmbeds, page, 300, True)
 
     @commands.command()
     async def invite(self, ctx):

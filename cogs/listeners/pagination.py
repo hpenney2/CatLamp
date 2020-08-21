@@ -16,13 +16,13 @@ class Pagination(commands.Cog):
         if reaction.message.id in self.bot.paginated:
             if user.id != self.bot.user.id:
                 data = self.bot.paginated[reaction.message.id]
-                if data[3]:  # data[3] is on coolDown, data[4] is queued
-                    if data[4]:
+                if data[4]:  # data[4] is on coolDown, data[5] is queued
+                    if data[5]:
                         return
                     else:
-                        data[4] = True
+                        data[5] = True
                         await sleep(1)
-                        data[4] = False
+                        data[5] = False
                 try:
                     await reaction.remove(user)
                 except (discord.Forbidden, discord.NotFound):
@@ -37,12 +37,12 @@ class Pagination(commands.Cog):
                     if data[2] >= len(embeds):
                         data[2] = 0
                 await data[0].edit(embed=discord.Embed.from_dict(embeds[data[2]]))
-                data[3] = True
+                data[4] = True
                 await sleep(1.5)
-                data[3] = False
+                data[4] = False
 
-    async def paginate(self, message, embeds, number, timeout):
-        self.bot.paginated[message.id] = [message, embeds, number, False, False]
+    async def paginate(self, message, embeds, number, timeout, coolDown):
+        self.bot.paginated[message.id] = [message, embeds, number, coolDown, False, False]
         await message.add_reaction('◀')
         await message.add_reaction('▶')
         try:
