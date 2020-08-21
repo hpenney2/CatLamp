@@ -16,11 +16,6 @@ class Pagination(commands.Cog):
         if reaction.message.id in self.bot.paginated:
             if user.id != self.bot.user.id:
                 data = self.bot.paginated[reaction.message.id]
-                print(not data[3] and data[4])
-                print(data[3] and data[4])
-                print(data[3] or data[4])
-                print(not (data[3] or data[4]))
-
                 if data[3]:  # data[3] is on coolDown, data[4] is queued
                     if data[4]:
                         return
