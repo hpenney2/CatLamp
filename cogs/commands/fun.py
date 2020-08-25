@@ -42,10 +42,8 @@ class Fun(commands.Cog):
 
         num = random.randint(1, 10)
         guesses = 3
-        await ctx.send(f"<@{ctx.author.id}> Guess a number between 1 and 10. You have {guesses} guesses left.")
+        await ctx.send(f"{ctx.author.mention} Guess a number between 1 and 10. You have {guesses} guesses left.", allowed_mentions=discord.AllowedMentions(users=False))
         while guesses > 0:
-            # allowed_mentions=discord.AllowedMentions(users=False)
-            # discord.AllowedMentions doesn't exist in the latest PyPi package, only available in >=1.4.0
             try:
                 Guess = await self.client.wait_for("message", check=check, timeout=15.0)
             except asyncio.TimeoutError:
@@ -61,11 +59,11 @@ class Fun(commands.Cog):
                 guesses += -1
                 msg = "Incorrect!"
                 if guesses > 0:
-                    msg += f"\n<@{ctx.author.id}> Guess a number between 1 and 10. You have {guesses} guesses left."
+                    msg += f"\n{ctx.author.mention} Guess a number between 1 and 10. You have {guesses} guesses left."
                 else:
                     msg += f"\nYou're out of guesses! The correct number was {num}."
                     self.inGame.remove(ctx.author.id)
-                await ctx.send(msg)
+                await ctx.send(msg, allowed_mentions=discord.AllowedMentions(users=False))
 
     @commands.command(name='reddit', aliases=['randomReddit', 'redditRandom', 'randomPost'])
     async def redditRandom(self, ctx, subreddit_name: str):
