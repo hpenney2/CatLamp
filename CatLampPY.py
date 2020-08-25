@@ -166,7 +166,14 @@ for cogDir in cogDirectories:
     loadDir = cogDir.replace('/', '.')
     for cog in listdir(cogDir):
         if cog.endswith('.py'):  # bot tries to load all .py files in said folders, use cogs/misc for non-cog things
-            client.load_extension(loadDir + cog[:-3])
+            try:
+                client.load_extension(loadDir + cog[:-3])
+            except commands.NoEntryPointError:
+                print(f"{loadDir + cog[:-3]} is not a proper cog!")
+            except commands.ExtensionAlreadyLoaded:
+                print('you should not be seeing this\n if you do, youre screwed')
+            except commands.ExtensionFailed as failure:
+                print(f'{failure.name} failed! booooo')
 
 if __name__ == "__main__":
     client.run(config["token"])
