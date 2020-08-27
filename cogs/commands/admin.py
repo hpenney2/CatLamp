@@ -53,16 +53,17 @@ class Administration(commands.Cog):
         if isAdmin(ctx.author):
             print(f"Reload initiated by {str(ctx.author)} ({ctx.author.id})")
             embed = discord.Embed(title="Reloading...",
-                                  description="CatLamp will reload shortly. Check the bot's status for updates.",
-                                  color=colors["success"])
+                                  description="CatLamp is reloading. Watch this message for updates.",
+                                  color=colors["warning"])
             embed.set_footer(
                 text=f"Reload initiated by {str(ctx.author)} ({ctx.author.id})")
-            await ctx.send(embed=embed)
+            msg = await ctx.send(embed=embed)
             await self.client.change_presence(activity=discord.Game("Reloading..."))
             print("Reloading...")
             self.client.cmds = []
             # *reload commands and listeners
             from os import listdir
+            errorInfo = ""
             cogDirectories = ['cogs/commands/',
                               'cogs/listeners/']  # bot will look for python files in these directories
             for cogDir in cogDirectories:
@@ -73,12 +74,28 @@ class Administration(commands.Cog):
                         try:
                             self.client.load_extension(loadDir + cog[:-3])
                         except commands.NoEntryPointError:
-                            print(f"{loadDir + cog[:-3]} is not a proper cog!")
+                            errorInfo += f"{loadDir + cog[:-3]} is not a proper cog!\n"
                         except commands.ExtensionAlreadyLoaded:
-                            print('you should not be seeing this\n if you do, youre screwed')
+                            try:
+                                self.client.reload_extension(loadDir + cog[:-3])
+                            except commands.ExtensionFailed as failure:
+                                errorInfo += f'{failure.name} failed! booooo\n'
                         except commands.ExtensionFailed as failure:
-                            print(f'{failure.name} failed! booooo')
+                            errorInfo += f'{failure.name} failed! booooo\n'
             await self.client.change_presence(activity=None)
+            if errorInfo != "":
+                print(f"Reloaded with errors!\n{errorInfo}")
+                embed.color = colors["error"]
+                embed.title = "Reloaded with errors"
+                embed.description = f"Errors occured while reloading.\n```{errorInfo[:-2]}```"
+                await msg.edit(embed=embed)
+            else:
+                print("Reloaded successfully!")
+                embed.color = colors["success"]
+                embed.title = "Reloaded"
+                embed.description = f"Reloaded successfully without errors!"
+                await msg.edit(embed=embed)
+
 
     @commands.command(hidden=True)
     async def pull(self, ctx):
@@ -127,6 +144,7 @@ class Administration(commands.Cog):
                 insert_returns(body)
 
                 env = {
+                    'self': self,
                     'client': self.client,
                     'discord': discord,
                     'commands': commands,
