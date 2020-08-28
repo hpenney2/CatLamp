@@ -168,6 +168,7 @@ async def on_error(event, *args, **kwargs):
         embed = discord.Embed(title=f"Error occured in event '{event}'",
                               description=f"```{str(sys.exc_info()[1])}```",
                               color=colors["error"])
+        embed.timestamp = datetime.datetime.utcnow()
         await client.get_channel(712489826330345534).send(embed=embed)
     raise sys.exc_info()[1]
 
