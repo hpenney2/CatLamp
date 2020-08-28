@@ -1,11 +1,11 @@
 import discord
 from discord.ext import commands
-from CatLampPY import hasPermissions, CommandErrorMsg
+from CatLampPY import hasPermissions, CommandErrorMsg # pylint: disable=import-error
 
 class Moderation(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        self.bot.cmds.append(kick)
+        self.bot.cmds.append(self.kick)
 
     @commands.command(cooldown_after_parsing=True)
     @commands.cooldown(1, 10, commands.BucketType.member)

@@ -1,3 +1,4 @@
+# pylint: disable=import-error
 from ast import parse 
 import os
 import subprocess

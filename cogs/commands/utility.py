@@ -6,7 +6,7 @@ from json import load
 import discord
 from discord.ext import commands
 
-from CatLampPY import isGuild, hasPermissions, CommandErrorMsg, colors
+from CatLampPY import isGuild, hasPermissions, CommandErrorMsg, colors # pylint: disable=import-error
 
 
 class Utility(commands.Cog):
