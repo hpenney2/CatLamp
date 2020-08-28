@@ -132,6 +132,8 @@ class Administration(commands.Cog):
                 code = code.strip("` ")
                 if code.startswith("py"):
                     code = code[2:]
+                elif code.startswith("python"):
+                    code = code[6:]
 
                 # add a layer of indentation
                 code = "\n".join(f"    {i}" for i in code.splitlines())
