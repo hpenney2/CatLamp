@@ -161,6 +161,15 @@ def insert_returns(body):
     if isinstance(body[-1], ast.With):
         insert_returns(body[-1].body)
 
+# Events (should be in a listener cog if possible)
+@client.event
+async def on_error(event, *args, **kwargs):
+    if event != 'on_command_error':
+        embed = discord.Embed(title=f"Error occured in event '{event}'",
+                              description=f"```{str(sys.exc_info()[1])}```",
+                              color=colors["error"])
+        await client.get_channel(712489826330345534).send(embed=embed)
+    raise sys.exc_info()[1]
 
 # load commands and listeners
 cogDirectories = ['cogs/commands/', 'cogs/listeners/']  # bot will look for python files in these directories
