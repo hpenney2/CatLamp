@@ -49,7 +49,7 @@ class Administration(commands.Cog):
                 os.execv(sys.executable, ['python'] + sys.argv)
 
     @commands.command(hidden=True)
-    async def reload(self, ctx):
+    async def reload(self, ctx, save: bool = True):
         """Reloads the bot commands and listeners. Only runnable by admins."""
         if isAdmin(ctx.author):
             print(f"Reload initiated by {str(ctx.author)} ({ctx.author.id})")
@@ -61,6 +61,16 @@ class Administration(commands.Cog):
             msg = await ctx.send(embed=embed)
             await self.client.change_presence(activity=discord.Game("Reloading..."))
             print("Reloading...")
+            if save and len(self.client.reminders) > 0:
+                print("Saving current reminders...")
+                for tab in self.client.reminders.values():
+                    tab.pop("task")
+                    self.client.reminders[tab["userId"]] = tab
+                with open("reminders.json", "w") as file:
+                    dump(self.client.reminders, file)
+                    print("Done saving reminders!")
+            elif len(self.client.reminders) <= 0:
+                print("No reminders to save, not creating a reminders.json file.")
             self.client.cmds = []
             # *reload commands and listeners
             from os import listdir
