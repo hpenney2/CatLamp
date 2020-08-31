@@ -6,5 +6,6 @@ def getColors():
     return {
         "error": discord.Color.from_rgb(255, 68, 78),
         "success": discord.Color.from_rgb(60, 255, 100),
+        "warning": discord.Color.from_rgb(255, 230, 0),
         "message": discord.Color.from_rgb(42, 141, 222)
     }

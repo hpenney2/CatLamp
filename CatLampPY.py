@@ -98,14 +98,16 @@ def isAdmin(user):
         return False
 
 
-def hasPermissions(perm):
+def hasPermissions(perm: str):
     """Check for if a user and the bot has a permission."""
 
     async def predicate(ctx):
         if not getattr(ctx.author.permissions_in(ctx.channel), perm):
-            raise CheckFailureMsg(f"You don't have the '{perm}' permission!")
+            cleanName = perm.replace("_", " ").title()
+            raise CheckFailureMsg(f"You don't have the \"{cleanName}\" permission!")
         elif not getattr(ctx.guild.me.permissions_in(ctx.channel), perm):
-            raise CheckFailureMsg(f"The bot doesn't have the '{perm}' permission!")
+            cleanName = perm.replace("_", " ").title()
+            raise CheckFailureMsg(f"The bot doesn't have the \"{cleanName}\" permission!")
         return True
 
     return commands.check(predicate)
