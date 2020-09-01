@@ -1,5 +1,6 @@
 import discord
 from discord.ext import commands
+from typing import Union
 from CatLampPY import hasPermissions, CommandErrorMsg # pylint: disable=import-error
 
 class Moderation(commands.Cog):
@@ -8,6 +9,16 @@ class Moderation(commands.Cog):
         self.bot.cmds.append(self.kick)
         self.bot.cmds.append(self.ban)
         self.bot.cmds.append(self.unban)
+
+    async def gf_user(self, user_id: int):
+        user = self.bot.get_user(user_id)
+        if not user:
+            try:
+                user = await self.bot.fetch_user(user_id)
+            except discord.NotFound:
+                raise CommandErrorMsg(f"No user with the ID {str(user_id)} was found!")
+        else:
+            return user
 
     @commands.command(cooldown_after_parsing=True)
     @commands.cooldown(1, 10, commands.BucketType.member)
@@ -28,8 +39,10 @@ class Moderation(commands.Cog):
     @commands.command(cooldown_after_parsing=True)
     @commands.cooldown(1, 10, commands.BucketType.member)
     @hasPermissions("ban_members")
-    async def ban(self, ctx, user: discord.User, reason: str = "No reason specified.", days_of_messages_to_delete: int = 0):
-        """Ban a user with an optional reason and days of messages to delete. Requires the Ban Members permission."""
+    async def ban(self, ctx, user: Union[discord.User, int], reason: str = "No reason specified.", days_of_messages_to_delete: int = 0):
+        """Ban a user (including someone not in the server) with an optional reason and days of messages to delete. Requires the Ban Members permission."""
+        if isinstance(user, int):
+            user = await self.gf_user(user)
         if user.id == self.bot.user.id:
             await ctx.send(":(")
             return
@@ -44,8 +57,10 @@ class Moderation(commands.Cog):
     @commands.command(cooldown_after_parsing=True)
     @commands.cooldown(1, 10, commands.BucketType.member)
     @hasPermissions("ban_members")
-    async def unban(self, ctx, user: discord.User):
+    async def unban(self, ctx, user: Union[discord.User, int]):
         """Unbans a user. Requires the Ban Members permission."""
+        if isinstance(user, int):
+            user = await self.gf_user(user)
         try:
             # This is to check if the user is actually banned.
             # If the user is not banned, fetch_ban will raise NotFound.
