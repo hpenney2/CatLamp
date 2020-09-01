@@ -17,7 +17,7 @@ class Info(commands.Cog, name="Bot Info"):
         self.client.cmds.append(self.server)
         self.client.cmds.append(self.privacy)
 
-    @commands.command(name="help", aliases=["cmds", "commands"])
+    @commands.command()
     # fuck "Function shadows built-in method help()"
     # all my homies hate "Function shadows built-in method help()"
     async def documentation(self, ctx, page: int = 1):
