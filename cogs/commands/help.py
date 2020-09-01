@@ -14,11 +14,6 @@ class EmbedHelpCommand(commands.HelpCommand):
 
     bot = commands.Bot(help_command=EmbedHelpCommand())
     """
-    def __init__(self, **options):
-        super().__init__(**options)
-        print('aaaaaaAAAAA')
-
-
     # Set the embed colour here
     COLOUR = discord.Colour.blurple()
 
