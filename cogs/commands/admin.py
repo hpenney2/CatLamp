@@ -85,7 +85,9 @@ class Administration(commands.Cog):
                         try:
                             self.client.load_extension(loadDir + cog[:-3])
                         except commands.NoEntryPointError:
-                            errorInfo += f"{loadDir + cog[:-3]} is not a proper cog!\n"
+                            pass
+                            # I got enough whining during startup, you can shut up
+                            # errorInfo += f"{loadDir + cog[:-3]} is not a proper cog!\n"
                         except commands.ExtensionAlreadyLoaded:
                             try:
                                 self.client.reload_extension(loadDir + cog[:-3])
@@ -162,6 +164,7 @@ class Administration(commands.Cog):
                     'self': self,
                     'client': self.client,
                     'discord': discord,
+                    'colors': colors,
                     'commands': commands,
                     'cmds': self.client.cmds,
                     'ctx': ctx,
