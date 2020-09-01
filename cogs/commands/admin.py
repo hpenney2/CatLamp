@@ -6,7 +6,7 @@ import sys
 import discord
 from discord.ext import commands
 from json import dump
-from CatLampPY import colors, config, insert_returns, reddit, isAdmin
+from CatLampPY import colors, config, insert_returns, reddit, isAdmin, CommandErrorMsg
 from hastebin import get_key
 from cogs.listeners.exceptions import Exceptions
 
@@ -145,6 +145,8 @@ class Administration(commands.Cog):
                 elif code.startswith("python"):
                     code = code[6:]
 
+                if "config" in code:
+                    raise CommandErrorMsg("No token for you dumb dumb")
                 # add a layer of indentation
                 code = "\n".join(f"    {i}" for i in code.splitlines())
 
