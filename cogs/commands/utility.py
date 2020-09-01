@@ -68,12 +68,12 @@ class Utility(commands.Cog):
             pass
 
     @commands.command(aliases=["reminder", "timer"])
-    async def remind(self, ctx, time: int, unit: str = "minutes", *, reminder_note: str = ""):
+    async def remind(self, ctx, time: float, unit: str = "minutes", *, reminder_note: str = ""):
         """Sets a reminder, optionally with a note. Valid time units are seconds, minutes, and hours."""
         if ctx.author.id in self.client.reminders:
             await ctx.send("You already have a reminder set! Use `+cancelReminder` to cancel it.")
             return
-        if time < 1:
+        if time <= 0:
             time = 1
         # Unit checking
         originalTime = time
