@@ -85,9 +85,8 @@ class Administration(commands.Cog):
                         try:
                             self.client.load_extension(loadDir + cog[:-3])
                         except commands.NoEntryPointError:
-                            pass
-                            # I got enough whining during startup, you can shut up
-                            # errorInfo += f"{loadDir + cog[:-3]} is not a proper cog!\n"
+                            if (loadDir + cog[:-3]) != "cogs.commands.help":
+                                errorInfo += f"{loadDir + cog[:-3]} is not a proper cog!\n"
                         except commands.ExtensionAlreadyLoaded:
                             try:
                                 self.client.reload_extension(loadDir + cog[:-3])
