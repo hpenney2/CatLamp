@@ -17,23 +17,25 @@ class Exceptions(commands.Cog):
             if ctx.command.hidden and not isAdmin(ctx.author):
                 return
             # Exception-specific error handling, more may be added later.
+            errorStr = None
             if isinstance(error, commands.BadArgument):
                 if "int" in str(error):
                     param = str(error).split("parameter ", 1)[1][:-1]
-                    error = f"{param} must be a number."
+                    errorStr = f"{param} must be a number."
             elif isinstance(error, commands.MissingRequiredArgument):
-                error = "This command requires more arguments. Check +help for details."
+                errorStr = "This command requires more arguments. Check +help for details."
+            elif isinstance(error, commands.BadUnionArgument) and str(error).startswith('Could not convert "user" into User or int.'):
+                errorStr = f"User not found!"
             embed = discord.Embed(title="Error",
                                   description=f"An error occurred while trying to run `{commandName}`!\n"
-                                              f"```{error}```",
+                                              f"```{errorStr or str(error)}```",
                                   color=colors["error"])
             embed.set_footer(
                 text=f"If think this shouldn't happen, contact a developer for help "
                      f"in the CatLamp server. (+server)")
             await ctx.send(embed=embed)
             print(f"An error occurred while trying to run '{ctx.message.content}'!")
-            if not type(error) is str:
-                raise error
+            raise error         
 
     async def errorEmbed(self, cmd, error):
         """[deprecated] Generates an error embed. Please use 'raise CommandErrorMsg("error message")' instead."""
