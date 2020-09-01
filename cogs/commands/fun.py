@@ -139,8 +139,10 @@ class Fun(commands.Cog):
                     embed.timestamp = datetime.fromtimestamp(randPost.created_utc)
                     satisfied = True
                 await ctx.send(embed=embed)
-            except(prawcore.BadRequest, prawcore.Redirect, prawcore.NotFound, prawcore.Forbidden):
-                await ctx.send('Failed to get a post.')
+            except prawcore.Forbidden:
+                await ctx.send("Subreddit is private.")
+            except(prawcore.BadRequest, prawcore.Redirect, prawcore.NotFound):
+                await ctx.send("Subreddit not found.")
 
 
 def setup(bot):
