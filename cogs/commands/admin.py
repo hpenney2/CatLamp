@@ -94,6 +94,8 @@ class Administration(commands.Cog):
                                 errorInfo += f'{failure.name} failed! booooo\n'
                         except commands.ExtensionFailed as failure:
                             errorInfo += f'{failure.name} failed! booooo\n'
+            from cogs.commands.help import EmbedHelpCommand
+            self.client.help_command = EmbedHelpCommand()
             await self.client.change_presence(activity=None)
             if errorInfo != "":
                 print(f"Reloaded with errors!\n{errorInfo}")
@@ -107,7 +109,6 @@ class Administration(commands.Cog):
                 embed.title = "Reloaded"
                 embed.description = f"Reloaded successfully without errors!"
                 await msg.edit(embed=embed)
-
 
     @commands.command(hidden=True)
     async def pull(self, ctx):

@@ -1,6 +1,11 @@
 from discord.ext import commands
 import discord
 
+from cogs.commands.info import Info
+
+import tables
+colors = tables.getColors()
+
 
 class EmbedHelpCommand(commands.HelpCommand):
     """This is an example of a HelpCommand that utilizes embeds.
@@ -15,7 +20,10 @@ class EmbedHelpCommand(commands.HelpCommand):
     bot = commands.Bot(help_command=EmbedHelpCommand())
     """
     # Set the embed colour here
-    COLOUR = discord.Colour.blurple()
+    COLOUR = colors['message']
+
+    # Set the cog here
+    cog = Info
 
     def get_ending_note(self):
         return 'Use {0}{1} [command] for more info on a command.'.format(self.clean_prefix, self.invoked_with)
@@ -32,12 +40,29 @@ class EmbedHelpCommand(commands.HelpCommand):
         for cog, commands in mapping.items():
             name = 'No Category' if cog is None else cog.qualified_name
             filtered = await self.filter_commands(commands, sort=True)
-            if filtered:
-                value = '\u2002'.join(c.name for c in commands)
-                if cog and cog.description:
-                    value = '{0}\n{1}'.format(cog.description, value)
 
-                embed.add_field(name=name, value=value)
+            # override processing
+            new = []
+            for c in commands:
+                new.append(c.name)
+            new.sort()
+            commands = new
+            del new
+
+            value = ''  # start of field value creation
+            if filtered:
+                if name == "Bot Info":
+                    value = 'help, '
+                for c in commands:
+                    if c != "help":
+                        value += f'{c}, '
+                value = value.rstrip(", ")
+
+            if cog and cog.description:  # add cog desc to field value
+                value = '{0}\n{1}'.format(cog.description, value)
+
+            if value:
+                embed.add_field(name=name, value=value, inline=False)
 
         embed.set_footer(text=self.get_ending_note())
         await self.get_destination().send(embed=embed)

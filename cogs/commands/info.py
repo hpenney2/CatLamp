@@ -2,9 +2,12 @@ import discord
 from discord.ext import commands
 import math
 
-from CatLampPY import colors
 from cogs.listeners.pagination import Pagination
 from cogs.misc.mdbed import uh
+
+import tables
+
+colors = tables.getColors()
 
 
 class Info(commands.Cog, name="Bot Info"):

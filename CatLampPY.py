@@ -69,7 +69,6 @@ while True:
 logging.basicConfig(level=logging.INFO, format="[%(asctime)s] %(levelname)s %(name)s | %(message)s")
 client = commands.AutoShardedBot(command_prefix=commands.when_mentioned_or('+'), case_insensitive=True,
                                  help_command=EmbedHelpCommand(verify_checks=False, show_hidden=False))
-# helpEmbed = None
 client.cmds = []
 client.helpEmbeds = []
 client.reminders = {}
