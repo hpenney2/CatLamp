@@ -142,8 +142,7 @@ class Utility(commands.Cog):
                 with open("reminders.json", "r") as file:
                     tempReminders = load(file)
                 for tab in tempReminders.values():
-                    remainingTime = round(
-                        (tab["startTime"] + tab["timeSeconds"]) - datetime.datetime.utcnow().timestamp())
+                    remainingTime = (tab["startTime"] + tab["timeSeconds"]) - datetime.datetime.utcnow().timestamp()
                     if remainingTime <= 0:
                         self.client.reminders[int(tab["userId"])] = tab
                         asyncio.ensure_future(
