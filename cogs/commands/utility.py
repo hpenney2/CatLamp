@@ -92,7 +92,10 @@ class Utility(commands.Cog):
             unit += "s"
         if reminder_note.strip():  # If not empty or whitespace
             reminder_note = f" Note: `{reminder_note}`"
-        originalTime = str(originalTime).rstrip('.0')
+
+        if str(originalTime).endswith('.0'):  # definitely best wait to remove trailing ".0" in integer floats
+            originalTime = str(originalTime)[:-2]
+
         task = asyncio.ensure_future(self.timer(ctx.channel.id, ctx.author.id, time, originalTime, unit, reminder_note))
         self.client.reminders[ctx.author.id] = {
             "task": task,
