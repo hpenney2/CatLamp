@@ -53,7 +53,7 @@ def hippityHoppityThisColorIsDisappearity(img: Image.Image, color: tuple = (0, 2
 def replaceColor(image: Image.Image, targetIn: tuple, colorOut: tuple):
     image = hippityHoppityThisColorIsDisappearity(image, targetIn)
     result = Image.new(mode=image.mode, size=(image.width, image.height), color=colorOut)
-    result.paste(image)
+    result = Image.alpha_composite(result, image)
     return result
 
 
@@ -105,7 +105,7 @@ class Images(commands.Cog, name="Image Manipulation"):
     @commands.command(cooldown_after_parsing=True)
     @commands.cooldown(1, 5, commands.BucketType.user)
     async def catLamp(self, ctx, user: discord.User = None):
-        """catlamp here"""
+        """Generates a Catlamp of attached image or your/the mentioned user's avatar."""
         async with ctx.channel.typing():
             # set the images
             image = await getImage(ctx, user)
@@ -122,12 +122,19 @@ class Images(commands.Cog, name="Image Manipulation"):
             # find a color not in either image so we can use it for transparency in the final product
             alpha = findAlphaTarget(image, overlay)
 
-            # set alpha color outside of the lamp
+            # set alpha color outside of the lamp (replace green with the designated alpha color)
             overlay = replaceColor(overlay, (0, 255, 0, 255), alpha)
 
-            # combine catLamp with image
-            outImg = overlay#Image.alpha_composite(image, overlay)
+            # cut hole in template (remove the magenta pixels)
+            overlay = hippityHoppityThisColorIsDisappearity(overlay, (255, 0, 255, 255))
 
+            # combine catLamp with image
+            outImg = Image.alpha_composite(image, overlay)
+
+            # make the outside actually transparent
+            outImg = hippityHoppityThisColorIsDisappearity(outImg, alpha)
+
+            # final prep and stuff for sending to the *internet*
             img = io.BytesIO()
             outImg.save(img, "png")
             img.seek(0)
