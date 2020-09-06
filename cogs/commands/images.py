@@ -1,6 +1,5 @@
 import deeppyer
 # noinspection PyPackageRequirements
-import PIL
 from PIL import Image
 import io
 import discord
@@ -41,9 +40,9 @@ class Images(commands.Cog, name="Image Manipulation"):
             image = await getImage(ctx, user)
             size = 870, 870  # the resolutions need to match
             image.thumbnail(size)
-            template = PIL.Image.open('catlamp-outlineonly.png', mode='r')
+            template = Image.open('catlamp-outlineonly.png', mode='r')
 
-            outImg = PIL.Image.alpha_composite(image, template)  # processing here
+            outImg = Image.alpha_composite(image, template)  # processing here
 
             img = io.BytesIO()
             outImg.save(img, "png")
