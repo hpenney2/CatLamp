@@ -67,8 +67,10 @@ while True:
     break
 
 logging.basicConfig(level=logging.INFO, format="[%(asctime)s] %(levelname)s %(name)s | %(message)s")
-client = commands.AutoShardedBot(command_prefix=commands.when_mentioned_or('+'), case_insensitive=True,
-                                 help_command=EmbedHelpCommand(verify_checks=False, show_hidden=False))
+client = commands.AutoShardedBot(
+    command_prefix=commands.when_mentioned_or('+'), case_insensitive=True,
+    help_command=EmbedHelpCommand(verify_checks=False, show_hidden=False)
+)
 client.cmds = []
 client.helpEmbeds = []
 client.reminders = {}
@@ -161,6 +163,7 @@ def insert_returns(body):
     # for with blocks, again we insert returns into the body
     if isinstance(body[-1], ast.With):
         insert_returns(body[-1].body)
+
 
 # Events (should be in a listener cog if possible)
 @client.event

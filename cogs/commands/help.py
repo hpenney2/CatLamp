@@ -25,35 +25,44 @@ class EmbedHelpCommand(commands.HelpCommand):
     # Set the cog here
     cog = Info
 
+    # Set the things to manually remove
+    placeholders = ['=minutes', '=No reason specified.', '=0']
+
     def get_ending_note(self):
         return 'Use {0}{1} [command] for more info on a command.'.format(self.clean_prefix, self.invoked_with)
 
     def get_command_signature(self, command):
-        return '{0.qualified_name} {0.signature}'.format(command)
+        syntax = command.signature.replace("_", " ")
+
+        for i in self.placeholders:  # remove placeholder things (please don't crucify me for not knowing the term)
+            if i in syntax:
+                syntax = syntax.replace(i, '')
+
+        return f'+{command.qualified_name} {syntax}'
 
     async def send_bot_help(self, mapping):
         embed = discord.Embed(title='Bot Commands', colour=self.COLOUR)
-        description = self.context.bot.description
+        description = "**NOTE: [option] indicates an optional argument, while <option> indicates a required argument.**"
         if description:
             embed.description = description
 
-        for cog, commands in mapping.items():
+        for cog, Commands in mapping.items():
             name = 'No Category' if cog is None else cog.qualified_name
-            filtered = await self.filter_commands(commands, sort=True)
+            filtered = await self.filter_commands(Commands, sort=True)
 
             # override processing
             new = []
-            for c in commands:
+            for c in Commands:
                 new.append(c.name)
             new.sort()
-            commands = new
+            Commands = new
             del new
 
             value = ''  # start of field value creation
             if filtered:
                 if name == "Bot Info":
                     value = 'help, '
-                for c in commands:
+                for c in Commands:
                     if c != "help":
                         value += f'{c}, '
                 value = value.rstrip(", ")
@@ -93,7 +102,20 @@ class EmbedHelpCommand(commands.HelpCommand):
         embed.set_footer(text=self.get_ending_note())
         await self.get_destination().send(embed=embed)
 
-    # This makes it so it uses the function above
-    # Less work for us to do since they're both similar.
-    # If you want to make regular command help look different then override it
-    send_command_help = send_group_help
+    async def send_command_help(self, Command):
+        embed = discord.Embed(title=self.get_command_signature(Command), colour=self.COLOUR)
+
+        if Command.qualified_name == 'help':
+            embed.description = "Displays the documentation for Catlamp."
+        elif Command.help:
+            embed.description = Command.help
+        if Command.aliases:
+            value = ''
+            for a in Command.aliases:
+                if a != "help":
+                    value += f'`{a}`, '
+            value = value.rstrip(", ")
+            embed.add_field(name='Aliases', value=value)
+
+        embed.set_footer(text=self.get_ending_note())
+        await self.get_destination().send(embed=embed)

@@ -20,11 +20,11 @@ class Info(commands.Cog, name="Bot Info"):
         self.client.cmds.append(self.server)
         self.client.cmds.append(self.privacy)
 
-    @commands.command()
+    @commands.command(hidden=True)
     # fuck "Function shadows built-in method help()"
     # all my homies hate "Function shadows built-in method help()"
     async def documentation(self, ctx, page: int = 1):
-        """Displays this message."""
+        """Displays the old version of this message."""
         # 10 per page, can't just have half a page of commands go bye-bye
         maxPages = round(math.ceil(len(self.client.cmds) / 10))
         page -= 1
