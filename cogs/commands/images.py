@@ -31,19 +31,21 @@ def forceSquare(pil_img):
         return result
 
 
-def aaaa(img):
+# https://stackoverflow.com/questions/765736/using-pil-to-make-all-white-pixels-transparent
+def hippityHoppityThisColorIsDisappearity(img: Image.Image, color: tuple = (0, 255, 0)):
     img = img.convert("RGBA")
     data = img.getdata()
-    print(img.getdata())
 
     newData = []
     for item in data:
-        if item[0] == 0 and item[1] == 255 and item[2] == 0:
-            newData.append([255, 255, 255, 0])
+
+        if item[0] == color[0] and item[1] == color[1] and item[2] == color[2]:
+            newData.append((255, 255, 255, 0))
         else:
             newData.append(item)
 
-    img = Image.frombuffer("RGBA", img.size, newData, "raw", "RGBA", 0, 1)
+    img.putdata(newData)
+
     return img
 
 
@@ -87,7 +89,7 @@ class Images(commands.Cog, name="Image Manipulation"):
 
             print(image.size == template.size, template.mode == image.mode)
             outImg = Image.alpha_composite(image, template)  # processing here
-            outImg = aaaa(outImg)
+            outImg = hippityHoppityThisColorIsDisappearity(outImg)
 
             img = io.BytesIO()
             outImg.save(img, "png")
