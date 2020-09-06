@@ -15,6 +15,22 @@ async def getImage(ctx, user: discord.User = None):
     return image
 
 
+# stole off the site with best SEO, https://note.nkmk.me/en/python-pillow-square-circle-thumbnail/
+def forceSquare(pil_img):
+    background_color = (0, 0, 0, 0)
+    width, height = pil_img.size
+    if width == height:
+        return pil_img
+    elif width > height:
+        result = Image.new(pil_img.mode, (width, width), background_color)
+        result.paste(pil_img, (0, (width - height) // 2))
+        return result
+    else:
+        result = Image.new(pil_img.mode, (height, height), background_color)
+        result.paste(pil_img, ((height - width) // 2, 0))
+        return result
+
+
 class Images(commands.Cog, name="Image Manipulation"):
     def __init__(self, bot):
         self.bot = bot
@@ -38,10 +54,22 @@ class Images(commands.Cog, name="Image Manipulation"):
         """catlamp here"""
         async with ctx.channel.typing():
             image = await getImage(ctx, user)
-            size = 870, 870  # the resolutions need to match
-            image.thumbnail(size)
+            # size = 870, 870  # the resolutions need to match
+            # image.thumbnail(size)
+            print(image.size)
+
             template = Image.open('catlamp-outlineonly.png', mode='r')
 
+            image = forceSquare(image)
+            print(image.size, template.size)
+            if image.size > template.size:
+                image.thumbnail(template.size)
+            else:
+                template.thumbnail(image.size)
+
+            image = image.convert(mode=template.mode)
+
+            print(image.size == template.size, template.mode == image.mode)
             outImg = Image.alpha_composite(image, template)  # processing here
 
             img = io.BytesIO()
