@@ -31,6 +31,22 @@ def forceSquare(pil_img):
         return result
 
 
+def aaaa(img):
+    img = img.convert("RGBA")
+    data = img.getdata()
+    print(img.getdata())
+
+    newData = []
+    for item in data:
+        if item[0] == 0 and item[1] == 255 and item[2] == 0:
+            newData.append([255, 255, 255, 0])
+        else:
+            newData.append(item)
+
+    img = Image.frombuffer("RGBA", img.size, newData, "raw", "RGBA", 0, 1)
+    return img
+
+
 class Images(commands.Cog, name="Image Manipulation"):
     def __init__(self, bot):
         self.bot = bot
@@ -71,6 +87,7 @@ class Images(commands.Cog, name="Image Manipulation"):
 
             print(image.size == template.size, template.mode == image.mode)
             outImg = Image.alpha_composite(image, template)  # processing here
+            outImg = aaaa(outImg)
 
             img = io.BytesIO()
             outImg.save(img, "png")
