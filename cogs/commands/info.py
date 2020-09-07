@@ -2,6 +2,7 @@ import discord
 from discord.ext import commands
 import math
 
+from CatLampPY import isAdmin
 from cogs.listeners.pagination import Pagination
 from cogs.misc.mdbed import uh
 
@@ -25,51 +26,52 @@ class Info(commands.Cog, name="Bot Info"):
     # all my homies hate "Function shadows built-in method help()"
     async def documentation(self, ctx, page: int = 1):
         """Displays the old version of this message."""
-        # 10 per page, can't just have half a page of commands go bye-bye
-        maxPages = round(math.ceil(len(self.client.cmds) / 10))
-        page -= 1
-        # underflow bad
-        if page < 0:
-            page = 0
-        # overflow bad
-        elif page > maxPages - 1:
-            page = maxPages - 1
+        if isAdmin(ctx.author):
+            # 10 per page, can't just have half a page of commands go bye-bye
+            maxPages = round(math.ceil(len(self.client.cmds) / 10))
+            page -= 1
+            # underflow bad
+            if page < 0:
+                page = 0
+            # overflow bad
+            elif page > maxPages - 1:
+                page = maxPages - 1
 
-        # set the things to find
-        # pageIndex = (page - 1) * 10
-        if len(self.client.helpEmbeds) == 0:
-            Page = 1
-            # set initial title and footer based on page no.
-            embed = discord.Embed(title="Commands", color=colors["message"])
-            embed.set_footer(text=f"Page 1/{maxPages}")
+            # set the things to find
+            # pageIndex = (page - 1) * 10
+            if len(self.client.helpEmbeds) == 0:
+                Page = 1
+                # set initial title and footer based on page no.
+                embed = discord.Embed(title="Commands", color=colors["message"])
+                embed.set_footer(text=f"Page 1/{maxPages}")
 
-            for i in range(len(self.client.cmds)):
-                # don't overflow, dumb
-                if i >= (Page * 10):
-                    self.client.helpEmbeds.append(embed.to_dict())
-                    Page += 1
-                    embed = discord.Embed(title="Commands", color=colors["message"])
-                    embed.set_footer(text=f"Page {Page}/{maxPages}")
-                else:
-                    # get command from index
-                    command = self.client.cmds[i]
+                for i in range(len(self.client.cmds)):
+                    # don't overflow, dumb
+                    if i >= (Page * 10):
+                        self.client.helpEmbeds.append(embed.to_dict())
+                        Page += 1
+                        embed = discord.Embed(title="Commands", color=colors["message"])
+                        embed.set_footer(text=f"Page {Page}/{maxPages}")
+                    else:
+                        # get command from index
+                        command = self.client.cmds[i]
 
-                    # generate help field for command
-                    if not len(embed.fields) >= 10:
-                        name = "+" + command.name
-                        Params = command.clean_params
-                        for param in Params:
-                            param = param.replace('_', ' ')
-                            name += f" <{param}>"
-                        desc = command.short_doc or "No description."
-                        if command.aliases:
-                            desc += "\nAliases: "
-                            desc += ", ".join(command.aliases)
-                        embed.add_field(name=name, value=desc, inline=False)
-            self.client.helpEmbeds.append(embed.to_dict())
-        # send the embed lol
-        helpMess = await ctx.send(embed=discord.Embed.from_dict(self.client.helpEmbeds[page]))
-        await self.pagination.paginate(helpMess, self.client.helpEmbeds, page, 300, True)
+                        # generate help field for command
+                        if not len(embed.fields) >= 10:
+                            name = "+" + command.name
+                            Params = command.clean_params
+                            for param in Params:
+                                param = param.replace('_', ' ')
+                                name += f" <{param}>"
+                            desc = command.short_doc or "No description."
+                            if command.aliases:
+                                desc += "\nAliases: "
+                                desc += ", ".join(command.aliases)
+                            embed.add_field(name=name, value=desc, inline=False)
+                self.client.helpEmbeds.append(embed.to_dict())
+            # send the embed lol
+            helpMess = await ctx.send(embed=discord.Embed.from_dict(self.client.helpEmbeds[page]))
+            await self.pagination.paginate(helpMess, self.client.helpEmbeds, page, 300, True)
 
     @commands.command()
     async def invite(self, ctx):
