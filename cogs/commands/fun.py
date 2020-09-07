@@ -68,10 +68,12 @@ class Fun(commands.Cog):
 
     @commands.command(name='reddit', aliases=['randomReddit', 'redditRandom', 'randomPost'])
     async def redditRandom(self, ctx, subreddit_name: str):
-        """Sends a random post from the specified subreddit"""
-        # in case someone types it with r/ at the start
+        """Sends a random post from the specified subreddit."""
+        # in case someone types it with r/ or /r/ at the start
         if subreddit_name.startswith('r/'):
             subreddit_name = subreddit_name[2:]
+        if subreddit_name.startswith('/r/'):
+            subreddit_name = subreddit_name[3:]
         async with ctx.channel.typing():
             try:
                 subreddit = reddit.subreddit(subreddit_name)

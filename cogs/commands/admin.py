@@ -1,6 +1,7 @@
 # pylint: disable=import-error
 from ast import parse 
 import os
+# pylint: disable=import-error
 import subprocess
 import sys
 import discord
