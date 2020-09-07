@@ -32,29 +32,27 @@ def forceSquare(pil_img):
         return result
 
 
-# https://stackoverflow.com/questions/765736/using-pil-to-make-all-white-pixels-transparent
 def hippityHoppityThisColorIsDisappearity(img: Image.Image, color: tuple = (0, 255, 0)):
-    img = img.convert("RGBA")
+    """Alias for replaceColor() with a result of transparent white"""
+    return replaceColor(img, targetIn=color, colorOut=(255, 255, 255, 0))
+
+
+# https://stackoverflow.com/questions/765736/using-pil-to-make-all-white-pixels-transparent
+def replaceColor(image: Image.Image, targetIn: tuple, colorOut: tuple):
+    img = image.convert("RGBA")
     data = img.getdata()
 
     newData = []
     for item in data:
 
-        if item[0] == color[0] and item[1] == color[1] and item[2] == color[2]:
-            newData.append((255, 255, 255, 0))
+        if item[0] == targetIn[0] and item[1] == targetIn[1] and item[2] == targetIn[2]:
+            newData.append(colorOut)
         else:
             newData.append(item)
 
     img.putdata(newData)
 
     return img
-
-
-def replaceColor(image: Image.Image, targetIn: tuple, colorOut: tuple):
-    image = hippityHoppityThisColorIsDisappearity(image, targetIn)
-    result = Image.new(mode=image.mode, size=(image.width, image.height), color=colorOut)
-    result = Image.alpha_composite(result, image)
-    return result
 
 
 def findAlphaTarget(image1: Image.Image, image2: Image.Image):
@@ -80,7 +78,6 @@ def findAlphaTarget(image1: Image.Image, image2: Image.Image):
         # randomize target
         potentialTarget = (random.randrange(0, 256), random.randrange(0, 256), random.randrange(0, 256), 255)
 
-    print(potentialTarget)
     return potentialTarget
 
 
