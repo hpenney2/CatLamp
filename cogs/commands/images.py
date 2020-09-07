@@ -81,6 +81,13 @@ def findAlphaTarget(image1: Image.Image, image2: Image.Image):
     return potentialTarget
 
 
+async def sendImage(ctx: commands.context, outImg: Image.Image, filename: str):
+    img = io.BytesIO()
+    outImg.save(img, "png")
+    img.seek(0)
+    await ctx.send(file=discord.File(img, filename))
+
+
 class Images(commands.Cog, name="Image Manipulation"):
     def __init__(self, bot):
         self.bot = bot
@@ -113,18 +120,36 @@ class Images(commands.Cog, name="Image Manipulation"):
 
             print(alpha)
 
+            # convert the images to be equal in size and mode for compatibility
+            image = forceSquare(image)
             # set alpha color outside of the lamp (replace green with the designated alpha color)
             overlay = replaceColor(overlay, (0, 255, 0, 255), alpha)
 
             # cut hole in template (remove the magenta pixels)
             overlay = hippityHoppityThisColorIsDisappearity(overlay, (255, 0, 255, 255))
 
-            # convert the images to be equal in size and mode for compatibility
-            image = forceSquare(image)
             if image.size > overlay.size:
                 image.thumbnail(overlay.size)
             else:
-                overlay.thumbnail(image.size)
+                # set alpha color outside of the lamp (replace green with transparent green)
+                overlay = replaceColor(overlay, (0, 255, 0, 255), (0, 255, 0, 0))
+
+                await sendImage(ctx, overlay, 'debugCatlamp.png')
+
+                # cut hole in template (remove the magenta pixels)
+                overlay = hippityHoppityThisColorIsDisappearity(overlay, (255, 0, 255, 255))
+
+                await sendImage(ctx, overlay, 'debugCatlamp.png')
+
+                overlay.thumbnail(image.size)  # this son of the bitches is the problem
+
+                await sendImage(ctx, overlay, 'debugCatlamp.png')
+
+                # replace transparent green with alpha
+                overlay = replaceColor(overlay, (0, 255, 0, 255), alpha)
+
+                await sendImage(ctx, overlay, 'debugCatlamp.png')
+
             image = image.convert(mode=overlay.mode)
 
             # combine catLamp with image
@@ -134,10 +159,7 @@ class Images(commands.Cog, name="Image Manipulation"):
             outImg = hippityHoppityThisColorIsDisappearity(outImg, alpha)
 
             # final prep and stuff for sending to the *internet*
-            img = io.BytesIO()
-            outImg.save(img, "png")
-            img.seek(0)
-            await ctx.send(file=discord.File(img, "catlamp.png"))
+            await sendImage(ctx, outImg, "catlamp.png")
 
 
 def setup(bot):
