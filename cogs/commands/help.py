@@ -1,3 +1,4 @@
+# pylint: disable=import-error
 from discord.ext import commands
 import discord
 
@@ -37,7 +38,7 @@ class EmbedHelpCommand(commands.HelpCommand):
 
     async def send_bot_help(self, mapping):
         embed = discord.Embed(title='Bot Commands', colour=self.COLOUR)
-        description = "**NOTE: [option] indicates an optional argument, while <option> indicates a required argument.**"
+        description = "`[option]` = Optional argument\n`<option>` = Required argument"
         if description:
             embed.description = description
 
