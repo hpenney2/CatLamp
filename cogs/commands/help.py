@@ -1,8 +1,6 @@
 from discord.ext import commands
 import discord
 
-from cogs.commands.info import Info
-
 import tables
 colors = tables.getColors()
 
@@ -21,9 +19,6 @@ class EmbedHelpCommand(commands.HelpCommand):
     """
     # Set the embed colour here
     COLOUR = colors['message']
-
-    # Set the cog here
-    cog = Info
 
     # Set the things to manually remove
     placeholders = ['=minutes', '=No reason specified.', '=0']
