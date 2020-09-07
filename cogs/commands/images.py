@@ -44,8 +44,7 @@ def replaceColor(image: Image.Image, targetIn: tuple, colorOut: tuple):
 
     newData = []
     for item in data:
-
-        if item[0] == targetIn[0] and item[1] == targetIn[1] and item[2] == targetIn[2]:
+        if item[0] == targetIn[0] and item[1] == targetIn[1] and item[2] == targetIn[2] and item[3] == targetIn[3]:
             newData.append(colorOut)
         else:
             newData.append(item)
@@ -118,37 +117,24 @@ class Images(commands.Cog, name="Image Manipulation"):
             # find a color not in either image so we can use it for transparency in the final product
             alpha = findAlphaTarget(image, overlay)
 
-            print(alpha)
-
             # convert the images to be equal in size and mode for compatibility
             image = forceSquare(image)
-            # set alpha color outside of the lamp (replace green with the designated alpha color)
-            overlay = replaceColor(overlay, (0, 255, 0, 255), alpha)
-
-            # cut hole in template (remove the magenta pixels)
-            overlay = hippityHoppityThisColorIsDisappearity(overlay, (255, 0, 255, 255))
 
             if image.size > overlay.size:
                 image.thumbnail(overlay.size)
-            else:
-                # set alpha color outside of the lamp (replace green with transparent green)
-                overlay = replaceColor(overlay, (0, 255, 0, 255), (0, 255, 0, 0))
-
-                await sendImage(ctx, overlay, 'debugCatlamp.png')
+                # set alpha color outside of the lamp (replace green with the designated alpha color)
+                overlay = replaceColor(overlay, (0, 255, 0, 255), alpha)
 
                 # cut hole in template (remove the magenta pixels)
                 overlay = hippityHoppityThisColorIsDisappearity(overlay, (255, 0, 255, 255))
+            else:
+                # cut hole in template (remove the magenta pixels)
+                overlay = hippityHoppityThisColorIsDisappearity(overlay, (255, 0, 255, 255))
 
-                await sendImage(ctx, overlay, 'debugCatlamp.png')
-
-                overlay.thumbnail(image.size)  # this son of the bitches is the problem
-
-                await sendImage(ctx, overlay, 'debugCatlamp.png')
+                overlay.thumbnail(image.size, Image.NEAREST)  # this son of the bitches is the problem
 
                 # replace transparent green with alpha
                 overlay = replaceColor(overlay, (0, 255, 0, 255), alpha)
-
-                await sendImage(ctx, overlay, 'debugCatlamp.png')
 
             image = image.convert(mode=overlay.mode)
 
