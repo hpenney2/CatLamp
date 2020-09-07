@@ -53,7 +53,8 @@ class EmbedHelpCommand(commands.HelpCommand):
             # override processing
             new = []
             for c in Commands:
-                new.append(c.name)
+                if not c.hidden:
+                    new.append(c.name)
             new.sort()
             Commands = new
             del new
