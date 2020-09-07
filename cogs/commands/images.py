@@ -106,7 +106,18 @@ class Images(commands.Cog, name="Image Manipulation"):
         async with ctx.channel.typing():
             # set the images
             image = await getImage(ctx, user)
-            overlay = self.catLampTemplate
+            overlay = self.catLampTemplate.copy()
+
+            # find a color not in either image so we can use it for transparency in the final product
+            alpha = findAlphaTarget(image, overlay)
+
+            print(alpha)
+
+            # set alpha color outside of the lamp (replace green with the designated alpha color)
+            overlay = replaceColor(overlay, (0, 255, 0, 255), alpha)
+
+            # cut hole in template (remove the magenta pixels)
+            overlay = hippityHoppityThisColorIsDisappearity(overlay, (255, 0, 255, 255))
 
             # convert the images to be equal in size and mode for compatibility
             image = forceSquare(image)
@@ -115,15 +126,6 @@ class Images(commands.Cog, name="Image Manipulation"):
             else:
                 overlay.thumbnail(image.size)
             image = image.convert(mode=overlay.mode)
-
-            # find a color not in either image so we can use it for transparency in the final product
-            alpha = findAlphaTarget(image, overlay)
-
-            # set alpha color outside of the lamp (replace green with the designated alpha color)
-            overlay = replaceColor(overlay, (0, 255, 0, 255), alpha)
-
-            # cut hole in template (remove the magenta pixels)
-            overlay = hippityHoppityThisColorIsDisappearity(overlay, (255, 0, 255, 255))
 
             # combine catLamp with image
             outImg = Image.alpha_composite(image, overlay)
