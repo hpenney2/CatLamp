@@ -1,3 +1,4 @@
+# pylint: disable=import-error
 from ast import parse 
 import os
 import subprocess
@@ -5,7 +6,7 @@ import sys
 import discord
 from discord.ext import commands
 from json import dump
-from CatLampPY import colors, config, insert_returns, reddit, isAdmin
+from CatLampPY import colors, config, insert_returns, reddit, isAdmin, CommandErrorMsg
 from hastebin import get_key
 from cogs.listeners.exceptions import Exceptions
 
@@ -48,7 +49,7 @@ class Administration(commands.Cog):
                 os.execv(sys.executable, ['python'] + sys.argv)
 
     @commands.command(hidden=True)
-    async def reload(self, ctx):
+    async def reload(self, ctx, save: bool = True):
         """Reloads the bot commands and listeners. Only runnable by admins."""
         if isAdmin(ctx.author):
             print(f"Reload initiated by {str(ctx.author)} ({ctx.author.id})")
@@ -60,6 +61,16 @@ class Administration(commands.Cog):
             msg = await ctx.send(embed=embed)
             await self.client.change_presence(activity=discord.Game("Reloading..."))
             print("Reloading...")
+            if save and len(self.client.reminders) > 0:
+                print("Saving current reminders...")
+                for tab in self.client.reminders.values():
+                    tab.pop("task")
+                    self.client.reminders[tab["userId"]] = tab
+                with open("reminders.json", "w") as file:
+                    dump(self.client.reminders, file)
+                    print("Done saving reminders!")
+            elif len(self.client.reminders) <= 0:
+                print("No reminders to save, not creating a reminders.json file.")
             self.client.cmds = []
             # *reload commands and listeners
             from os import listdir
@@ -74,6 +85,8 @@ class Administration(commands.Cog):
                         try:
                             self.client.load_extension(loadDir + cog[:-3])
                         except commands.NoEntryPointError:
+                            if (loadDir + cog[:-3]) != "cogs.commands.help":
+                                errorInfo += f"{loadDir + cog[:-3]} is not a proper cog!\n"
                             errorInfo += f"{loadDir + cog[:-3]} is not a proper cog!\n"
                         except commands.ExtensionAlreadyLoaded:
                             try:
@@ -82,6 +95,8 @@ class Administration(commands.Cog):
                                 errorInfo += f'{failure.name} failed! booooo\n'
                         except commands.ExtensionFailed as failure:
                             errorInfo += f'{failure.name} failed! booooo\n'
+            from cogs.commands.help import EmbedHelpCommand
+            self.client.help_command = EmbedHelpCommand()
             await self.client.change_presence(activity=None)
             if errorInfo != "":
                 print(f"Reloaded with errors!\n{errorInfo}")
@@ -131,7 +146,11 @@ class Administration(commands.Cog):
                 code = code.strip("` ")
                 if code.startswith("py"):
                     code = code[2:]
+                elif code.startswith("python"):
+                    code = code[6:]
 
+                if "config" in code:
+                    raise CommandErrorMsg("No token for you dumb dumb")
                 # add a layer of indentation
                 code = "\n".join(f"    {i}" for i in code.splitlines())
 
@@ -147,6 +166,7 @@ class Administration(commands.Cog):
                     'self': self,
                     'client': self.client,
                     'discord': discord,
+                    'colors': colors,
                     'commands': commands,
                     'cmds': self.client.cmds,
                     'ctx': ctx,

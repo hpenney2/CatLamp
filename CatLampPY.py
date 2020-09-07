@@ -28,6 +28,8 @@ while True:
         import io
         import re as regex
 
+        from cogs.commands.help import EmbedHelpCommand
+
         config = open("config.json", "r")
         config = json.load(config)
         a = []  # make a list of everything in config
@@ -65,9 +67,10 @@ while True:
     break
 
 logging.basicConfig(level=logging.INFO, format="[%(asctime)s] %(levelname)s %(name)s | %(message)s")
-client = commands.AutoShardedBot(command_prefix=commands.when_mentioned_or('+'), case_insensitive=True)
-client.remove_command("help")
-# helpEmbed = None
+client = commands.AutoShardedBot(
+    command_prefix=commands.when_mentioned_or('+'), case_insensitive=True,
+    help_command=EmbedHelpCommand(verify_checks=False, show_hidden=False)
+)
 client.cmds = []
 client.helpEmbeds = []
 client.reminders = {}
@@ -162,20 +165,35 @@ def insert_returns(body):
         insert_returns(body[-1].body)
 
 
-# load commands and listeners
-cogDirectories = ['cogs/commands/', 'cogs/listeners/']  # bot will look for python files in these directories
-for cogDir in cogDirectories:
-    loadDir = cogDir.replace('/', '.')
-    for cog in listdir(cogDir):
-        if cog.endswith('.py'):  # bot tries to load all .py files in said folders, use cogs/misc for non-cog things
-            try:
-                client.load_extension(loadDir + cog[:-3])
-            except commands.NoEntryPointError:
-                print(f"{loadDir + cog[:-3]} is not a proper cog!")
-            except commands.ExtensionAlreadyLoaded:
-                print('you should not be seeing this\n if you do, youre screwed')
-            except commands.ExtensionFailed as failure:
-                print(f'{failure.name} failed! booooo')
+# Events (should be in a listener cog if possible)
+@client.event
+async def on_error(event, *args, **kwargs):
+    if event != 'on_command_error':
+        embed = discord.Embed(title=f"Error occured in event '{event}'",
+                              description=f"```{str(sys.exc_info()[1])}```",
+                              color=colors["error"])
+        embed.timestamp = datetime.datetime.utcnow()
+        await client.get_channel(712489826330345534).send(embed=embed)
+    raise sys.exc_info()[1]
+
 
 if __name__ == "__main__":
+
+    # load commands and listeners
+    cogDirectories = ['cogs/commands/', 'cogs/listeners/']  # bot will look for python files in these directories
+    for cogDir in cogDirectories:
+        loadDir = cogDir.replace('/', '.')
+        for cog in listdir(cogDir):
+            if cog.endswith('.py'):  # bot tries to load all .py files in said folders, use cogs/misc for non-cog things
+                try:
+                    client.load_extension(loadDir + cog[:-3])
+                except commands.NoEntryPointError:
+                    print(f"{loadDir + cog[:-3]} is not a proper cog!")
+                except commands.ExtensionAlreadyLoaded:
+                    print('you should not be seeing this\n if you do, youre screwed')
+                except commands.ExtensionFailed as failure:
+                    print(f'{failure.name} failed! booooo')
+
+    timeMod.sleep(0.000000001)  # load cogs before running token
+
     client.run(config["token"])

@@ -1,7 +1,7 @@
 import discord
+import sys
 from discord.ext import commands
-
-from CatLampPY import isAdmin, colors
+from CatLampPY import isAdmin, colors # pylint: disable=import-error
 
 
 class Exceptions(commands.Cog):
@@ -35,7 +35,8 @@ class Exceptions(commands.Cog):
                      f"in the CatLamp server. (+server)")
             await ctx.send(embed=embed)
             print(f"An error occurred while trying to run '{ctx.message.content}'!")
-            raise error         
+            if not type(error) is str:
+                raise error
 
     async def errorEmbed(self, cmd, error):
         """[deprecated] Generates an error embed. Please use 'raise CommandErrorMsg("error message")' instead."""
