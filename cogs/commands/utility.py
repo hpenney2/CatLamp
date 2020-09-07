@@ -68,12 +68,12 @@ class Utility(commands.Cog):
             pass
 
     @commands.command(aliases=["reminder", "timer"])
-    async def remind(self, ctx, time: int, unit: str = "minutes", *, reminder_note: str = ""):
+    async def remind(self, ctx, time: float, unit: str = "minutes", *, reminder_note: str = ""):
         """Sets a reminder, optionally with a note. Valid time units are seconds, minutes, and hours."""
         if ctx.author.id in self.client.reminders:
             await ctx.send("You already have a reminder set! Use `+cancelReminder` to cancel it.")
             return
-        if time < 1:
+        if time <= 0:
             time = 1
         # Unit checking
         originalTime = time
@@ -92,6 +92,10 @@ class Utility(commands.Cog):
             unit += "s"
         if reminder_note.strip():  # If not empty or whitespace
             reminder_note = f" Note: `{reminder_note}`"
+
+        if str(originalTime).endswith('.0'):  # definitely best wait to remove trailing ".0" in integer floats
+            originalTime = str(originalTime)[:-2]
+
         task = asyncio.ensure_future(self.timer(ctx.channel.id, ctx.author.id, time, originalTime, unit, reminder_note))
         self.client.reminders[ctx.author.id] = {
             "task": task,
@@ -141,8 +145,7 @@ class Utility(commands.Cog):
                 with open("reminders.json", "r") as file:
                     tempReminders = load(file)
                 for tab in tempReminders.values():
-                    remainingTime = round(
-                        (tab["startTime"] + tab["timeSeconds"]) - datetime.datetime.utcnow().timestamp())
+                    remainingTime = (tab["startTime"] + tab["timeSeconds"]) - datetime.datetime.utcnow().timestamp()
                     if remainingTime <= 0:
                         self.client.reminders[int(tab["userId"])] = tab
                         asyncio.ensure_future(

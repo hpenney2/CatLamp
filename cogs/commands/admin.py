@@ -87,6 +87,7 @@ class Administration(commands.Cog):
                         except commands.NoEntryPointError:
                             if (loadDir + cog[:-3]) != "cogs.commands.help":
                                 errorInfo += f"{loadDir + cog[:-3]} is not a proper cog!\n"
+                            errorInfo += f"{loadDir + cog[:-3]} is not a proper cog!\n"
                         except commands.ExtensionAlreadyLoaded:
                             try:
                                 self.client.reload_extension(loadDir + cog[:-3])
@@ -109,6 +110,7 @@ class Administration(commands.Cog):
                 embed.title = "Reloaded"
                 embed.description = f"Reloaded successfully without errors!"
                 await msg.edit(embed=embed)
+
 
     @commands.command(hidden=True)
     async def pull(self, ctx):

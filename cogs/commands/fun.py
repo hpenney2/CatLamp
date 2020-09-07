@@ -5,6 +5,7 @@ import prawcore  # because praw exceptions inherit from here
 import random
 import re as regex
 from CatLampPY import reddit
+from datetime import datetime
 
 
 class Fun(commands.Cog):
@@ -133,12 +134,15 @@ class Fun(commands.Cog):
                     embed.set_author(name=f"Posted by /u/{randPost.author.name}")
                     footer = f"{str(round(randPost.upvote_ratio * 100))}% upvoted"
                     if footerNote:
-                        footer = footer + f" || {footerNote}"
+                        footer += f" || {footerNote}"
                     embed.set_footer(text=footer)
+                    embed.timestamp = datetime.fromtimestamp(randPost.created_utc)
                     satisfied = True
                 await ctx.send(embed=embed)
-            except(prawcore.BadRequest, prawcore.Redirect, prawcore.NotFound, prawcore.Forbidden):
-                await ctx.send('Failed to get a post.')
+            except prawcore.Forbidden:
+                await ctx.send("Subreddit is private.")
+            except(prawcore.BadRequest, prawcore.Redirect, prawcore.NotFound):
+                await ctx.send("Subreddit not found.")
 
 
 def setup(bot):
