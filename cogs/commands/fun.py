@@ -72,7 +72,7 @@ class Fun(commands.Cog):
         # in case someone types it with r/ or /r/ at the start
         if subreddit_name.startswith('r/'):
             subreddit_name = subreddit_name[2:]
-        if subreddit_name.startswith('/r/'):
+        elif subreddit_name.startswith('/r/'):
             subreddit_name = subreddit_name[3:]
         async with ctx.channel.typing():
             try:
