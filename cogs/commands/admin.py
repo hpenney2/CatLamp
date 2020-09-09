@@ -49,6 +49,7 @@ class Administration(commands.Cog):
             except FileNotFoundError:
                 os.execv(sys.executable, ['python'] + sys.argv)
 
+    # noinspection PyUnresolvedReferences,PyDunderSlots
     @commands.command(hidden=True)
     async def reload(self, ctx, save: bool = True):
         """Reloads the bot commands and listeners. Only runnable by admins."""
@@ -102,7 +103,7 @@ class Administration(commands.Cog):
                 print(f"Reloaded with errors!\n{errorInfo}")
                 embed.color = colors["error"]
                 embed.title = "Reloaded with errors"
-                embed.description = f"Errors occured while reloading.\n```{errorInfo[:-2]}```"
+                embed.description = f"Errors occurred while reloading.\n```{errorInfo[:-2]}```"
                 await msg.edit(embed=embed)
             else:
                 print("Reloaded successfully!")
