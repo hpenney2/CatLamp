@@ -57,8 +57,7 @@ class Administration(commands.Cog):
             embed = discord.Embed(title="Reloading...",
                                   description="CatLamp is reloading. Watch this message for updates.",
                                   color=colors["warning"])
-            embed.set_footer(
-                text=f"Reload initiated by {str(ctx.author)} ({ctx.author.id})")
+            embed.set_footer(text=f"Reload initiated by {str(ctx.author)} ({ctx.author.id})")
             msg = await ctx.send(embed=embed)
             await self.client.change_presence(activity=discord.Game("Reloading..."))
             print("Reloading...")
@@ -111,7 +110,6 @@ class Administration(commands.Cog):
                 embed.title = "Reloaded"
                 embed.description = f"Reloaded successfully without errors!"
                 await msg.edit(embed=embed)
-
 
     @commands.command(hidden=True)
     async def pull(self, ctx):
