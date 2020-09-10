@@ -3,10 +3,13 @@ import datetime
 import os
 from json import load
 
-import discord
 from discord.ext import commands
 
-from CatLampPY import isGuild, hasPermissions, CommandErrorMsg, colors  # pylint: disable=import-error
+from CatLampPY import isGuild, hasPermissions, CommandErrorMsg  # pylint: disable=import-error
+from tables import *
+
+colors = getColors()
+times = getTimes()
 
 
 class Utility(commands.Cog):
@@ -77,12 +80,8 @@ class Utility(commands.Cog):
             time = 1
         # Unit checking
         originalTime = time
-        if unit.lower() == "second" or unit.lower() == "seconds":
-            time = originalTime
-        elif unit.lower() == "minute" or unit.lower() == "minutes":
-            time = 60 * time
-        elif unit.lower() == "hour" or unit.lower() == "hours":
-            time = 3600 * time
+        if unit.lower() in times:
+            time = times[unit.lower()] * time
         else:
             raise CommandErrorMsg("Invalid time unit!")
 
