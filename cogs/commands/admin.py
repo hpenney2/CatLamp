@@ -33,11 +33,12 @@ class Administration(commands.Cog):
             await self.client.change_presence(activity=discord.Game("Restarting..."))
             if len(self.client.reminders) > 0:
                 print("Saving current reminders...")
-                for tab in self.client.reminders.values():
+                temp = self.client.reminders.copy()  # copy the reminders for snap, crackle, and pop
+                for tab in temp.values():
                     tab.pop("task")
-                    self.client.reminders[tab["userId"]] = tab
+                    temp[tab["userId"]] = tab
                 with open("reminders.json", "w") as file:
-                    dump(self.client.reminders, file)
+                    dump(temp, file)
                     print("Done saving reminders!")
             else:
                 print("No reminders to save, not creating a reminders.json file.")
@@ -64,7 +65,7 @@ class Administration(commands.Cog):
             print("Reloading...")
             if save and len(self.client.reminders) > 0:
                 print("Saving current reminders...")
-                temp = self.client.reminders.copy()  # copy the reminders json for snap, crackle, and pop
+                temp = self.client.reminders.copy()  # copy the reminders for snap, crackle, and pop
                 for tab in temp.values():
                     tab.pop("task")
                     temp[tab["userId"]] = tab
