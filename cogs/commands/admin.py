@@ -66,12 +66,17 @@ class Administration(commands.Cog):
             if save and len(self.client.reminders) > 0:
                 print("Saving current reminders...")
                 temp = self.client.reminders.copy()  # copy the reminders for snap, crackle, and pop
-                for tab in temp.values():
-                    tab.pop("task")
+                print(f"\n\n Temp: {temp}\n\nActual: {self.client.reminders}")
+                for i in temp:
+                    tab = temp[i]
+                    temporary = tab.pop("task")
                     temp[tab["userId"]] = tab
+                    self.client.reminders[i]['task'] = temporary
                 with open("reminders.json", "w") as file:
+                    print(f"\n Temp at time of dumping: {temp}\n\n Main at time:{self.client.reminders}")
                     dump(temp, file)
                     print("Done saving reminders!")
+                print(f"\n Temp: {temp}\n\nActual: {self.client.reminders}")
             elif len(self.client.reminders) <= 0:
                 print("No reminders to save, not creating a reminders.json file.")
             self.client.cmds = []
