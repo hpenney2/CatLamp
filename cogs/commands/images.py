@@ -125,9 +125,11 @@ class Images(commands.Cog, name="Image Manipulation"):
         try:
             self.catLampTemplate = Image.open('images/catlamp-outlineonly.png', mode='r').convert('RGBA')
             self.dioTemplate = Image.open('images/dio.png', mode='r').convert('RGBA')
+            self.flushedTemplate = Image.open('images/flushed.png', mode='r').convert('RGBA')
         except FileNotFoundError:
             self.catLampTemplate = Image.open('cogs/commands/images/catlamp-outlineonly.png', mode='r').convert('RGBA')
             self.dioTemplate = Image.open('cogs/commands/images/dio.png', mode='r').convert('RGBA')
+            self.flushedTemplate = Image.open('cogs/commands/images/flushed.png', mode='r').convert('RGBA')
 
     @commands.command(cooldown_after_parsing=True)
     @commands.cooldown(1, 5, commands.BucketType.user)
@@ -208,6 +210,34 @@ class Images(commands.Cog, name="Image Manipulation"):
 
             # final prep and stuff for sending to the *internet*
             await sendImage(ctx, outImg, "SPOILER_dio.png")
+
+    @commands.command(cooldown_after_parsing=True)
+    @commands.cooldown(1, 5, commands.BucketType.user)
+    async def flushed(self, ctx, user: discord.User = None):
+        """The attached image or your/the mentioned user's avatar: 😳"""
+        async with ctx.channel.typing():
+            # set the images
+            image = await getImage(ctx, user)
+            overlay = self.flushedTemplate.copy()
+
+            # convert the images to be equal in size and mode for compatibility
+            image = forceSquare(image)
+
+            # cut hole in template (remove the magenta pixels)
+            overlay = hippityHoppityThisColorIsDisappearity(overlay, (255, 0, 255, 255))
+
+            if image.size > overlay.size:
+                image.thumbnail(overlay.size)
+            else:
+                overlay.thumbnail(image.size)  # this son of the bitches is the problem
+
+            image = image.convert(mode=overlay.mode)
+
+            # combine dio with image
+            outImg = Image.alpha_composite(image, overlay)
+
+            # final prep and stuff for sending to the *internet*
+            await sendImage(ctx, outImg, "flushed.png")
 
     @commands.command(cooldown_after_parsing=True)
     @commands.cooldown(1, 5, commands.BucketType.user)
