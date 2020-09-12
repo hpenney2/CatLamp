@@ -43,19 +43,50 @@ def replaceColor(image: Image.Image, targetIn: tuple, colorOut: tuple):
     data = img.getdata()
 
     newData = []
-    for item in data:
-        if item[0] == targetIn[0] and item[1] == targetIn[1] and item[2] == targetIn[2] and item[3] == targetIn[3]:
-            newData.append(colorOut)
-        else:
-            newData.append(item)
+    try:
+        for item in data:
+            if item[0] == targetIn[0] and item[1] == targetIn[1] and item[2] == targetIn[2] and item[3] == targetIn[3]:
+                newData.append(colorOut)
+            else:
+                newData.append(item)
+    except IndexError:
+        for item in data:
+            if item[0] == targetIn[0] and item[1] == targetIn[1] and item[2] == targetIn[2]:
+                newData.append(colorOut)
+            else:
+                newData.append(item)
 
     img.putdata(newData)
 
     return img
 
 
-def findAlphaTarget(image1: Image.Image, image2: Image.Image):
+def findMonoAlphaTarget(image: Image.Image):
+    satisfied = False
+    potentialTarget = (0, 255, 0, 255)  # start with green
+    blacklist = []
+    fuck = 0
 
+    while not satisfied:
+        if fuck == 10:
+            random.seed()
+            fuck = 0
+
+        if potentialTarget not in blacklist:
+            if potentialTarget in image.getdata():
+                blacklist.append(potentialTarget)
+            else:
+                satisfied = True
+        else:
+            fuck += 1
+
+        # randomize target
+        potentialTarget = (random.randrange(0, 256), random.randrange(0, 256), random.randrange(0, 256), 255)
+
+    return potentialTarget
+
+
+def findDualAlphaTarget(image1: Image.Image, image2: Image.Image):
     satisfied = False
     potentialTarget = (0, 255, 0, 255)  # start with green
     blacklist = []
@@ -100,7 +131,7 @@ class Images(commands.Cog, name="Image Manipulation"):
         async with ctx.channel.typing():
             image = await getImage(ctx, user)
             deepImg = await deeppyer.deepfry(image, flares=False)
-            deepImg = deepImg.convert.convert('RGBA')  # i dunno, deepImg is an Image.py, but sendImage() wants Image
+            deepImg = deepImg.convert('RGBA')  # i dunno, deepImg is an Image.py, but sendImage() wants Image
             await sendImage(ctx, deepImg, "deepfry.png")
 
     @commands.command(cooldown_after_parsing=True)
@@ -113,7 +144,7 @@ class Images(commands.Cog, name="Image Manipulation"):
             overlay = self.catLampTemplate.copy()
 
             # find a color not in either image so we can use it for transparency in the final product
-            alpha = findAlphaTarget(image, overlay)
+            alpha = findDualAlphaTarget(image, overlay)
 
             # convert the images to be equal in size and mode for compatibility
             image = forceSquare(image)
@@ -147,14 +178,32 @@ class Images(commands.Cog, name="Image Manipulation"):
 
     @commands.command(cooldown_after_parsing=True)
     @commands.cooldown(1, 5, commands.BucketType.user)
-    async def name(self, ctx, user: discord.User = None):
+    async def invert(self, ctx, user: discord.User = None):
         """Inverts the attached image or your/the mentioned user's avatar."""
         async with ctx.channel.typing():
             image = await getImage(ctx, user)
 
-            outImg = ImageOps.invert(image)  # processing here
+            if image.mode == "RGBA":
+                alpha = findMonoAlphaTarget(image)
 
-            await sendImage(ctx, outImg, "invert.png")
+                alphaTemp = Image.new('RGB', (1, 1), alpha)
+                alphaTemp = ImageOps.invert(alphaTemp)
+
+                alphaInvert = alphaTemp.getdata()[0]  # find inverted alpha color
+
+                image = Image.alpha_composite(Image.new('RGBA', (image.width, image.height), alpha), image)
+
+                await sendImage(ctx, image, "debug.png")
+
+            image = image.convert('RGB')  # i dunno, ImageOps wants an RGB
+            image = ImageOps.invert(image)
+
+            if alphaInvert:
+                print(alphaInvert)
+                print('uhhh')
+                image = hippityHoppityThisColorIsDisappearity(image, alphaInvert)
+
+            await sendImage(ctx, image, "invert.png")
 
 
 def setup(bot):
