@@ -264,6 +264,20 @@ class Images(commands.Cog, name="Image Manipulation"):
 
             await sendImage(ctx, image, "invert.png")
 
+    @commands.command(cooldown_after_parsing=True)
+    @commands.cooldown(1, 5, commands.BucketType.user)
+    async def sadden(self, ctx, user: discord.User = None):
+        """😔"""
+        async with ctx.channel.typing():
+            image = await getImage(ctx, user)
+
+            image = image.convert('RGB')  # i dunno, ImageOps wants an RGB
+            image = ImageOps.grayscale(image)
+
+            await sendImage(ctx, image, "grayscale.png")
+
+
+
 
 def setup(bot):
     bot.add_cog(Images(bot))
