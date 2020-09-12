@@ -122,7 +122,12 @@ class Images(commands.Cog, name="Image Manipulation"):
     def __init__(self, bot):
         self.bot = bot
         self.bot.cmds.append(self.deepfry)
-        self.catLampTemplate = Image.open('catlamp-outlineonly.png', mode='r').convert('RGBA')
+        try:
+            self.catLampTemplate = Image.open('images/catlamp-outlineonly.png', mode='r').convert('RGBA')
+            self.dioTemplate = Image.open('images/dio.png', mode='r').convert('RGBA')
+        except FileNotFoundError:
+            self.catLampTemplate = Image.open('cogs/commands/images/catlamp-outlineonly.png', mode='r').convert('RGBA')
+            self.dioTemplate = Image.open('cogs/commands/images/dio.png', mode='r').convert('RGBA')
 
     @commands.command(cooldown_after_parsing=True)
     @commands.cooldown(1, 5, commands.BucketType.user)
@@ -178,6 +183,34 @@ class Images(commands.Cog, name="Image Manipulation"):
 
     @commands.command(cooldown_after_parsing=True)
     @commands.cooldown(1, 5, commands.BucketType.user)
+    async def dio(self, ctx, user: discord.User = None):
+        """You expected the attached image or your/the mentioned user's avatar, but it was I, Dio!"""
+        async with ctx.channel.typing():
+            # set the images
+            image = await getImage(ctx, user)
+            overlay = self.dioTemplate.copy()
+
+            # convert the images to be equal in size and mode for compatibility
+            image = forceSquare(image)
+
+            # cut hole in template (remove the magenta pixels)
+            overlay = hippityHoppityThisColorIsDisappearity(overlay, (255, 0, 255, 255))
+
+            if image.size > overlay.size:
+                image.thumbnail(overlay.size)
+            else:
+                overlay.thumbnail(image.size)  # this son of the bitches is the problem
+
+            image = image.convert(mode=overlay.mode)
+
+            # combine dio with image
+            outImg = Image.alpha_composite(image, overlay)
+
+            # final prep and stuff for sending to the *internet*
+            await sendImage(ctx, outImg, "dio.png")
+
+    @commands.command(cooldown_after_parsing=True)
+    @commands.cooldown(1, 5, commands.BucketType.user)
     async def invert(self, ctx, user: discord.User = None):
         """Inverts the attached image or your/the mentioned user's avatar."""
         async with ctx.channel.typing():
@@ -206,7 +239,6 @@ class Images(commands.Cog, name="Image Manipulation"):
 
 def setup(bot):
     bot.add_cog(Images(bot))
-
 
 # general template because I can
 #     @commands.command(cooldown_after_parsing=True)
