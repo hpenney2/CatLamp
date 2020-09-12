@@ -1,6 +1,6 @@
 import deeppyer
 # noinspection PyPackageRequirements
-from PIL import Image
+from PIL import Image, ImageOps
 import io
 import discord
 from discord.ext import commands
@@ -100,15 +100,13 @@ class Images(commands.Cog, name="Image Manipulation"):
         async with ctx.channel.typing():
             image = await getImage(ctx, user)
             deepImg = await deeppyer.deepfry(image, flares=False)
-            img = io.BytesIO()
-            deepImg.save(img, "png")
-            img.seek(0)
-            await ctx.send(file=discord.File(img, "deepfry.png"))
+            deepImg = deepImg.convert.convert('RGBA')  # i dunno, deepImg is an Image.py, but sendImage() wants Image
+            await sendImage(ctx, deepImg, "deepfry.png")
 
     @commands.command(cooldown_after_parsing=True)
     @commands.cooldown(1, 5, commands.BucketType.user)
     async def catLamp(self, ctx, user: discord.User = None):
-        """Generates a Catlamp of attached image or your/the mentioned user's avatar."""
+        """Generates a Catlamp of the attached image or your/the mentioned user's avatar."""
         async with ctx.channel.typing():
             # set the images
             image = await getImage(ctx, user)
@@ -147,6 +145,17 @@ class Images(commands.Cog, name="Image Manipulation"):
             # final prep and stuff for sending to the *internet*
             await sendImage(ctx, outImg, "catlamp.png")
 
+    @commands.command(cooldown_after_parsing=True)
+    @commands.cooldown(1, 5, commands.BucketType.user)
+    async def name(self, ctx, user: discord.User = None):
+        """Inverts the attached image or your/the mentioned user's avatar."""
+        async with ctx.channel.typing():
+            image = await getImage(ctx, user)
+
+            outImg = ImageOps.invert(image)  # processing here
+
+            await sendImage(ctx, outImg, "invert.png")
+
 
 def setup(bot):
     bot.add_cog(Images(bot))
@@ -162,7 +171,4 @@ def setup(bot):
 #
 #             outImg = None  # processing here
 #
-#             img = io.BytesIO()
-#             outImg.save(img, "png")
-#             img.seek(0)
-#             await ctx.send(file=discord.File(img, "image.png"))
+#             await sendImage(ctx, outImg, "image.png")
