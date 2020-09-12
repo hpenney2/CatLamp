@@ -207,7 +207,7 @@ class Images(commands.Cog, name="Image Manipulation"):
             outImg = Image.alpha_composite(image, overlay)
 
             # final prep and stuff for sending to the *internet*
-            await sendImage(ctx, outImg, "dio.png")
+            await sendImage(ctx, outImg, "SPOILER_dio.png")
 
     @commands.command(cooldown_after_parsing=True)
     @commands.cooldown(1, 5, commands.BucketType.user)
@@ -225,8 +225,6 @@ class Images(commands.Cog, name="Image Manipulation"):
                 alphaInvert = alphaTemp.getdata()[0]  # find inverted alpha color
 
                 image = Image.alpha_composite(Image.new('RGBA', (image.width, image.height), alpha), image)
-
-                await sendImage(ctx, image, "debug.png")
 
             image = image.convert('RGB')  # i dunno, ImageOps wants an RGB
             image = ImageOps.invert(image)
