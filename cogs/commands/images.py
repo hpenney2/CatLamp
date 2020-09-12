@@ -199,8 +199,6 @@ class Images(commands.Cog, name="Image Manipulation"):
             image = ImageOps.invert(image)
 
             if alphaInvert:
-                print(alphaInvert)
-                print('uhhh')
                 image = hippityHoppityThisColorIsDisappearity(image, alphaInvert)
 
             await sendImage(ctx, image, "invert.png")
@@ -210,7 +208,7 @@ def setup(bot):
     bot.add_cog(Images(bot))
 
 
-# template because I can
+# general template because I can
 #     @commands.command(cooldown_after_parsing=True)
 #     @commands.cooldown(1, 5, commands.BucketType.user)
 #     async def name(self, ctx, user: discord.User = None):
@@ -221,3 +219,31 @@ def setup(bot):
 #             outImg = None  # processing here
 #
 #             await sendImage(ctx, outImg, "image.png")
+
+# cookie-cutter ImageOps command template
+#     @commands.command(cooldown_after_parsing=True)
+#     @commands.cooldown(1, 5, commands.BucketType.user)
+#     async def name(self, ctx, user: discord.User = None):
+#         """Inverts the attached image or your/the mentioned user's avatar."""
+#         async with ctx.channel.typing():
+#             image = await getImage(ctx, user)
+#
+#             if image.mode == "RGBA":
+#                 alpha = findMonoAlphaTarget(image)
+#
+#                 alphaTemp = Image.new('RGB', (1, 1), alpha)
+#                 alphaTemp = ImageOps.invert(alphaTemp)
+#
+#                 alphaInvert = alphaTemp.getdata()[0]  # find inverted alpha color
+#
+#                 image = Image.alpha_composite(Image.new('RGBA', (image.width, image.height), alpha), image)
+#
+#                 await sendImage(ctx, image, "debug.png")
+#
+#             image = image.convert('RGB')  # i dunno, ImageOps wants an RGB
+#             image = ImageOps.invert(image)  #  ImageOps function I guess
+#
+#             if alphaInvert:
+#                 image = hippityHoppityThisColorIsDisappearity(image, alphaInvert)
+#
+#             await sendImage(ctx, image, "invert.png")
