@@ -1,4 +1,5 @@
 # pylint: disable=import-error
+import asyncio
 from ast import parse 
 import os
 # pylint: disable=import-error
@@ -97,7 +98,7 @@ class Administration(commands.Cog):
     @commands.command(hidden=True, aliases=["forceStop"])
     async def forceRestart(self, ctx):
         """Force restarts the bot. Only runnable by admins."""
-        if isAdmin(ctx.author):
+        if isAdmin(ctx.author) and self.check(ctx, "force restart", "Force restart"):
             print(f"Restart initiated by {str(ctx.author)} ({ctx.author.id})")
             try:
                 embed = discord.Embed(title="Force Restarting...",
@@ -145,6 +146,24 @@ class Administration(commands.Cog):
                 print("Done saving reminders!")
         else:
             print("No reminders to save, not creating a reminders.json file.")
+
+    async def check(self, ctx, verb: str, noun: str):
+        confirmMess = await ctx.send(f'Are you sure you want to {verb} the bot?')
+        await confirmMess.add_reaction('✅')
+        await confirmMess.add_reaction('❌')
+
+        # wait_for stolen from docs example
+        def confirm(react, reactor):
+            return reactor == ctx.author and str(react.emoji) in ('✅', '❌') and confirmMess.id == react.message.id
+
+        try:
+            reaction, user = await self.client.wait_for('reaction_add', timeout=30, check=confirm)
+        except asyncio.TimeoutError:  # timeout cancel
+            await confirmMess.edit(text=f'{noun} cancelled.')
+        else:
+            if reaction.emoji == '✅':
+                await confirmMess.delete()
+                return True
 
     @commands.command(hidden=True)
     async def pull(self, ctx):
