@@ -31,17 +31,7 @@ class Administration(commands.Cog):
                 text=f"Restart initiated by {str(ctx.author)} ({ctx.author.id})")
             await ctx.send(embed=embed)
             await self.client.change_presence(activity=discord.Game("Restarting..."))
-            if len(self.client.reminders) > 0:
-                print("Saving current reminders...")
-                temp = self.client.reminders.copy()  # copy the reminders for snap, crackle, and pop
-                for tab in temp.values():
-                    tab.pop("task")
-                    temp[tab["userId"]] = tab
-                with open("reminders.json", "w") as file:
-                    dump(temp, file)
-                    print("Done saving reminders!")
-            else:
-                print("No reminders to save, not creating a reminders.json file.")
+            self.saveReminders()
             await self.client.logout()
             print("Bot connection closed.")
             print("Restarting...")
@@ -63,20 +53,8 @@ class Administration(commands.Cog):
             msg = await ctx.send(embed=embed)
             await self.client.change_presence(activity=discord.Game("Reloading..."))
             print("Reloading...")
-            if save and len(self.client.reminders) > 0:
-                print("Saving current reminders...")
-                temp = {}
-                for i in temp:
-                    for i2 in temp[i]:
-                        if i2 != "task":
-                            tab[i2] = temp[i][i2]
-                    temp[tab["userId"]] = tab
-                    temp[i]['task'] = temporary
-                with open("reminders.json", "w") as file:
-                    dump(temp, file)
-                    print("Done saving reminders!")
-            elif len(self.client.reminders) <= 0:
-                print("No reminders to save, not creating a reminders.json file.")
+            if save:
+                self.saveReminders()
             self.client.cmds = []
             # *reload commands and listeners
             from os import listdir
@@ -115,6 +93,58 @@ class Administration(commands.Cog):
                 embed.title = "Reloaded"
                 embed.description = f"Reloaded successfully without errors!"
                 await msg.edit(embed=embed)
+
+    @commands.command(hidden=True, aliases=["forceStop"])
+    async def forceRestart(self, ctx):
+        """Force restarts the bot. Only runnable by admins."""
+        if isAdmin(ctx.author):
+            print(f"Restart initiated by {str(ctx.author)} ({ctx.author.id})")
+            try:
+                embed = discord.Embed(title="Force Restarting...",
+                                      description="CatLamp will restart shortly. Check the bot's status for updates.",
+                                      color=colors["success"])
+                embed.set_footer(
+                    text=f"Restart initiated by {str(ctx.author)} ({ctx.author.id})")
+                await ctx.send(embed=embed)
+            except Exception as e:
+                print(f'Sending embed failed with exception {e}')
+            try:
+                await self.client.change_presence(activity=discord.Game("Restarting..."))
+            except Exception as e:
+                print(f'Presence change failed with exception {e}')
+            try:
+                self.saveReminders()
+            except Exception as e:
+                print(f'Reminder saving failed with exception {e}')
+            try:
+                await self.client.logout()
+                print("Bot connection closed.")
+            except Exception as e:
+                print(f"Bot logout failed with exception {e}")
+            print("Force restarting...")
+            try:
+                os.execv(sys.executable, ['python3'] + sys.argv)
+            except FileNotFoundError:
+                os.execv(sys.executable, ['python'] + sys.argv)
+            except Exception as e:
+                print('fuck we\'re fucked')
+                raise e
+
+    def saveReminders(self):
+        if len(self.client.reminders) > 0:
+            print("Saving current reminders...")
+            temp = {}
+            for i in self.client.reminders:
+                tab = {}
+                for i2 in self.client.reminders[i]:
+                    if i2 != "task":
+                        tab[i2] = self.client.reminders[i][i2]
+                temp[tab["userId"]] = tab
+            with open("reminders.json", "w") as file:
+                dump(temp, file)
+                print("Done saving reminders!")
+        else:
+            print("No reminders to save, not creating a reminders.json file.")
 
     @commands.command(hidden=True)
     async def pull(self, ctx):
