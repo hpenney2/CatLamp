@@ -98,7 +98,7 @@ class Administration(commands.Cog):
     @commands.command(hidden=True, aliases=["forceStop"])
     async def forceRestart(self, ctx):
         """Force restarts the bot. Only runnable by admins."""
-        if isAdmin(ctx.author) and self.check(ctx, "force restart", "Force restart"):
+        if isAdmin(ctx.author) and await self.check(ctx, "force restart", "Force restart"):
             print(f"Restart initiated by {str(ctx.author)} ({ctx.author.id})")
             try:
                 embed = discord.Embed(title="Force Restarting...",
