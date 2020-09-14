@@ -8,6 +8,53 @@ from CatLampPY import reddit
 from datetime import datetime
 
 
+async def sendPost(ctx, post):
+    randPost = post
+    embed = discord.Embed(title=randPost.title, description=randPost.selftext,
+                          url=f"https://www.reddit.com{randPost.permalink}")
+    footerNote = None
+    checkImage = False
+    if randPost.url and not randPost.is_self:
+        expressions = []
+        for i in ['img', 'image', 'gif', 'g.f', 'gf']:
+            for ex in regex.findall(i, randPost.url):
+                expressions.append(ex)
+        if len(expressions) > 0:
+            checkImage = True
+        if randPost.url[-4:] in ('.gif', '.png', '.jpg', 'jpeg'):
+            embed.set_image(url=randPost.url)
+        elif randPost.url.startswith("https://v.redd.it/") or randPost.url[-4:] in ('gifv', '.mp4',
+                                                                                    'webm', 'webp'):
+            embed.description = f"[(Video)]({randPost.url})"
+            footerNote = 'This is a video, which is not supported in Discord bot embeds.'
+            # Currently, it's impossible to add custom videos to embeds, so this is my solution for now.
+        elif randPost.url.startswith("/r/"):
+            embed.description = f"[(Crosspost)](https://www.reddit.com{randPost.url})"
+        elif not randPost.url.startswith("https://i.redd.it/"):
+            if checkImage:
+                badSite = None
+                for i in ["https://gfycat.com", "https://redgifs.com", "https://imgur.com"]:
+                    if randPost.url.startswith(i):
+                        badSite = i
+                if badSite:
+                    embed.description = f"[(GIF)]({randPost.url})"
+                    footerNote = f'This GIF is on {badSite},' \
+                                 f' which is too complex for Discord bot embeds.'
+            if randPost.url.startswith('https://www.reddit.com/gallery/'):
+                footerNote = 'This is a Reddit Gallery, which is impossible to format into one ' \
+                             'embed.'
+            embed.description = f"[(Link)]({randPost.url})"
+    embed.set_author(name=f"Posted by /u/{randPost.author.name}")
+    footer = f"{str(round(randPost.upvote_ratio * 100))}% upvoted"
+    if footerNote:
+        footer += f" || {footerNote}"
+    embed.set_footer(text=footer)
+    embed.timestamp = datetime.fromtimestamp(randPost.created_utc)
+
+    await ctx.send(embed=embed)
+    return True
+
+
 class Fun(commands.Cog):
     def __init__(self, bot):
         self.client = bot
@@ -43,7 +90,8 @@ class Fun(commands.Cog):
 
         num = random.randint(1, 10)
         guesses = 3
-        await ctx.send(f"{ctx.author.mention} Guess a number between 1 and 10. You have {guesses} guesses left.", allowed_mentions=discord.AllowedMentions(users=False))
+        await ctx.send(f"{ctx.author.mention} Guess a number between 1 and 10. You have {guesses} guesses left.",
+                       allowed_mentions=discord.AllowedMentions(users=False))
         while guesses > 0:
             try:
                 Guess = await self.client.wait_for("message", check=check, timeout=15.0)
@@ -93,53 +141,8 @@ class Fun(commands.Cog):
                         continue
                     if not randPost.url or not randPost.selftext:  # just because i'm a nervous idiot so i need to check
                         pass
-                    embed = discord.Embed(title=randPost.title, description=randPost.selftext,
-                                          url=f"https://www.reddit.com{randPost.permalink}")
-                    footerNote = None
-                    checkImage = False
-                    if randPost.url and not randPost.is_self:
-                        expressions = []
-                        for i in ['img', 'image', 'gif', 'g.f', 'gf']:
-                            for ex in regex.findall(i, randPost.url):
-                                expressions.append(ex)
-                        if len(expressions) > 0:
-                            checkImage = True
-                        if randPost.url[-4:] in ('.gif', '.png', '.jpg', 'jpeg'):
-                            embed.set_image(url=randPost.url)
-                        elif randPost.url.startswith("https://v.redd.it/") or randPost.url[-4:] in ('gifv', '.mp4',
-                                                                                                    'webm', 'webp'):
-                            embed.description = f"[(Video)]({randPost.url})"
-                            footerNote = 'This is a video, which is not supported in Discord bot embeds.'
-                            # Currently, it's impossible to add custom videos to embeds, so this is my solution for now.
-                        elif randPost.url.startswith("/r/"):
-                            embed.description = f"[(Crosspost)](https://www.reddit.com{randPost.url})"
-                        elif not randPost.url.startswith("https://i.redd.it/"):
-                            if checkImage:
-                                badSite = None
-                                for i in ["https://gfycat.com", "https://redgifs.com"]:
-                                    if randPost.url.startswith(i):
-                                        badSite = i
-                                if badSite:
-                                    embed.description = f"[(GIF)]({randPost.url})"
-                                    footerNote = f'This GIF is on {badSite}, which is not supported in Discord embeds.'
-                                else:
-                                    embed.set_image(url=randPost.url)
-                                    footerNote = 'Image not displaying? Report it in the CatLamp server. (+server)'
-                            if randPost.url.startswith('https://www.reddit.com/gallery/'):
-                                footerNote = 'This is a Reddit Gallery, which is impossible to format into one ' \
-                                             'embed.'
-                            embed.description = f"[(Link)]({randPost.url})"
-                        else:
-                            tries += 1
-                            continue
-                    embed.set_author(name=f"Posted by /u/{randPost.author.name}")
-                    footer = f"{str(round(randPost.upvote_ratio * 100))}% upvoted"
-                    if footerNote:
-                        footer += f" || {footerNote}"
-                    embed.set_footer(text=footer)
-                    embed.timestamp = datetime.fromtimestamp(randPost.created_utc)
-                    satisfied = True
-                await ctx.send(embed=embed)
+                    if await sendPost(ctx, randPost):
+                        satisfied = True
             except prawcore.Forbidden:
                 await ctx.send("Subreddit is private.")
             except(prawcore.BadRequest, prawcore.Redirect, prawcore.NotFound):
@@ -147,51 +150,7 @@ class Fun(commands.Cog):
 
     @commands.command()
     async def testPost(self, ctx, postID):
-        randPost = reddit.submission(id=postID)
-        embed = discord.Embed(title=randPost.title, description=randPost.selftext,
-                              url=f"https://www.reddit.com{randPost.permalink}")
-        footerNote = None
-        checkImage = False
-        if randPost.url and not randPost.is_self:
-            expressions = []
-            for i in ['img', 'image', 'gif', 'g.f', 'gf']:
-                for ex in regex.findall(i, randPost.url):
-                    expressions.append(ex)
-            if len(expressions) > 0:
-                checkImage = True
-            if randPost.url[-4:] in ('.gif', '.png', '.jpg', 'jpeg'):
-                embed.set_image(url=randPost.url)
-            elif randPost.url.startswith("https://v.redd.it/") or randPost.url[-4:] in ('gifv', '.mp4',
-                                                                                        'webm', 'webp'):
-                embed.description = f"[(Video)]({randPost.url})"
-                footerNote = 'This is a video, which is not supported in Discord bot embeds.'
-                # Currently, it's impossible to add custom videos to embeds, so this is my solution for now.
-            elif randPost.url.startswith("/r/"):
-                embed.description = f"[(Crosspost)](https://www.reddit.com{randPost.url})"
-            elif not randPost.url.startswith("https://i.redd.it/"):
-                if checkImage:
-                    badSite = None
-                    for i in ["https://gfycat.com", "https://redgifs.com"]:
-                        if randPost.url.startswith(i):
-                            badSite = i
-                    if badSite:
-                        embed.description = f"[(GIF)]({randPost.url})"
-                        footerNote = f'This GIF is on {badSite}, which is not supported in Discord embeds.'
-                    else:
-                        embed.set_image(url=randPost.url)
-                        footerNote = 'Image not displaying? Report it in the CatLamp server. (+server)'
-                if randPost.url.startswith('https://www.reddit.com/gallery/'):
-                    footerNote = 'This is a Reddit Gallery, which is impossible to format into one ' \
-                                 'embed.'
-                embed.description = f"[(Link)]({randPost.url})"
-        embed.set_author(name=f"Posted by /u/{randPost.author.name}")
-        footer = f"{str(round(randPost.upvote_ratio * 100))}% upvoted"
-        if footerNote:
-            footer += f" || {footerNote}"
-        embed.set_footer(text=footer)
-        embed.timestamp = datetime.fromtimestamp(randPost.created_utc)
-
-        await ctx.send(embed=embed)
+        await sendPost(ctx, reddit.submission(id=postID))
 
 
 def setup(bot):
