@@ -95,7 +95,8 @@ class Info(commands.Cog, name="Bot Info"):
         try:
             # user.send() method is better than getting a dm channel
             await ctx.author.send("You can join the official CatLamp server below.\nhttps://discord.gg/5p8bQcy")
-            await ctx.send("Sent CatLamp's server invite to your DMs!")
+            if ctx.channel.type == discord.ChannelType.text:
+                await ctx.send("Sent CatLamp's server invite to your DMs!")
         except discord.Forbidden:
             await ctx.send("I can't DM you! Make sure to enable your DMs so I can.")
 
