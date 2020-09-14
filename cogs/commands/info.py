@@ -86,9 +86,12 @@ class Info(commands.Cog, name="Bot Info"):
     async def server(self, ctx):
         """Sends CatLamp's server invite to your DMs."""
         # static server.id is better than getting a server (with the same id, might I add), then using it for comparison
-        if ctx.guild.id == 712487389121216584:
-            await ctx.send("You're already here! If you need an invite, you can get it from <#712489819334246441>.")
-            return
+        try:
+            if ctx.guild.id == 712487389121216584:
+                await ctx.send("You're already here! If you need an invite, you can get it from <#712489819334246441>.")
+                return
+        except AttributeError:
+            pass
         try:
             # user.send() method is better than getting a dm channel
             await ctx.author.send("You can join the official CatLamp server below.\nhttps://discord.gg/5p8bQcy")
