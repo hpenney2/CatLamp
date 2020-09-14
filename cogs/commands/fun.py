@@ -44,7 +44,10 @@ async def sendPost(ctx, post):
                 footerNote = 'This is a Reddit Gallery, which is impossible to format into one ' \
                              'embed.'
             embed.description = f"[(Link)]({randPost.url})"
-    embed.set_author(name=f"Posted by /u/{randPost.author.name}")
+    try:
+        embed.set_author(name=f"Posted by /u/{randPost.author.name}")
+    except AttributeError:
+        embed.set_author(name=f"Posted by /u/[deleted]")
     footer = f"{str(round(randPost.upvote_ratio * 100))}% upvoted"
     if footerNote:
         footer += f" || {footerNote}"
