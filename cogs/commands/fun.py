@@ -18,9 +18,8 @@ async def sendPost(ctx, post):
                           url=f"https://www.reddit.com{randPost.permalink}")
 
     # remove problematic &#x200B; that fuck with link detection
-    if randPost.selftext.replace("&#x200B;\n", "").strip('\n').startswith('https://preview.redd.it/'):
-        embed.set_image(url=randPost.selftext.replace("&#x200B;\n", "").strip('\n'))
-        embed.description = None
+    if randPost.selftext.startswith("&#x200B;\n"):
+        embed.description = randPost.selftext.replace("&#x200B;\n", "").strip('\n')
 
     footerNote = None
     checkImage = False
@@ -54,6 +53,10 @@ async def sendPost(ctx, post):
                 footerNote = 'This is a Reddit Gallery, which is impossible to format into one ' \
                              'embed.'
             embed.description = f"[(Link)]({randPost.url})"
+    else:
+        if embed.description.startswith('https://preview.redd.it/'):
+            embed.set_image(url=randPost.selftext.replace("&#x200B;\n", "").strip('\n'))
+            embed.description = None
     try:
         embed.set_author(name=f"Posted by /u/{randPost.author.name}")
     except AttributeError:
