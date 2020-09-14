@@ -255,6 +255,8 @@ class Images(commands.Cog, name="Image Manipulation"):
                 alphaInvert = alphaTemp.getdata()[0]  # find inverted alpha color
 
                 image = Image.alpha_composite(Image.new('RGBA', (image.width, image.height), alpha), image)
+            else:
+                alphaInvert = None
 
             image = image.convert('RGB')  # i dunno, ImageOps wants an RGB
             image = ImageOps.invert(image)
@@ -275,8 +277,6 @@ class Images(commands.Cog, name="Image Manipulation"):
             image = ImageOps.grayscale(image)
 
             await sendImage(ctx, image, "grayscale.png")
-
-
 
 
 def setup(bot):
