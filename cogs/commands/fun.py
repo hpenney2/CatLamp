@@ -4,14 +4,24 @@ from discord.ext import commands
 import prawcore  # because praw exceptions inherit from here
 import random
 import re as regex
-from CatLampPY import reddit
+from CatLampPY import reddit, isAdmin
 from datetime import datetime
 
 
 async def sendPost(ctx, post):
     randPost = post
+    print(randPost.selftext)
+    if randPost.selftext.startswith("&#x200B;\n"):
+        print(randPost.selftext.replace("&#x200B;\n", "").strip('\n'))
+
     embed = discord.Embed(title=randPost.title, description=randPost.selftext,
                           url=f"https://www.reddit.com{randPost.permalink}")
+
+    # remove problematic &#x200B; that fuck with link detection
+    if randPost.selftext.replace("&#x200B;\n", "").strip('\n').startswith('https://preview.redd.it/'):
+        embed.set_image(url=randPost.selftext.replace("&#x200B;\n", "").strip('\n'))
+        embed.description = None
+
     footerNote = None
     checkImage = False
     if randPost.url and not randPost.is_self:
@@ -151,9 +161,10 @@ class Fun(commands.Cog):
             except(prawcore.BadRequest, prawcore.Redirect, prawcore.NotFound):
                 await ctx.send("Subreddit not found.")
 
-    @commands.command()
+    @commands.command(hidden=True)
     async def testPost(self, ctx, postID):
-        await sendPost(ctx, reddit.submission(id=postID))
+        if isAdmin(ctx.author):
+            await sendPost(ctx, reddit.submission(id=postID))
 
 
 def setup(bot):
