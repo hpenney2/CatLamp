@@ -74,6 +74,7 @@ client = commands.AutoShardedBot(
 client.cmds = []
 client.helpEmbeds = []
 client.reminders = {}
+client.redditStats = {'Date': datetime.date.today()}  # initialize the statistics with a timestamp of the current day
 colors = tables.getColors()
 reddit = praw.Reddit(client_id=config["redditCID"],
                      client_secret=config["redditSecret"],

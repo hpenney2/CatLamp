@@ -1,18 +1,17 @@
 import asyncio
 import discord
-from discord.ext import commands
+from discord.ext import commands, tasks
 import prawcore  # because praw exceptions inherit from here
 import random
 import re as regex
 from CatLampPY import reddit, isAdmin
-from datetime import datetime
+import datetime
+
+from hastebin import get_key
 
 
 async def sendPost(ctx, post):
     randPost = post
-    print(randPost.selftext)
-    if randPost.selftext.startswith("&#x200B;\n"):
-        print(randPost.selftext.replace("&#x200B;\n", "").strip('\n'))
 
     embed = discord.Embed(title=randPost.title, description=randPost.selftext,
                           url=f"https://www.reddit.com{randPost.permalink}")
@@ -65,7 +64,7 @@ async def sendPost(ctx, post):
     if footerNote:
         footer += f" || {footerNote}"
     embed.set_footer(text=footer)
-    embed.timestamp = datetime.fromtimestamp(randPost.created_utc)
+    embed.timestamp = datetime.datetime.fromtimestamp(randPost.created_utc)
 
     await ctx.send(embed=embed)
     return True
@@ -78,6 +77,8 @@ class Fun(commands.Cog):
         self.client.cmds.append(self.guess)
         self.client.cmds.append(self.redditRandom)
         self.inGame = []
+
+        self.statReset.start()
 
     @commands.command(aliases=["flip"])
     async def coinFlip(self, ctx):
@@ -141,6 +142,10 @@ class Fun(commands.Cog):
         async with ctx.channel.typing():
             try:
                 subreddit = reddit.subreddit(subreddit_name)
+                try:
+                    self.client.redditStats[subreddit.display_name.lower()] += 1
+                except KeyError:
+                    self.client.redditStats[subreddit.display_name.lower()] = 1
                 if not ctx.message.channel.is_nsfw() and subreddit.over18:
                     await ctx.send("This subreddit is marked as NSFW. Please move to an NSFW channel.")
                     return
@@ -168,6 +173,64 @@ class Fun(commands.Cog):
     async def testPost(self, ctx, postID):
         if isAdmin(ctx.author):
             await sendPost(ctx, reddit.submission(id=postID))
+
+    async def sendData(self, channel: discord.abc.Messageable):
+        if len(self.client.redditStats) > 1:
+            embed = None
+            titleMaybe = ''
+            content = ''
+            if len(self.client.redditStats) <= 26:
+                embed = discord.Embed(title=f"Reddit data for {self.client.redditStats['Date'].isoformat()}")
+                for i in self.client.redditStats:
+                    if i != 'Date':
+                        embed.add_field(name=f'r/{i}', value=self.client.redditStats[i])
+                embed.timestamp = datetime.datetime.now()
+            else:  # stringify it because
+                titleMaybe = f"Reddit data for {self.client.redditStats['Date'].isoformat()}"
+                for i in self.client.redditStats:
+                    if i != 'Date':
+                        content += f'\nr/{i}:\n{self.client.redditStats[i]}'
+
+            if embed:
+                await channel.send(embed=embed)
+            else:
+                payload = f'{titleMaybe}\n{content}'
+                await channel.send(f'There was too much data, so it was uploaded to Hastebin:\n'
+                                   f'https://hastebin.com/{get_key(payload)}')
+        else:
+            await channel.send('There is no data to send!')
+
+    @commands.command(hidden=True, aliases=['redditAnal', 'redAnal'])
+    async def redditAnalytics(self, ctx):
+        if isAdmin(ctx.author):
+            await self.sendData(ctx)
+
+    def cog_unload(self):
+        if len(self.client.redditStats) > 1:
+            print(f"Reddit data for {self.client.redditStats['Date'].isoformat()}")
+            content = ''
+            for i in self.client.redditStats:
+                if i != 'Date':
+                    content += f'\nr/{i}:\n{self.client.redditStats[i]}'
+            print(content)
+
+    @tasks.loop(hours=24)
+    async def statReset(self):
+        self.client.redditStats = {'Date': datetime.date.today()}  # reset stats
+
+    @statReset.after_loop
+    async def on_daily_cancel(self):
+        if self.statReset.is_being_cancelled():
+            print(f"Reddit data for {self.client.redditStats['Date'].isoformat()}")
+            content = ''
+            for i in self.client.redditStats:
+                if i != 'Date':
+                    content += f'\nr/{i}:\n{self.client.redditStats[i]}'
+            print(content)
+
+    @statReset.before_loop
+    async def before_daily(self):
+        await self.client.wait_until_ready()
 
 
 def setup(bot):
