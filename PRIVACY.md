@@ -17,7 +17,8 @@ We collect user IDs for reference in reminders (`+remind`).
 We collect server identification, member count, and owner names for our auditing logs.
 
 ### User-Submitted Content
-We save the note attached to any reminders (`+remind`) for reference.
+- We save the note attached to any reminders (`+remind`) for reference.
+- We also anonymously save search queries provided in the reddit command (`+reddit`).
 
 ### Involved Users' IDs
 If you are involved in the development of CatLamp or are listed as an Administrator, your identification number is saved for reference in bot functions (attribution and permission checks are the common uses).
