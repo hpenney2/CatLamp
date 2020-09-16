@@ -3,6 +3,8 @@ from discord.ext import commands
 import discord
 
 import tables
+from CatLampPY import isAdmin
+
 colors = tables.getColors()
 
 
@@ -100,19 +102,20 @@ class EmbedHelpCommand(commands.HelpCommand):
         await self.get_destination().send(embed=embed)
 
     async def send_command_help(self, Command):
-        embed = discord.Embed(title=self.get_command_signature(Command), colour=self.COLOUR)
+        if not Command.hidden or isAdmin(self.context.author):
+            embed = discord.Embed(title=self.get_command_signature(Command), colour=self.COLOUR)
 
-        if Command.qualified_name == 'help':
-            embed.description = "Displays the documentation for Catlamp."
-        elif Command.help:
-            embed.description = Command.help
-        if Command.aliases:
-            value = ''
-            for a in Command.aliases:
-                if a != "help":
-                    value += f'`{a}`, '
-            value = value.rstrip(", ")
-            embed.add_field(name='Aliases', value=value)
+            if Command.qualified_name == 'help':
+                embed.description = "Displays the documentation for Catlamp."
+            elif Command.help:
+                embed.description = Command.help
+            if Command.aliases:
+                value = ''
+                for a in Command.aliases:
+                    if a != "help":
+                        value += f'`{a}`, '
+                value = value.rstrip(", ")
+                embed.add_field(name='Aliases', value=value)
 
-        embed.set_footer(text=self.get_ending_note())
-        await self.get_destination().send(embed=embed)
+            embed.set_footer(text=self.get_ending_note())
+            await self.get_destination().send(embed=embed)
