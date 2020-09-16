@@ -79,13 +79,13 @@ def urlParse(url: str, embed: discord.Embed):
         embed.set_image(url=url)
         embed.description = None
 
-    try:
-        if embed.description.startswith('http') and embed.image != discord.Embed.Empty:
-            print('link to image, delete desc')
-            embed.description = ''
-        elif not embed.description.startswith('http') and embed.image != discord.embeds.EmbedProxy:
-    except AttributeError:  # ok there is no description, so just ignore lol
-        pass
+    # try:
+    #     if embed.description.startswith('http') and embed.image != discord.Embed.Empty:
+    #         print('link to image, delete desc')
+    #         embed.description = ''
+    #     elif not embed.description.startswith('http') and embed.image != discord.embeds.EmbedProxy:
+    # except AttributeError:  # ok there is no description, so just ignore lol
+    #     pass
 
     return embed, footerNote
 
