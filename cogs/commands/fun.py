@@ -80,14 +80,23 @@ def urlParse(url: str, embed: discord.Embed):
         embed.description = None
 
     try:
-        if embed.description.startswith('http') and embed.image != discord.Embed.Empty:
-            print('link to image, delete desc')
+        if embed.description.startswith('http') and hasImage(embed):
+            # this is a link to image, so delete
             embed.description = ''
-        elif not embed.description.startswith('http') and embed.image != discord.embeds.EmbedProxy:
+        elif not embed.description.startswith('http') and hasImage(embed):
+            # desc is not image link, delete image
+            embed.set_image(url=discord.Embed.Empty)
     except AttributeError:  # ok there is no description, so just ignore lol
         pass
 
     return embed, footerNote
+
+
+def hasImage(embed: discord.Embed):
+    if embed.image:
+        return True
+    else:
+        return False
 
 
 class Fun(commands.Cog):
