@@ -84,9 +84,8 @@ def urlParse(url: str, embed: discord.Embed):
         if embed.description.startswith('http') and hasImage(embed):
             # this is a link to image, so delete
             embed.description = ''
-        elif not embed.description.startswith('http') and hasImage(embed):
+        elif not (embed.description.startswith('http') or not embed.description) and hasImage(embed):
             # desc is not image link, delete image
-            print('yeet')
             embed.set_image(url=discord.Embed.Empty)
     except AttributeError:  # ok there is no description, so just ignore lol
         pass
