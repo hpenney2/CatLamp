@@ -8,7 +8,7 @@ import sys
 import discord
 from discord.ext import commands
 from json import dump
-from CatLampPY import colors, config, insert_returns, reddit, CommandErrorMsg
+from CatLampPY import colors, config, insert_returns, reddit, CommandErrorMsg, miscCogs
 from cogs.misc.isAdmin import isAdmin
 from hastebin import get_key
 from cogs.listeners.exceptions import Exceptions
@@ -82,6 +82,46 @@ class Administration(commands.Cog):
                         errorInfo += f'{failure.name} failed! booooo\n'
         from cogs.commands.help import EmbedHelpCommand
         self.client.help_command = EmbedHelpCommand()
+        await self.client.change_presence(activity=None)
+        if errorInfo != "":
+            print(f"Reloaded with errors!\n{errorInfo}")
+            embed.color = colors["error"]
+            embed.title = "Reloaded with errors"
+            embed.description = f"Errors occurred while reloading.\n```{errorInfo[:-2]}```"
+            await msg.edit(embed=embed)
+        else:
+            print("Reloaded successfully!")
+            embed.color = colors["success"]
+            embed.title = "Reloaded"
+            embed.description = f"Reloaded successfully without errors!"
+            await msg.edit(embed=embed)
+
+    @commands.command(hidden=True)
+    @commands.check(isAdmin)
+    async def miscReload(self, ctx, save: bool = True):
+        """Reloads the registered cogs in cogs.misc. Only runnable by admins."""
+        print(f"Reload initiated by {str(ctx.author)} ({ctx.author.id})")
+        embed = discord.Embed(title="Reloading...",
+                              description="CatLamp is reloading miscellaneous cogs. Watch this message for updates.",
+                              color=colors["warning"])
+        embed.set_footer(text=f"Reload initiated by {str(ctx.author)} ({ctx.author.id})")
+        msg = await ctx.send(embed=embed)
+        await self.client.change_presence(activity=discord.Game("Partially reloading..."))
+        print("Reloading...")
+        if save:
+            self.saveReminders()
+        self.client.cmds = []
+        # load misc cogs
+        errorInfo = ""
+        for cog in miscCogs:
+            try:
+                self.client.load_extension('cogs.misc.' + cog)
+            except commands.NoEntryPointError:
+                print(f"{'cogs.misc.' + cog} is not a proper cog!")
+            except commands.ExtensionAlreadyLoaded:
+                print('you should not be seeing this\n if you do, youre screwed')
+            except commands.ExtensionFailed as failure:
+                print(f'{failure.name} failed! booooo')
         await self.client.change_presence(activity=None)
         if errorInfo != "":
             print(f"Reloaded with errors!\n{errorInfo}")

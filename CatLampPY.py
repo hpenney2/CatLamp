@@ -161,12 +161,14 @@ def insert_returns(body):
 @client.event
 async def on_error(event, *args, **kwargs):
     if event != 'on_command_error':
-        embed = discord.Embed(title=f"Error occured in event '{event}'",
+        embed = discord.Embed(title=f"Error occurred in event '{event}'",
                               description=f"```{str(sys.exc_info()[1])}```",
                               color=colors["error"])
         embed.timestamp = datetime.datetime.utcnow()
         await client.get_channel(712489826330345534).send(embed=embed)
     raise sys.exc_info()[1]
+
+miscCogs = ['redditReset']
 
 
 if __name__ == "__main__":
@@ -185,6 +187,17 @@ if __name__ == "__main__":
                     print('you should not be seeing this\n if you do, youre screwed')
                 except commands.ExtensionFailed as failure:
                     print(f'{failure.name} failed! booooo')
+
+    # load misc cogs
+    for cog in miscCogs:
+        try:
+            client.load_extension('cogs.misc.' + cog)
+        except commands.NoEntryPointError:
+            print(f"{'cogs.misc.' + cog} is not a proper cog!")
+        except commands.ExtensionAlreadyLoaded:
+            print('you should not be seeing this\n if you do, youre screwed')
+        except commands.ExtensionFailed as failure:
+            print(f'{failure.name} failed! booooo')
 
     timeMod.sleep(0.000000001)  # load cogs before running token
 
