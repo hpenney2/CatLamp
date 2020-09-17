@@ -86,6 +86,7 @@ def urlParse(url: str, embed: discord.Embed):
             embed.description = ''
         elif not embed.description.startswith('http') and hasImage(embed):
             # desc is not image link, delete image
+            print('yeet')
             embed.set_image(url=discord.Embed.Empty)
     except AttributeError:  # ok there is no description, so just ignore lol
         pass
@@ -201,9 +202,9 @@ class Fun(commands.Cog):
                 await ctx.send("Subreddit not found.")
 
     @commands.command(hidden=True)
+    @commands.check(isAdmin)
     async def testPost(self, ctx, postID):
-        if isAdmin(ctx.author):
-            await sendPost(ctx, reddit.submission(id=postID))
+        await sendPost(ctx, reddit.submission(id=postID))
 
     async def sendData(self, channel: discord.abc.Messageable):
         if len(self.client.redditStats) > 1:
@@ -272,9 +273,9 @@ class Fun(commands.Cog):
             await confirmMess.edit(content='`+reddit` was cancelled.')
 
     @commands.command(hidden=True, aliases=['redditAnal', 'redAnal'])
+    @commands.check(isAdmin)
     async def redditAnalytics(self, ctx):
-        if isAdmin(ctx.author):
-            await self.sendData(ctx)
+        await self.sendData(ctx)
 
     def cog_unload(self):
         if len(self.client.redditStats) > 1:

@@ -15,7 +15,7 @@ class Exceptions(commands.Cog):
     async def on_command_error(self, ctx, error):
         commandName = ctx.message.content.split(' ')[0]
         if not isinstance(error, commands.CommandNotFound):
-            if ctx.command.hidden and not isAdmin(ctx.author):
+            if ctx.command.hidden and not isAdmin(ctx):
                 return
             # Exception-specific error handling, more may be added later.
             errorStr = None
