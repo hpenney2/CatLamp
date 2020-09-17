@@ -160,7 +160,7 @@ def insert_returns(body):
 # Events (should be in a listener cog if possible)
 @client.event
 async def on_error(event, *args, **kwargs):
-    if event != 'on_command_error':
+    if event != ('on_command_error' or (sys.exc_info()[0] == discord.Forbidden)):
         embed = discord.Embed(title=f"Error occurred in event '{event}'",
                               description=f"```{str(sys.exc_info()[1])}```",
                               color=colors["error"])
