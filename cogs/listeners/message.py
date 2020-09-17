@@ -21,7 +21,7 @@ class Message(commands.Cog):
                 await msg.channel.send("do not the sex")
             elif msg.content != "python" and "do the sex" in msg.content.lower():
                 await msg.channel.send("do **not** the sex")
-            elif msg.content != "python" and "psps" in msg.content.lower():
+            if msg.content != "python" and "psps" in msg.content.lower():
                 await msg.add_reaction('<:lampstare:747483819388436570>')
 
 
