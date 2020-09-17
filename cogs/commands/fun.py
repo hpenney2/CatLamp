@@ -1,12 +1,12 @@
 import asyncio
 import discord
-from discord.ext import commands, tasks
+from discord.ext import commands
 import prawcore  # because praw exceptions inherit from here
 import random
 import re as regex
-from CatLampPY import reddit, isAdmin
+from CatLampPY import reddit
+from cogs.misc.isAdmin import isAdmin
 import datetime
-
 from hastebin import get_key
 
 
@@ -69,8 +69,7 @@ def urlParse(url: str, embed: discord.Embed):
                     badSite = i
             if badSite:
                 embed.description = f"[(GIF)]({url})"
-                footerNote = f'This GIF is on {badSite},' \
-                             f' which is too complex for Discord bot embeds.'
+                footerNote = f'This GIF is on {badSite}, which appears inconsistently in Discord bot embeds.'
         if url.startswith('https://www.reddit.com/gallery/'):
             footerNote = 'This is a Reddit Gallery, which is impossible to format into one ' \
                          'embed.'
@@ -83,7 +82,7 @@ def urlParse(url: str, embed: discord.Embed):
         if embed.description.startswith('http') and hasImage(embed):
             # this is a link to image, so delete
             embed.description = ''
-        elif not embed.description.startswith('http') and hasImage(embed):
+        elif not (embed.description.startswith('http') or not embed.description) and hasImage(embed):
             # desc is not image link, delete image
             embed.set_image(url=discord.Embed.Empty)
     except AttributeError:  # ok there is no description, so just ignore lol
@@ -99,15 +98,41 @@ def hasImage(embed: discord.Embed):
         return False
 
 
+async def sendData(client, channel: discord.abc.Messageable):
+    if len(client.redditStats) > 1:
+        embed = None
+        titleMaybe = ''
+        content = ''
+        if len(client.redditStats) <= 26:
+            embed = discord.Embed(title=f"Reddit data for {client.redditStats['Date'].isoformat()}")
+            for i in client.redditStats:
+                if i != 'Date':
+                    embed.add_field(name=f'r/{i}', value=client.redditStats[i])
+            embed.timestamp = datetime.datetime.now()
+        else:  # stringify it because
+            titleMaybe = f"Reddit data for {client.redditStats['Date'].isoformat()}"
+            for i in client.redditStats:
+                if i != 'Date':
+                    content += f'\nr/{i}:\n{client.redditStats[i]}'
+
+        if embed:
+            await channel.send(embed=embed)
+        else:
+            payload = f'{titleMaybe}\n{content}'
+            await channel.send(f'There was too much data, so it was uploaded to Hastebin:\n'
+                               f'https://hastebin.com/{get_key(payload)}')
+    else:
+        await channel.send('There is no data to send!')
+
+
 class Fun(commands.Cog):
     def __init__(self, bot):
         self.client = bot
         self.client.cmds.append(self.coinFlip)
         self.client.cmds.append(self.guess)
         self.client.cmds.append(self.redditRandom)
+        self.degenerates = []
         self.inGame = []
-
-        self.statReset.start()
 
     @commands.command(aliases=["flip"])
     async def coinFlip(self, ctx):
@@ -175,9 +200,9 @@ class Fun(commands.Cog):
                     self.client.redditStats[subreddit.display_name.lower()] += 1
                 except KeyError:
                     self.client.redditStats[subreddit.display_name.lower()] = 1
-                if not ctx.message.channel.is_nsfw() and subreddit.over18:
-                    await ctx.send("This subreddit is marked as NSFW. Please move to an NSFW channel.")
-                    return
+                if subreddit.over18:
+                    if not await self.nsfwCheck(ctx, "subreddit"):
+                        return
                 satisfied = False
                 tries = 0
                 while not satisfied:
@@ -186,7 +211,8 @@ class Fun(commands.Cog):
                         return
                     randPost = subreddit.random()
                     if (not randPost or randPost.distinguished or len(randPost.title) > 256 or
-                            len(randPost.selftext) > 2048) or (randPost.over_18 and not ctx.message.channel.is_nsfw()):
+                            len(randPost.selftext) > 2048) or \
+                            (randPost.over_18 and not await self.nsfwCheck(ctx, "post")):
                         tries += 1
                         continue
                     if not randPost.url or not randPost.selftext:  # just because i'm a nervous idiot so i need to check
@@ -199,67 +225,60 @@ class Fun(commands.Cog):
                 await ctx.send("Subreddit not found.")
 
     @commands.command(hidden=True)
+    @commands.check(isAdmin)
     async def testPost(self, ctx, postID):
-        if isAdmin(ctx.author):
-            await sendPost(ctx, reddit.submission(id=postID))
+        await sendPost(ctx, reddit.submission(id=postID))
 
-    async def sendData(self, channel: discord.abc.Messageable):
-        if len(self.client.redditStats) > 1:
-            embed = None
-            titleMaybe = ''
-            content = ''
-            if len(self.client.redditStats) <= 26:
-                embed = discord.Embed(title=f"Reddit data for {self.client.redditStats['Date'].isoformat()}")
-                for i in self.client.redditStats:
-                    if i != 'Date':
-                        embed.add_field(name=f'r/{i}', value=self.client.redditStats[i])
-                embed.timestamp = datetime.datetime.now()
-            else:  # stringify it because
-                titleMaybe = f"Reddit data for {self.client.redditStats['Date'].isoformat()}"
-                for i in self.client.redditStats:
-                    if i != 'Date':
-                        content += f'\nr/{i}:\n{self.client.redditStats[i]}'
-
-            if embed:
-                await channel.send(embed=embed)
-            else:
-                payload = f'{titleMaybe}\n{content}'
-                await channel.send(f'There was too much data, so it was uploaded to Hastebin:\n'
-                                   f'https://hastebin.com/{get_key(payload)}')
+    async def nsfwCheck(self, ctx: commands.Context, unit: str):
+        note = ''
+        if ctx.channel.type == discord.ChannelType.text:  # server/text-channel
+            if not ctx.message.channel.is_nsfw():
+                note = f"This {unit} is marked as NSFW. Please move to an NSFW channel."
+            cool = ctx.message.channel.is_nsfw()
         else:
-            await channel.send('There is no data to send!')
+            if ctx.author.id in self.degenerates:
+                cool = True
+            else:
+                cool = await self.check(ctx, unit)
+                if cool:
+                    self.degenerates.append(ctx.author.id)
+
+        if unit != 'post':
+            if note:
+                await ctx.send(note)
+        return cool
+
+    async def check(self, ctx: commands.Context, unit: str):
+        confirmMess = await ctx.send(f'This {unit} is NSFW. Are you over 18 and *sure* you want to view this content?')
+        await confirmMess.add_reaction('✅')
+        await confirmMess.add_reaction('❌')
+
+        # wait_for stolen from docs example
+        def confirm(react, reactor):
+            return reactor == ctx.author and str(react.emoji) in ('✅', '❌') and confirmMess.id == react.message.id
+
+        try:
+            reaction, user = await self.client.wait_for('reaction_add', timeout=30, check=confirm)
+        except asyncio.TimeoutError:  # timeout cancel
+            await confirmMess.edit(text='`+reddit` timed-out.')
+        else:
+            if reaction.emoji == '✅':
+                await confirmMess.delete()
+                return True
+
+            else:  # ❌ react cancel
+                await confirmMess.remove_reaction('✅', self.client.user)
+                await confirmMess.remove_reaction('❌', self.client.user)
+            try:
+                await confirmMess.remove_reaction('❌', user)
+            except (discord.Forbidden, discord.NotFound):
+                pass
+            await confirmMess.edit(content='`+reddit` was cancelled.')
 
     @commands.command(hidden=True, aliases=['redditAnal', 'redAnal'])
+    @commands.check(isAdmin)
     async def redditAnalytics(self, ctx):
-        if isAdmin(ctx.author):
-            await self.sendData(ctx)
-
-    def cog_unload(self):
-        if len(self.client.redditStats) > 1:
-            print(f"Reddit data for {self.client.redditStats['Date'].isoformat()}")
-            content = ''
-            for i in self.client.redditStats:
-                if i != 'Date':
-                    content += f'\nr/{i}:\n{self.client.redditStats[i]}'
-            print(content)
-
-    @tasks.loop(hours=24)
-    async def statReset(self):
-        self.client.redditStats = {'Date': datetime.date.today()}  # reset stats
-
-    @statReset.after_loop
-    async def on_daily_cancel(self):
-        if self.statReset.is_being_cancelled():
-            print(f"Reddit data for {self.client.redditStats['Date'].isoformat()}")
-            content = ''
-            for i in self.client.redditStats:
-                if i != 'Date':
-                    content += f'\nr/{i}:\n{self.client.redditStats[i]}'
-            print(content)
-
-    @statReset.before_loop
-    async def before_daily(self):
-        await self.client.wait_until_ready()
+        await sendData(self.client, ctx)
 
 
 def setup(bot):

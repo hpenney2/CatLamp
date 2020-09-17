@@ -79,10 +79,6 @@ colors = tables.getColors()
 reddit = praw.Reddit(client_id=config["redditCID"],
                      client_secret=config["redditSecret"],
                      user_agent="CatLamp (by /u/hpenney2)")
-admins = [
-    142664159048368128,  # hpenney2/hp, bot creator and host
-    474328006588891157  # TheEgghead27, contributor
-]
 
 
 class CheckFailureMsg(commands.CheckFailure):
@@ -94,12 +90,7 @@ class CommandErrorMsg(commands.CommandError):
 
 
 ### Functions and Checks ###
-def isAdmin(user):
-    """Checks if a user is an admin or not. Returns True or False respectively."""
-    if user.id in admins:
-        return True
-    else:
-        return False
+# isAdmin() has been moved to cogs.misc because ImportError
 
 
 def hasPermissions(perm: str):
@@ -170,12 +161,14 @@ def insert_returns(body):
 @client.event
 async def on_error(event, *args, **kwargs):
     if event != 'on_command_error':
-        embed = discord.Embed(title=f"Error occured in event '{event}'",
+        embed = discord.Embed(title=f"Error occurred in event '{event}'",
                               description=f"```{str(sys.exc_info()[1])}```",
                               color=colors["error"])
         embed.timestamp = datetime.datetime.utcnow()
         await client.get_channel(712489826330345534).send(embed=embed)
     raise sys.exc_info()[1]
+
+miscCogs = ['redditReset']
 
 
 if __name__ == "__main__":
@@ -194,6 +187,17 @@ if __name__ == "__main__":
                     print('you should not be seeing this\n if you do, youre screwed')
                 except commands.ExtensionFailed as failure:
                     print(f'{failure.name} failed! booooo')
+
+    # load misc cogs
+    for cog in miscCogs:
+        try:
+            client.load_extension('cogs.misc.' + cog)
+        except commands.NoEntryPointError:
+            print(f"{'cogs.misc.' + cog} is not a proper cog!")
+        except commands.ExtensionAlreadyLoaded:
+            print('you should not be seeing this\n if you do, youre screwed')
+        except commands.ExtensionFailed as failure:
+            print(f'{failure.name} failed! booooo')
 
     timeMod.sleep(0.000000001)  # load cogs before running token
 

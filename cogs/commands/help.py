@@ -3,7 +3,7 @@ from discord.ext import commands
 import discord
 
 import tables
-from CatLampPY import isAdmin
+from cogs.misc.isAdmin import isAdmin
 
 colors = tables.getColors()
 
@@ -102,7 +102,7 @@ class EmbedHelpCommand(commands.HelpCommand):
         await self.get_destination().send(embed=embed)
 
     async def send_command_help(self, Command):
-        if not Command.hidden or isAdmin(self.context.author):
+        if not Command.hidden or isAdmin(self.context):
             embed = discord.Embed(title=self.get_command_signature(Command), colour=self.COLOUR)
 
             if Command.qualified_name == 'help':

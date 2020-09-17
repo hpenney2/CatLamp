@@ -1,7 +1,8 @@
 import discord
 from discord.ext import commands
 from typing import Union
-from CatLampPY import hasPermissions, CommandErrorMsg # pylint: disable=import-error
+from CatLampPY import hasPermissions, CommandErrorMsg  # pylint: disable=import-error
+
 
 class Moderation(commands.Cog):
     def __init__(self, bot):
@@ -14,6 +15,7 @@ class Moderation(commands.Cog):
         user = self.bot.get_user(user_id)
         if not user:
             try:
+                # noinspection PyUnusedLocal
                 user = await self.bot.fetch_user(user_id)
             except discord.NotFound:
                 raise CommandErrorMsg(f"No user with the ID {str(user_id)} was found!")
@@ -31,7 +33,8 @@ class Moderation(commands.Cog):
         elif member.id == ctx.guild.owner.id:
             raise CommandErrorMsg("I can't kick the server owner!")
         try:
-            await ctx.guild.kick(member, reason=f"Kicked by {str(ctx.author)} ({ctx.author.id}) with reason: '{reason}'")
+            await ctx.guild.kick(member,
+                                 reason=f"Kicked by {str(ctx.author)} ({ctx.author.id}) with reason: '{reason}'")
         except discord.Forbidden:
             raise CommandErrorMsg("I'm not high enough in the role hierarchy to kick that person!")
         await ctx.send(f"{member.mention} ({str(member)}) has been kicked from the server with reason: '{reason}'")
@@ -39,8 +42,10 @@ class Moderation(commands.Cog):
     @commands.command(cooldown_after_parsing=True)
     @commands.cooldown(1, 10, commands.BucketType.member)
     @hasPermissions("ban_members")
-    async def ban(self, ctx, user: Union[discord.User, int], reason: str = "No reason specified.", days_of_messages_to_delete: int = 0):
-        """Ban a user (including someone not in the server) with an optional reason and days of messages to delete. Requires the Ban Members permission."""
+    async def ban(self, ctx, user: Union[discord.User, int], reason: str = "No reason specified.",
+                  days_of_messages_to_delete: int = 0):
+        """Ban a user (including someone not in the server) with an optional reason and days of messages to delete.
+        Requires the Ban Members permission."""
         if isinstance(user, int):
             user = await self.gf_user(user)
         if user.id == self.bot.user.id:
@@ -49,7 +54,8 @@ class Moderation(commands.Cog):
         elif user.id == ctx.guild.owner.id:
             raise CommandErrorMsg("I can't ban the server owner!")
         try:
-            await ctx.guild.ban(user, reason=f"Banned by {str(ctx.author)} ({ctx.author.id}) with reason: '{reason}'", delete_message_days=days_of_messages_to_delete)
+            await ctx.guild.ban(user, reason=f"Banned by {str(ctx.author)} ({ctx.author.id}) with reason: '{reason}'",
+                                delete_message_days=days_of_messages_to_delete)
         except discord.Forbidden:
             raise CommandErrorMsg("I'm not high enough in the role hierarchy to ban that person!")
         await ctx.send(f"{user.mention} ({str(user)}) has been banned from the server with reason: '{reason}'")
