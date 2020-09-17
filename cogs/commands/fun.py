@@ -175,9 +175,9 @@ class Fun(commands.Cog):
                     self.client.redditStats[subreddit.display_name.lower()] += 1
                 except KeyError:
                     self.client.redditStats[subreddit.display_name.lower()] = 1
-                if not ctx.message.channel.is_nsfw() and subreddit.over18:
-                    await ctx.send("This subreddit is marked as NSFW. Please move to an NSFW channel.")
-                    return
+                if subreddit.over18:
+                    if not await self.nsfwCheck(ctx, "subreddit"):
+                        return
                 satisfied = False
                 tries = 0
                 while not satisfied:
@@ -186,7 +186,8 @@ class Fun(commands.Cog):
                         return
                     randPost = subreddit.random()
                     if (not randPost or randPost.distinguished or len(randPost.title) > 256 or
-                            len(randPost.selftext) > 2048) or (randPost.over_18 and not ctx.message.channel.is_nsfw()):
+                            len(randPost.selftext) > 2048) or \
+                            (randPost.over_18 and not await self.nsfwCheck(ctx, "post")):
                         tries += 1
                         continue
                     if not randPost.url or not randPost.selftext:  # just because i'm a nervous idiot so i need to check
@@ -228,6 +229,46 @@ class Fun(commands.Cog):
                                    f'https://hastebin.com/{get_key(payload)}')
         else:
             await channel.send('There is no data to send!')
+
+    async def nsfwCheck(self, ctx: commands.Context, unit: str):
+        note = ''
+        if ctx.channel.type == discord.ChannelType.text:  # server/text-channel
+            if not ctx.message.channel.is_nsfw():
+                note = f"This {unit} is marked as NSFW. Please move to an NSFW channel."
+            cool = ctx.message.channel.is_nsfw()
+        else:
+            cool = await self.check(ctx, unit)
+
+        if note:
+            await ctx.send(note)
+            return cool
+
+    async def check(self, ctx: commands.Context, unit: str):
+        confirmMess = await ctx.send(f'This {unit} is NSFW. Are you sure you want to view this content?')
+        await confirmMess.add_reaction('✅')
+        await confirmMess.add_reaction('❌')
+
+        # wait_for stolen from docs example
+        def confirm(react, reactor):
+            return reactor == ctx.author and str(react.emoji) in ('✅', '❌') and confirmMess.id == react.message.id
+
+        try:
+            reaction, user = await self.client.wait_for('reaction_add', timeout=30, check=confirm)
+        except asyncio.TimeoutError:  # timeout cancel
+            await confirmMess.edit(text='`+reddit` timed-out.')
+        else:
+            if reaction.emoji == '✅':
+                await confirmMess.delete()
+                return True
+
+            else:  # ❌ react cancel
+                await confirmMess.remove_reaction('✅', self.client.user)
+                await confirmMess.remove_reaction('❌', self.client.user)
+            try:
+                await confirmMess.remove_reaction('❌', user)
+            except (discord.Forbidden, discord.NotFound):
+                pass
+            await confirmMess.edit(content='`+reddit` was cancelled.')
 
     @commands.command(hidden=True, aliases=['redditAnal', 'redAnal'])
     async def redditAnalytics(self, ctx):
