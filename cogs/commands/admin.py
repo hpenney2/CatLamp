@@ -8,7 +8,8 @@ import sys
 import discord
 from discord.ext import commands
 from json import dump
-from CatLampPY import colors, config, insert_returns, reddit, isAdmin, CommandErrorMsg
+from CatLampPY import colors, config, insert_returns, reddit, CommandErrorMsg
+from cogs.misc.isAdmin import isAdmin
 from hastebin import get_key
 from cogs.listeners.exceptions import Exceptions
 

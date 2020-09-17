@@ -79,10 +79,6 @@ colors = tables.getColors()
 reddit = praw.Reddit(client_id=config["redditCID"],
                      client_secret=config["redditSecret"],
                      user_agent="CatLamp (by /u/hpenney2)")
-admins = [
-    142664159048368128,  # hpenney2/hp, bot creator and host
-    474328006588891157  # TheEgghead27, contributor
-]
 
 
 class CheckFailureMsg(commands.CheckFailure):
@@ -94,12 +90,7 @@ class CommandErrorMsg(commands.CommandError):
 
 
 ### Functions and Checks ###
-def isAdmin(user):
-    """Checks if a user is an admin or not. Returns True or False respectively."""
-    if user.id in admins:
-        return True
-    else:
-        return False
+# isAdmin() has been moved to cogs.misc because ImportError
 
 
 def hasPermissions(perm: str):

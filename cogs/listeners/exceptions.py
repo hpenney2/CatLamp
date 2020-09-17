@@ -1,7 +1,8 @@
 import discord
 import sys
 from discord.ext import commands
-from CatLampPY import isAdmin, colors # pylint: disable=import-error
+from CatLampPY import colors  # pylint: disable=import-error
+from cogs.misc.isAdmin import isAdmin
 
 
 class Exceptions(commands.Cog):

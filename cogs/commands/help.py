@@ -3,7 +3,7 @@ from discord.ext import commands
 import discord
 
 import tables
-from CatLampPY import isAdmin
+from cogs.misc.isAdmin import isAdmin
 
 colors = tables.getColors()
 

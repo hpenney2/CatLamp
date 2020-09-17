@@ -4,7 +4,8 @@ from discord.ext import commands, tasks
 import prawcore  # because praw exceptions inherit from here
 import random
 import re as regex
-from CatLampPY import reddit, isAdmin
+from CatLampPY import reddit
+from cogs.misc.isAdmin import isAdmin
 import datetime
 
 from hastebin import get_key

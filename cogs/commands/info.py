@@ -2,7 +2,7 @@ import discord
 from discord.ext import commands
 import math
 
-from CatLampPY import isAdmin
+from cogs.misc.isAdmin import isAdmin
 from cogs.listeners.pagination import Pagination
 from cogs.misc.mdbed import uh
 
