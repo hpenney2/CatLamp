@@ -240,9 +240,10 @@ class Fun(commands.Cog):
         else:
             cool = await self.check(ctx, unit)
 
-        if note:
-            await ctx.send(note)
-            return cool
+        if unit != 'post':
+            if note:
+                await ctx.send(note)
+        return cool
 
     async def check(self, ctx: commands.Context, unit: str):
         confirmMess = await ctx.send(f'This {unit} is NSFW. Are you sure you want to view this content?')
