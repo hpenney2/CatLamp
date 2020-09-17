@@ -69,8 +69,7 @@ def urlParse(url: str, embed: discord.Embed):
                     badSite = i
             if badSite:
                 embed.description = f"[(GIF)]({url})"
-                footerNote = f'This GIF is on {badSite},' \
-                             f' which is too complex for Discord bot embeds.'
+                footerNote = f'This GIF is on {badSite}, which appears inconsistently in Discord bot embeds.'
         if url.startswith('https://www.reddit.com/gallery/'):
             footerNote = 'This is a Reddit Gallery, which is impossible to format into one ' \
                          'embed.'
