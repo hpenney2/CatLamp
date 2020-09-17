@@ -132,6 +132,7 @@ class Fun(commands.Cog):
         self.client.cmds.append(self.coinFlip)
         self.client.cmds.append(self.guess)
         self.client.cmds.append(self.redditRandom)
+        self.degenerates = []
         self.inGame = []
 
     @commands.command(aliases=["flip"])
@@ -236,7 +237,12 @@ class Fun(commands.Cog):
                 note = f"This {unit} is marked as NSFW. Please move to an NSFW channel."
             cool = ctx.message.channel.is_nsfw()
         else:
-            cool = await self.check(ctx, unit)
+            if ctx.author.id in self.degenerates:
+                cool = True
+            else:
+                cool = await self.check(ctx, unit)
+                if cool:
+                    self.degenerates.append(ctx.author.id)
 
         if unit != 'post':
             if note:
