@@ -37,7 +37,7 @@ class Name(commands.Cog):
 
     @statReset.before_loop
     async def before_daily(self):
-        await self.client.wait_until_ready()
+        await wakeAtMidnight()
 
 
 async def wakeAtMidnight():
