@@ -2,6 +2,9 @@ from discord.ext import commands
 
 
 def isOk(msg):
+    if msg.guild:
+        if msg.guild.id in [264445053596991498]:
+            return False
     return True
 
 
