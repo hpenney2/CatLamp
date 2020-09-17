@@ -246,7 +246,7 @@ class Fun(commands.Cog):
         return cool
 
     async def check(self, ctx: commands.Context, unit: str):
-        confirmMess = await ctx.send(f'This {unit} is NSFW. Are you sure you want to view this content?')
+        confirmMess = await ctx.send(f'This {unit} is NSFW. Are you over 18 and *sure* you want to view this content?')
         await confirmMess.add_reaction('✅')
         await confirmMess.add_reaction('❌')
 
