@@ -14,6 +14,7 @@ from hastebin import get_key
 from cogs.listeners.exceptions import Exceptions
 
 
+# noinspection PyUnresolvedReferences,PyDunderSlots
 class Administration(commands.Cog):
     def __init__(self, bot):
         self.client = bot
@@ -42,7 +43,6 @@ class Administration(commands.Cog):
         except FileNotFoundError:
             os.execv(sys.executable, ['python'] + sys.argv)
 
-    # noinspection PyUnresolvedReferences,PyDunderSlots
     @commands.command(hidden=True)
     @commands.check(isAdmin)
     async def reload(self, ctx, save: bool = True):
