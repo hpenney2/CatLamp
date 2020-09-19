@@ -23,6 +23,7 @@ class Name(commands.Cog):
     @tasks.loop(hours=24)
     async def statReset(self):
         await sendData(self.client, self.client.get_channel(712489826330345534))
+        await (self.client.get_channel(712489826330345534)).send(f'DEBUG: {datetime.date.today()}')
         self.client.redditStats = {'Date': datetime.date.today()}  # reset stats
 
     @statReset.after_loop
@@ -37,9 +38,11 @@ class Name(commands.Cog):
 
     @statReset.before_loop
     async def before_daily(self):
+        await self.client.wait_until_ready()
         # sleep until 12 AM
         now = datetime.datetime.now()
         remaining = (now.replace(day=now.day + 1, hour=0, minute=0, second=0, microsecond=0) - now).total_seconds()
+        await (self.client.get_channel(712489826330345534)).send(f'Resetting Reddit analytics in {remaining} seconds.')
         await asyncio.sleep(remaining)
 
 
