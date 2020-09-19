@@ -115,7 +115,7 @@ class Administration(commands.Cog):
         errorInfo = ""
         for cog in miscCogs:
             try:
-                self.client.load_extension('cogs.misc.' + cog)
+                self.client.reload_extension('cogs.misc.' + cog)
             except commands.NoEntryPointError:
                 print(f"{'cogs.misc.' + cog} is not a proper cog!")
             except commands.ExtensionAlreadyLoaded:
