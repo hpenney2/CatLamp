@@ -40,7 +40,6 @@ async def sendPost(ctx, post):
     embed.timestamp = datetime.datetime.fromtimestamp(randPost.created_utc)
 
     await ctx.send(embed=embed)
-    return True
 
 
 def urlParse(url: str, embed: discord.Embed):
@@ -204,25 +203,35 @@ class Fun(commands.Cog):
                     if not await self.nsfwCheck(ctx, "subreddit"):
                         return
                 satisfied = False
+                errorMess = ''
                 tries = 0
                 while not satisfied:
                     if tries >= 15:
-                        await ctx.send("Failed to get a post.")
-                        return
+                        errorMess = "Failed to get a post."
+                        break
                     randPost = subreddit.random()
                     if (not randPost or randPost.distinguished or len(randPost.title) > 256 or
                             len(randPost.selftext) > 2048) or \
                             (randPost.over_18 and not await self.nsfwCheck(ctx, "post")):
                         tries += 1
+                        del randPost
                         continue
-                    if not randPost.url or not randPost.selftext:  # just because i'm a nervous idiot so i need to check
-                        pass
-                    if await sendPost(ctx, randPost):
-                        satisfied = True
+                    if not (randPost.url or randPost.selftext):  # just because i'm a nervous idiot so i need to check
+                        tries += 1
+                        del randPost
+                        continue
+                    satisfied = True
             except prawcore.Forbidden:
-                await ctx.send("Subreddit is private.")
+                errorMess = "Subreddit is private."
             except(prawcore.BadRequest, prawcore.Redirect, prawcore.NotFound):
-                await ctx.send("Subreddit not found.")
+                errorMess = "Subreddit not found."
+
+        if errorMess:
+            await ctx.send(errorMess)
+        elif randPost:
+            await sendPost(ctx, randPost)
+        else:
+            await ctx.send('oy something went wrong big oh no')
 
     @commands.command(hidden=True)
     @commands.check(isAdmin)
