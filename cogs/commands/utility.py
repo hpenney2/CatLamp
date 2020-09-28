@@ -51,6 +51,7 @@ class Utility(commands.Cog):
             raise CommandErrorMsg("That channel isn't even in the same server!")
         # The reason I didn't just implement the below with checks is because the channel isn't
         # always the same as ctx.channel
+        # TODO: Make this better because there is definitely a way to do it better
         perms = ctx.author.permissions_in(channel)
         botPerms = ctx.guild.me.permissions_in(channel)
         if not perms.read_messages:
