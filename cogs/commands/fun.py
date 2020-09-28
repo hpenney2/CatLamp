@@ -102,28 +102,25 @@ async def sendData(client, channel: discord.abc.Messageable):
     embed = discord.Embed(title=f"Reddit data for {client.redditStats['Date'].isoformat()}")
     embed.timestamp = datetime.datetime.utcnow()
     if len(client.redditStats) > 1:
-        titleMaybe = ''
-        content = ''
         if len(client.redditStats) <= 26:
             for i in client.redditStats:
                 if i != 'Date':
                     embed.add_field(name=f'r/{i}', value=client.redditStats[i])
         else:  # stringify it because
             embed = None
-            titleMaybe = f"Reddit data for {client.redditStats['Date'].isoformat()}"
+            content = ''
             for i in client.redditStats:
                 if i != 'Date':
                     content += f'\nr/{i}:\n{client.redditStats[i]}'
 
-        if embed:
-            await channel.send(embed=embed)
-        else:
-            payload = f'{titleMaybe}\n{content}'
+        if not embed:
+            # noinspection PyUnboundLocalVariable
+            payload = f'Reddit data for {client.redditStats["Date"].isoformat()}\n{content}'
             await channel.send(f'There was too much data, so it was uploaded to Hastebin:\n'
                                f'https://hastebin.com/{get_key(payload)}')
     else:
         embed.add_field(name=":(", value="There is no data to send!")
-        await channel.send(embed=embed)
+    await channel.send(embed=embed)
 
 
 class Fun(commands.Cog):
