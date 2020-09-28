@@ -6,6 +6,7 @@ certifi==2019.11.28
 chardet==3.0.4
 cleverbotfree==1.2.2
 colorama==0.4.3
+dblpy==0.4.0
 deeppyer==1.0.1
 discord.py~=1.4.1
 idna==2.10
