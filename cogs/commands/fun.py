@@ -4,6 +4,7 @@ from discord.ext import commands
 import prawcore  # because praw exceptions inherit from here
 import random
 import re as regex
+# pylint: disable=import-error
 from CatLampPY import reddit
 from cogs.misc.isAdmin import isAdmin
 import datetime
@@ -98,17 +99,17 @@ def hasImage(embed: discord.Embed):
 
 
 async def sendData(client, channel: discord.abc.Messageable):
+    embed = discord.Embed(title=f"Reddit data for {client.redditStats['Date'].isoformat()}")
+    embed.timestamp = datetime.datetime.utcnow()
     if len(client.redditStats) > 1:
-        embed = None
         titleMaybe = ''
         content = ''
         if len(client.redditStats) <= 26:
-            embed = discord.Embed(title=f"Reddit data for {client.redditStats['Date'].isoformat()}")
             for i in client.redditStats:
                 if i != 'Date':
                     embed.add_field(name=f'r/{i}', value=client.redditStats[i])
-            embed.timestamp = datetime.datetime.now()
         else:  # stringify it because
+            embed = None
             titleMaybe = f"Reddit data for {client.redditStats['Date'].isoformat()}"
             for i in client.redditStats:
                 if i != 'Date':
@@ -121,7 +122,8 @@ async def sendData(client, channel: discord.abc.Messageable):
             await channel.send(f'There was too much data, so it was uploaded to Hastebin:\n'
                                f'https://hastebin.com/{get_key(payload)}')
     else:
-        await channel.send('There is no data to send!')
+        embed.add_field(name=":(", value="There is no data to send!")
+        await channel.send(embed=embed)
 
 
 class Fun(commands.Cog):
