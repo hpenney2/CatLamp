@@ -70,7 +70,7 @@ logging.basicConfig(level=logging.INFO, format="[%(asctime)s] %(levelname)s %(na
 intents = discord.Intents.default()
 client = commands.AutoShardedBot(
     command_prefix=commands.when_mentioned_or('+'), case_insensitive=True, intents=intents,
-    help_command=EmbedHelpCommand(verify_checks=False, show_hidden=False)
+    help_command=EmbedHelpCommand(verify_checks=False, show_hidden=False), chunk_guilds_at_startup=False
 )
 client.cmds = []
 client.helpEmbeds = []
