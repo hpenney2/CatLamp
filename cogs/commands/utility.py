@@ -148,8 +148,10 @@ class Utility(commands.Cog):
             valid = [d, h, m, s]
             names = ["days", "hours", "minutes", "seconds"]
             for time in valid:
-                if time <= 0 and len(valid) != 1:
-                    del valid[valid.index(time)]
+                if time < 1 and len(valid) != 1:
+                    i = valid.index(time)
+                    del valid[i]
+                    del names[i]
                 else:
                     break
             for time in valid:

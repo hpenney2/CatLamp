@@ -188,6 +188,10 @@ class Administration(commands.Cog):
                 print("Done saving reminders!")
         else:
             print("No reminders to save, not creating a reminders.json file.")
+            try:
+                os.remove("reminders.json")
+            except FileNotFoundError:
+                pass
 
     async def check(self, ctx, verb: str, noun: str):
         confirmMess = await ctx.send(f'Are you sure you want to {verb} the bot?')
