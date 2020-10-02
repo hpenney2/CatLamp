@@ -27,6 +27,7 @@ while True:
         from os import listdir
         import io
         import re as regex
+        import dbl
 
         from cogs.commands.help import EmbedHelpCommand
 
