@@ -18,7 +18,6 @@ class Utility(commands.Cog):
         self.client.cmds.append(self.announce)
         self.client.cmds.append(self.cancelReminder)
         self.client.cmds.append(self.remind)
-        self.client.cmds.append(self.purge)
         self.reminders_setup = False
 
     # @commands.Cog.listener() for a listener event

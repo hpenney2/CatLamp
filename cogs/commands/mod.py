@@ -7,6 +7,7 @@ from CatLampPY import isGuild, hasPermissions, CommandErrorMsg  # pylint: disabl
 class Moderation(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
+        self.bot.cmds.append(self.purge)
         self.bot.cmds.append(self.kick)
         self.bot.cmds.append(self.ban)
         self.bot.cmds.append(self.unban)
