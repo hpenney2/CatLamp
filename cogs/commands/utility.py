@@ -5,7 +5,7 @@ from json import load
 
 from discord.ext import commands
 
-from CatLampPY import isGuild, hasPermissions, CommandErrorMsg  # pylint: disable=import-error
+from CatLampPY import isGuild, CommandErrorMsg  # pylint: disable=import-error
 from tables import *
 
 colors = getColors()

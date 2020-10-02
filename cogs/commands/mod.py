@@ -1,7 +1,7 @@
 import discord
 from discord.ext import commands
 from typing import Union
-from CatLampPY import hasPermissions, CommandErrorMsg  # pylint: disable=import-error
+from CatLampPY import isGuild, hasPermissions, CommandErrorMsg  # pylint: disable=import-error
 
 
 class Moderation(commands.Cog):
