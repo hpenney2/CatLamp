@@ -22,6 +22,23 @@ class Moderation(commands.Cog):
         else:
             return user
 
+    @commands.command(aliases=["bulkDelete"])
+    @isGuild()
+    @hasPermissions("manage_messages")
+    async def purge(self, ctx, number_of_messages: int):
+        """Purges a certain amount of messages up to 100. Only works in servers."""
+        if number_of_messages <= 0:
+            raise CommandErrorMsg("I need at least 1 message to purge!")
+        elif number_of_messages > 100:
+            raise CommandErrorMsg("I can't purge more than 100 messages at a time!")
+        await ctx.message.delete()
+        msgsDeleted = await ctx.channel.purge(limit=number_of_messages)
+        msg = await ctx.send(f"Deleted {len(msgsDeleted)} messages.")
+        try:
+            await msg.delete(delay=5)
+        except discord.NotFound:
+            pass
+
     @commands.command(cooldown_after_parsing=True)
     @commands.cooldown(1, 10, commands.BucketType.member)
     @hasPermissions("kick_members")
