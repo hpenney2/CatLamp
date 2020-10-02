@@ -1,4 +1,13 @@
 ### Startup ###
+def checkKeys(configList: list, reqKeys: list):
+    reqKeysInConfig = []
+    for configItem in configList:
+        if configItem in reqKeys:
+            reqKeysInConfig.append(configItem)
+    reqKeys.sort()
+    reqKeysInConfig.sort()
+    return reqKeysInConfig == reqKeys
+
 importAttempts = 0
 while True:
     try:
@@ -28,6 +37,7 @@ while True:
         import io
         import re as regex
         import dbl
+        import statcord
 
         from cogs.commands.help import EmbedHelpCommand
 
@@ -38,7 +48,8 @@ while True:
             a.append(configuration)
         a.sort()  # sort the list for consistency
         # make sure the sorted list has everything we need (also in a sorted list), no more, no less
-        if a != ['dblToken', 'githubPAT', 'githubUser', 'redditCID', 'redditSecret', 'token']:
+        requiredKeys = ['dblToken', 'githubPAT', 'githubUser', 'redditCID', 'redditSecret', 'token'] # If a config key is REQUIRED, add it here.
+        if not checkKeys(a, requiredKeys):
             print("The config.json file is missing at least one entry! Please make sure the format matches the "
                   "README.md.")
             input("Press enter to close, then restart the bot when fixed.")
@@ -181,10 +192,14 @@ if __name__ == "__main__":
         loadDir = cogDir.replace('/', '.')
         for cog in listdir(cogDir):
             if cog.endswith('.py'):  # bot tries to load all .py files in said folders, use cogs/misc for non-cog things
+                if loadDir + cog[:-3] == "cogs.listeners.statcord" and not "statcordKey" in config:
+                    print("Statcord API key not found in config.json, not loading the Statcord cog.")
+                    continue
                 try:
                     client.load_extension(loadDir + cog[:-3])
                 except commands.NoEntryPointError:
-                    print(f"{loadDir + cog[:-3]} is not a proper cog!")
+                    if (loadDir + cog[:-3]) != "cogs.commands.help":
+                        print(f"{loadDir + cog[:-3]} is not a proper cog!")
                 except commands.ExtensionAlreadyLoaded:
                     print('you should not be seeing this\n if you do, youre screwed')
                 except commands.ExtensionFailed as failure:
