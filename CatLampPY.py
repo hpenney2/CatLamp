@@ -37,7 +37,7 @@ while True:
             a.append(configuration)
         a.sort()  # sort the list for consistency
         # make sure the sorted list has everything we need (also in a sorted list), no more, no less
-        if a != ['githubPAT', 'githubUser', 'redditCID', 'redditSecret', 'token']:
+        if a != ['dblToken', 'githubPAT', 'githubUser', 'redditCID', 'redditSecret', 'token']:
             print("The config.json file is missing at least one entry! Please make sure the format matches the "
                   "README.md.")
             input("Press enter to close, then restart the bot when fixed.")

@@ -16,7 +16,8 @@ You can either copy the format below or run the included `gen_config.py` file in
 	"githubUser": "github_username_here",
 	"githubPAT": "github_personal_access_token_here",
 	"redditCID": "client_id_here",
-	"redditSecret": "client_secret_here"
+	"redditSecret": "client_secret_here",
+	"dblToken": "DBL_token_here"
 }
 ```
 `githubPAT` can be your password or a personal access token generated in settings (that has the repo scope).
