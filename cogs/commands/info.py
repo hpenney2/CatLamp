@@ -14,6 +14,7 @@ colors = tables.getColors()
 class Info(commands.Cog, name="Bot Info"):
     def __init__(self, bot):
         self.client = bot
+        self.client.privacy = uh()
         self.pagination = Pagination(self.client)
         self.client.cmds.append(self.documentation)
         self.client.cmds.append(self.invite)
@@ -76,7 +77,8 @@ class Info(commands.Cog, name="Bot Info"):
     @commands.command()
     async def invite(self, ctx):
         """Sends CatLamp's invite link."""
-        msg = await ctx.send("You can add CatLamp to your server using the link below.\nhttps://top.gg/bot/712394747548794950")
+        msg = await ctx.send("You can add CatLamp to your server using the link below.\n"
+                             "https://top.gg/bot/712394747548794950")
         try:
             await msg.edit(suppress=True)
         except discord.Forbidden:
@@ -103,12 +105,7 @@ class Info(commands.Cog, name="Bot Info"):
     @commands.command()
     async def privacy(self, ctx):
         """Displays the CatLamp privacy policy."""
-        try:
-            privacy = self.client.privacy
-        except (NameError, AttributeError):
-            self.client.privacy = uh()
-            privacy = self.client.privacy
-        await ctx.send(embed=privacy)
+        await ctx.send(embed=self.client.privacy)
 
     @commands.command()
     async def ping(self, ctx):
