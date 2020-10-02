@@ -286,7 +286,7 @@ class Fun(commands.Cog):
     @commands.command(hidden=True, aliases=['redditAnal', 'redAnal'])
     @commands.check(isAdmin)
     async def redditAnalytics(self, ctx):
-        if ctx.channel == client.get_channel(712489826330345534):
+        if ctx.channel.id == 712489826330345534:
             await sendData(self.client, ctx)
 
 
