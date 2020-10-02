@@ -13,8 +13,8 @@ If you are considered an Involved User, you may request that your attribution is
 ### User IDs
 We collect user IDs for reference in reminders (`+remind`).
 
-### Server IDs
-We collect server identification, member count, and owner names for our auditing logs.
+### Server Data
+We collect server identification, member count, and owner names for our audit logs.
 
 ### User-Submitted Content
 - We save the note attached to any reminders (`+remind`) for reference.
