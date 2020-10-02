@@ -1,12 +1,13 @@
 import discord
 from discord.ext import commands
 from typing import Union
-from CatLampPY import hasPermissions, CommandErrorMsg  # pylint: disable=import-error
+from CatLampPY import isGuild, hasPermissions, CommandErrorMsg  # pylint: disable=import-error
 
 
 class Moderation(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
+        self.bot.cmds.append(self.purge)
         self.bot.cmds.append(self.kick)
         self.bot.cmds.append(self.ban)
         self.bot.cmds.append(self.unban)
@@ -21,6 +22,23 @@ class Moderation(commands.Cog):
                 raise CommandErrorMsg(f"No user with the ID {str(user_id)} was found!")
         else:
             return user
+
+    @commands.command(aliases=["bulkDelete"])
+    @isGuild()
+    @hasPermissions("manage_messages")
+    async def purge(self, ctx, number_of_messages: int):
+        """Purges a certain amount of messages up to 100. Only works in servers."""
+        if number_of_messages <= 0:
+            raise CommandErrorMsg("I need at least 1 message to purge!")
+        elif number_of_messages > 100:
+            raise CommandErrorMsg("I can't purge more than 100 messages at a time!")
+        await ctx.message.delete()
+        msgsDeleted = await ctx.channel.purge(limit=number_of_messages)
+        msg = await ctx.send(f"Deleted {len(msgsDeleted)} messages.")
+        try:
+            await msg.delete(delay=5)
+        except discord.NotFound:
+            pass
 
     @commands.command(cooldown_after_parsing=True)
     @commands.cooldown(1, 10, commands.BucketType.member)

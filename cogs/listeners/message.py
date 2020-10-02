@@ -2,7 +2,6 @@ from discord.ext import commands
 
 
 def isOk(msg):
-    return False # remove this line to bring back after DBL
     if msg.guild:
         if msg.guild.id in [264445053596991498]:
             return False

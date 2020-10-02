@@ -119,3 +119,6 @@ class EmbedHelpCommand(commands.HelpCommand):
 
             embed.set_footer(text=self.get_ending_note())
             await self.get_destination().send(embed=embed)
+        else:
+            
+            await self.context.send(f'No command called "{self.context.message.content.split()[1]}" found.')
