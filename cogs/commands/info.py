@@ -76,7 +76,7 @@ class Info(commands.Cog, name="Bot Info"):
     @commands.command()
     async def invite(self, ctx):
         """Sends CatLamp's invite link."""
-        msg = await ctx.send("You can add CatLamp to your server using the link below.\nhttps://bit.ly/CatLampBot")
+        msg = await ctx.send("You can add CatLamp to your server using the link below.\nhttps://top.gg/bot/712394747548794950")
         try:
             await msg.edit(suppress=True)
         except discord.Forbidden:
