@@ -16,5 +16,6 @@ class Statcord(commands.Cog):
         if not ctx.command.hidden:
             self.api.command_run(ctx)
 
+            
 def setup(bot):
     bot.add_cog(Statcord(bot))
