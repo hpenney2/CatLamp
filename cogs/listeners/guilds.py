@@ -17,6 +17,8 @@ class Guilds(commands.Cog):
         embed.set_footer(text=f"Now in {len(self.client.guilds)} guilds.")
         if bool(guild.icon_url):
             embed.set_thumbnail(url=str(guild.icon_url))
+        if not guild.chunked:
+            await guild.chunk()
         embed.add_field(name="Owner", value=f"`{guild.owner}`")  # str()ing a User returns the thing properly formatted
         embed.add_field(name="Members", value=guild.member_count)
         embed.add_field(name="Shard ID", value=guild.shard_id)
