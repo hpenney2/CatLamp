@@ -13,7 +13,8 @@ class Statcord(commands.Cog):
 
     @commands.Cog.listener()
     async def on_command(self, ctx):
-        self.api.command_run(ctx)
+        if not ctx.command.hidden:
+            self.api.command_run(ctx)
 
 def setup(bot):
     bot.add_cog(Statcord(bot))
