@@ -37,7 +37,7 @@ while True:
         import io
         import re as regex
         import dbl
-        #import statcord # REMOVE WHEN FIXED
+        import statcord
 
         from cogs.commands.help import EmbedHelpCommand
 
@@ -193,10 +193,6 @@ if __name__ == "__main__":
         for cog in listdir(cogDir):
             if cog.endswith('.py'):  # bot tries to load all .py files in said folders, use cogs/misc for non-cog things
                 fullName = loadDir + cog[:-3]
-                # REMOVE WHEN FIXED >>>>>>
-                if fullName == "cogs.listeners.statcord":
-                    continue
-                # <<<<<< REMOVE WHEN FIXED
                 if fullName == "cogs.listeners.statcord" and not "statcordKey" in config:
                     print("Statcord API key not found in config.json, not loading the Statcord cog.")
                     continue
