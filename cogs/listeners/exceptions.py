@@ -19,9 +19,9 @@ class Exceptions(commands.Cog):
             # Exception-specific error handling, more may be added later.
             errorStr = None
             if isinstance(error, commands.BadArgument):
-                if "int" in str(error):
+                if "int" in str(error) or "float" in str(error):
                     param = str(error).split("parameter ", 1)[1][:-1]
-                    errorStr = f"{param} must be a number."
+                    errorStr = f"\"{param}\" must be a number."
             elif isinstance(error, commands.MissingRequiredArgument):
                 errorStr = "This command requires more arguments. Check +help for details."
             elif isinstance(error, commands.BadUnionArgument) and str(error).startswith('Could not convert "user" into User or int.'):
