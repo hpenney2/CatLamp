@@ -289,7 +289,7 @@ class Fun(commands.Cog):
         if ctx.channel.id == 712489826330345534:
             await sendData(self.client, ctx)
         else:
-            await ctx.send('This command is locked to <#712489826330345534>')
+            await ctx.send('This command is locked to <#712489826330345534>.')
 
 
 def setup(bot):
