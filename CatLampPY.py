@@ -188,6 +188,8 @@ miscCogs = ['redditReset']
 if __name__ == "__main__":
 
     # load commands and listeners
+    client.runStatcord = True
+    client.runDBL = True
     cogDirectories = ['cogs/commands/', 'cogs/listeners/']  # bot will look for python files in these directories
     for cogDir in cogDirectories:
         loadDir = cogDir.replace('/', '.')
@@ -196,9 +198,11 @@ if __name__ == "__main__":
                 fullName = loadDir + cog[:-3]
                 if fullName == "cogs.listeners.statcord" and not "statcordKey" in config:
                     print("Statcord API key not found in config.json, not loading the Statcord cog.")
+                    client.runStatcord = False
                     continue
                 elif fullName == "cogs.listeners.dbl" and not 'dblToken' in config:
                     print("DBL token not found in config.json, not loading the DBL cog.")
+                    client.runDBL = False
                     continue
                 try:
                     client.load_extension(loadDir + cog[:-3])
