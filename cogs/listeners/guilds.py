@@ -39,6 +39,7 @@ class Guilds(commands.Cog):
 
 
     async def chunkGuildsAsync(self):
+        await self.client.wait_until_ready()
         print("Beginning guild chunking...")
         for guild in self.client.guilds:
             if not guild.chunked:
