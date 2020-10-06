@@ -37,14 +37,20 @@ class DBL(commands.Cog):
                     return web.json_response({"hello":"world"})
                 elif postType == "upvote":
                     user = post.get("user")
-                    await botlogs.send(f"User `{user}` voted for the bot on DBL.")
+                    userName = None
+                    try:
+                        userName = str(await self.bot.fetch_user(user))
+                    except discord.NotFound:
+                        userName = "Unknown User"
+                    await botlogs.send(f"User `{userName} ({user})` voted for the bot on DBL.")
                     return web.json_response({"status":"upvote_handled_successfully"})
                 else:
                     print(f"Unknown post type! Got '{postType}', expected 'upvote' or 'test'")
                     await botlogs.send(f"Unknown post type! Got '{postType}', expected 'upvote' or 'test'")
                     return web.json_response({"error":"bad_vote_type"})
         app = web.Application()
-        app.add_routes([web.post("/dblwebhook", handleDBLVote)])
+        app.add_routes([web.post("/dblwebhook", handleDBLVote),
+                        web.post("/dblwebhook/", handleDBLVote)])
         runner = web.AppRunner(app)
         await runner.setup()
         self.site = web.TCPSite(runner, port=10215)
