@@ -38,5 +38,15 @@ class Guilds(commands.Cog):
             await channel.send(embed=embed)
 
 
+    async def chunkGuildsAsync(self):
+        print("Beginning guild chunking...")
+        for guild in self.client.guilds:
+            if not guild.chunked:
+                await guild.chunk()
+        print(f"Done chunking {len(self.client.guilds)} guilds!")
+
+
 def setup(bot):
-    bot.add_cog(Guilds(bot))
+    g = Guilds(bot)
+    bot.add_cog(g)
+    bot.loop.create_task(g.chunkGuildsAsync())
