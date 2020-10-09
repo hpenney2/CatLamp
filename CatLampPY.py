@@ -1,4 +1,13 @@
 ### Startup ###
+def checkKeys(configList: list, reqKeys: list):
+    reqKeysInConfig = []
+    for configItem in configList:
+        if configItem in reqKeys:
+            reqKeysInConfig.append(configItem)
+    reqKeys.sort()
+    reqKeysInConfig.sort()
+    return reqKeysInConfig == reqKeys
+
 importAttempts = 0
 while True:
     try:
@@ -28,6 +37,7 @@ while True:
         import io
         import re as regex
         import dbl
+        import statcord
 
         from cogs.commands.help import EmbedHelpCommand
 
@@ -38,7 +48,8 @@ while True:
             a.append(configuration)
         a.sort()  # sort the list for consistency
         # make sure the sorted list has everything we need (also in a sorted list), no more, no less
-        if a != ['dblToken', 'githubPAT', 'githubUser', 'redditCID', 'redditSecret', 'token']:
+        requiredKeys = ['githubPAT', 'githubUser', 'redditCID', 'redditSecret', 'token'] # If a config key is REQUIRED, add it here.
+        if not checkKeys(a, requiredKeys):
             print("The config.json file is missing at least one entry! Please make sure the format matches the "
                   "README.md.")
             input("Press enter to close, then restart the bot when fixed.")
@@ -68,7 +79,8 @@ while True:
     break
 
 logging.basicConfig(level=logging.INFO, format="[%(asctime)s] %(levelname)s %(name)s | %(message)s")
-intents = discord.Intents.all()
+intents = discord.Intents.default()
+intents.members = True
 client = commands.AutoShardedBot(
     command_prefix=commands.when_mentioned_or('+'), case_insensitive=True, intents=intents,
     help_command=EmbedHelpCommand(verify_checks=False, show_hidden=False), chunk_guilds_at_startup=False
@@ -176,15 +188,27 @@ miscCogs = ['redditReset']
 if __name__ == "__main__":
 
     # load commands and listeners
+    client.runStatcord = True
+    client.runDBL = True
     cogDirectories = ['cogs/commands/', 'cogs/listeners/']  # bot will look for python files in these directories
     for cogDir in cogDirectories:
         loadDir = cogDir.replace('/', '.')
         for cog in listdir(cogDir):
             if cog.endswith('.py'):  # bot tries to load all .py files in said folders, use cogs/misc for non-cog things
+                fullName = loadDir + cog[:-3]
+                if fullName == "cogs.listeners.statcord" and not "statcordKey" in config:
+                    print("Statcord API key not found in config.json, not loading the Statcord cog.")
+                    client.runStatcord = False
+                    continue
+                elif fullName == "cogs.listeners.dbl" and not 'dblToken' in config:
+                    print("DBL token not found in config.json, not loading the DBL cog.")
+                    client.runDBL = False
+                    continue
                 try:
                     client.load_extension(loadDir + cog[:-3])
                 except commands.NoEntryPointError:
-                    print(f"{loadDir + cog[:-3]} is not a proper cog!")
+                    if fullName != "cogs.commands.help":
+                        print(f"{fullName} is not a proper cog!")
                 except commands.ExtensionAlreadyLoaded:
                     print('you should not be seeing this\n if you do, youre screwed')
                 except commands.ExtensionFailed as failure:

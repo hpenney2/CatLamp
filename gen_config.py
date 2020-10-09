@@ -7,6 +7,8 @@ if os.path.exists("config.json"):
 
 data = {}
 
+print("Note: Optional keys are not shown here. They must be added manually. See README.md for more details.")
+
 print("Enter your bot token:")
 token = input()
 data["token"] = token

@@ -68,11 +68,18 @@ class Administration(commands.Cog):
             for cog in listdir(cogDir):
                 if cog.endswith(
                         '.py'):  # bot tries to load all .py files in said folders, use cogs/misc for non-cog things
+                    fullName = loadDir + cog[:-3]
+                    if fullName == "cogs.listeners.statcord" and not self.client.runStatcord:
+                        print("Statcord API key not found in config.json, not loading the Statcord cog.")
+                        continue
+                    elif fullName == "cogs.listeners.dbl" and not self.client.runDBL:
+                        print("DBL token not found in config.json, not loading the DBL cog.")
+                        continue
                     try:
                         self.client.load_extension(loadDir + cog[:-3])
                     except commands.NoEntryPointError:
-                        if (loadDir + cog[:-3]) != "cogs.commands.help":
-                            errorInfo += f"{loadDir + cog[:-3]} is not a proper cog!\n"
+                        if fullName != "cogs.commands.help":
+                            errorInfo += f"{fullName} is not a proper cog!\n"
                     except commands.ExtensionAlreadyLoaded:
                         try:
                             self.client.reload_extension(loadDir + cog[:-3])

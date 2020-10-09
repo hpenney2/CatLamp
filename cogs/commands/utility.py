@@ -3,13 +3,14 @@ import datetime
 import os
 from json import load
 
+import discord
 from discord.ext import commands
 
 from CatLampPY import isGuild, CommandErrorMsg  # pylint: disable=import-error
 from tables import *
 
-colors = getColors()
-times = getTimes()
+colors = getColors() # pylint: disable=undefined-variable
+times = getTimes() # pylint: disable=undefined-variable
 
 
 class Utility(commands.Cog):
