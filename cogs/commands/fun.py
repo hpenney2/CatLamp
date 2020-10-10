@@ -298,7 +298,7 @@ class Fun(commands.Cog):
         """Beta tic tac toe thing"""
         if not victim.bot:
             if victim.id != ctx.author.id:
-                game = discordTicTac(ctx, ctx.message.mentions[0])
+                game = discordTicTac(ctx, victim)
                 await game.run()
             else:
                 await ctx.send('you cant play tictactoe against yourself lol')
