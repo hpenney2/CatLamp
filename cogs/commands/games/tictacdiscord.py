@@ -1,8 +1,10 @@
 import asyncio
-import discord
+# import discord (DiscordX already has discord)
 from discord.ext import commands
 import random
 
+from cogs.commands.games.DInput import DInput
+from cogs.commands.games.DiscordX import *
 from cogs.commands.games.tictacterminal import ticTacToe
 
 
@@ -61,7 +63,7 @@ directionShuffle = {
 # noinspection PyAttributeOutsideInit,PyPropertyAccess,PyMethodOverriding
 class discordTicTac(ticTacToe):
     def __init__(self, ctx: commands.Context, p2: discord.user):
-        super(discordTicTac, self).__init__()
+        ticTacToe.__init__(self)
         self.ctx = ctx
 
         # randomize players
@@ -73,12 +75,21 @@ class discordTicTac(ticTacToe):
             self.p2 = ctx.author
 
     async def run(self):
-        embed = discord.Embed(title=f'Starting {self.ctx.author}\' game of TicTacToe...', color=0x00ff00)
-        embed.description = f"⬛⬛⬛\n⬛⬛⬛\n⬛⬛⬛"
+        self.embed = discord.Embed(title=f'Starting {self.ctx.author}\' game of TicTacToe...',
+                                   description=f"⬛⬛⬛\n⬛⬛⬛\n⬛⬛⬛", color=0x00ff00)
 
-        self.confirmMess = await self.ctx.send(embed=embed)
-        for i in ['⬆', '⬇', '⬅', '➡', '✅']:
-            await self.confirmMess.add_reaction(i)
+        self.confirmMess = await self.ctx.send(embed=self.embed)
+
+        self.p1In = DInput(self.ctx.bot, self.confirmMess, self.p1)
+        self.p2In = DInput(self.ctx.bot, self.confirmMess, self.p2)
+
+        self.gfx = DiscordX(target_message=self.confirmMess, data=dictToScanLines(self.pieces), resolution=[3, 3],
+                            embed=self.embed,
+                            conversionTable={'None': '⬛', 'X': '❌', 'O': '⭕',
+                                             'oS': '<:oS:757696246755622923>', 'xS': '<:xS:757697702216597604>',
+                                             'noneS': '<:noneS:757697725906026547>'})
+
+        await self.p1In.initReactions()
 
         for i in range(9):
             self.currentPlayerID = i % 2
@@ -100,7 +111,7 @@ class discordTicTac(ticTacToe):
 
             if self.winCheck(self.pieces):
                 await self.cleanBoard()
-                await self.announceWin(curPlayer)
+                await self.announceWin(curPlayer, self.currentPlayerID)
                 return
         await self.cleanBoard()
         await self.ctx.send('wow a tie amazing')
@@ -108,65 +119,48 @@ class discordTicTac(ticTacToe):
     # noinspection PyTypeChecker
     async def awaitP1Input(self):
         if await self.userInput(self.p1):
-            await(self.announceWin(self.p1))
+            await(self.announceWin(self.p2, abs(self.currentPlayerID - 1)))
             return True
         return False
 
     # noinspection PyTypeChecker
     async def awaitP2Input(self):
         if await self.userInput(self.p2):
-            await(self.announceWin(self.p1))
+            await(self.announceWin(self.p1, abs(self.currentPlayerID - 1)))
             return True
         return False
 
-    def renderBoard(self, board: dict, playerName: str):
-        embed = discord.Embed(title=f'TicTacToe: {self.p1} VS {self.p2}', color=0x00ff00)
+    async def renderBoard(self, board: dict, playerName: str):
+        self.embed.title = f'TicTacToe: {self.p1} VS {self.p2}'
         if playerName:
-            embed.set_author(name=f'{playerName}\'s turn. ({self.IDtoMark(self.currentPlayerID)})')
+            self.embed.set_author(name=f'{playerName}\'s turn. ({self.IDtoMark(self.currentPlayerID)})')
+        else:
+            self.embed.remove_author()
 
-        pieceEmojiIndex = {'None': '⬛', 'X': '❌', 'O': '⭕',
-                           'oS': '<:oS:757696246755622923>', 'xS': '<:xS:757697702216597604>',
-                           'noneS': '<:noneS:757697725906026547>'}
-        icons = []
-        for i in board.values():
-            icons.append(pieceEmojiIndex[str(i)])
-        embed.description = f"{icons[0]}{icons[1]}{icons[2]}\n{icons[3]}{icons[4]}{icons[5]}\n" \
-                            f"{icons[6]}{icons[7]}{icons[8]}"
-        return embed
+        self.gfx.syncData(dictToScanLines(board))
+        self.gfx.syncEmbed(self.embed)
+        await self.gfx.blit()
 
     async def userInput(self, p):
         waiting = True
         selection, temp = selectInit(self.pieces)
-        await self.confirmMess.edit(embed=self.renderBoard(temp, p.name))
+        await self.renderBoard(temp, p.name)
         while waiting:
-            # wait_for stolen from docs example
-            def confirm(react, reactor):
-                return reactor == p and str(react.emoji) in ('⬆', '⬇', '⬅', '➡', '✅') \
-                       and self.confirmMess.id == react.message.id
-
-            try:
-                reaction, user = await self.ctx.bot.wait_for('reaction_add', timeout=90, check=confirm)
-            except asyncio.TimeoutError:  # timeout cancel
+            if p == self.p1:
+                thing = await self.p1In.awaitInput()
+            else:
+                thing = await self.p2In.awaitInput()
+            if type(thing) == asyncio.exceptions.TimeoutError:  # if theres a timeout
                 await self.ctx.send(f'{p.mention}\'s game timed-out. Be quicker bro!!!')
                 return p
             else:
-                if reaction.emoji == '✅':
+                if thing == '✅':
                     waitingTemp = await self.processInput(selection)
-                    asyncio.ensure_future(self.removeReactions(['⬆', '⬇', '⬅', '➡', '✅'], user))
                     waiting = waitingTemp
 
                 else:
-                    selection, temp = directionShuffle[reaction.emoji](selection, self.pieces)
-                    await self.confirmMess.edit(embed=self.renderBoard(temp, p.name))
-                    asyncio.ensure_future(self.removeReactions([reaction.emoji], user))
-
-    async def removeReactions(self, emojis: list, user: discord.User):
-        """I made this a function for *blast-processing* and also efficiency"""
-        for i in emojis:
-            try:
-                await self.confirmMess.remove_reaction(i, user)
-            except (discord.Forbidden, discord.NotFound):
-                pass
+                    selection, temp = directionShuffle[thing](selection, self.pieces)
+                    await self.renderBoard(temp, p.name)
 
     async def processInput(self, Input):
         if self.pieces[Input] is not None:
@@ -185,9 +179,9 @@ class discordTicTac(ticTacToe):
             return False
         return True
 
-    async def announceWin(self, winner: discord.User):
-        await self.ctx.send(f'Player {winner.mention} ({self.IDtoMark(self.currentPlayerID)}) wins!')
+    async def announceWin(self, winner: discord.User, ID: int):
+        await self.ctx.send(f'Player {winner.mention} ({self.IDtoMark(ID)}) wins!')
 
     async def cleanBoard(self):
-        asyncio.ensure_future(self.removeReactions(['⬆', '⬇', '⬅', '➡', '✅'], self.ctx.bot.user))
-        await self.confirmMess.edit(embed=self.renderBoard(self.pieces, ''))
+        asyncio.ensure_future(self.p1In.removeReactions(('⬆', '⬇', '⬅', '➡', '✅'), self.ctx.bot.user))
+        await self.renderBoard(self.pieces, '')

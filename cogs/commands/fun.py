@@ -294,12 +294,15 @@ class Fun(commands.Cog):
 
     @commands.command(hidden=True, aliases=['tttB', "tic_tac_toe_beta"])
     @commands.check(isAdmin)
-    async def tictactoeBeta(self, ctx, victim: discord.User):
+    async def tictactoeBeta(self, ctx, victim: discord.Member):
         """Beta tic tac toe thing"""
         if not victim.bot:
             if victim.id != ctx.author.id:
-                game = discordTicTac(ctx, victim)
-                await game.run()
+                if victim.permissions_in(ctx.channel).read_messages:
+                    game = discordTicTac(ctx, victim)
+                    await game.run()
+                else:
+                    await ctx.send('hey if you cant see the game, is it even fair?')
             else:
                 await ctx.send('you cant play tictactoe against yourself lol')
         else:
