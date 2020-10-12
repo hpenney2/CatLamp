@@ -252,7 +252,7 @@ class Administration(commands.Cog):
                 code = code[6:]
 
             if "config" in code:
-                raise CommandErrorMsg("No token for you dumb dumb")
+                raise CommandErrorMsg("no")
             # add a layer of indentation
             code = "\n".join(f"    {i}" for i in code.splitlines())
 
