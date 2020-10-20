@@ -147,13 +147,9 @@ class Utility(commands.Cog):
             d, h = divmod(h, 24)
             valid = [d, h, m, s]
             names = ["days", "hours", "minutes", "seconds"]
-            for time in valid:
-                if time < 1 and len(valid) != 1:
-                    i = valid.index(time)
-                    del valid[i]
-                    del names[i]
-                else:
-                    break
+            while valid[0] < 1 and len(valid) != 1:
+                del valid[0]
+                del names[0]
             for time in valid:
                 index = valid.index(time)
                 unit = names[index]
