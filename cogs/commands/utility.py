@@ -132,7 +132,7 @@ class Utility(commands.Cog):
             self.client.reminders.pop(ctx.author.id)
             await ctx.send("Reminder cancelled.")
 
-    
+
     @commands.command()
     async def timeLeft(self, ctx):
         """Checks how much time is left on your current reminder if you have one."""
