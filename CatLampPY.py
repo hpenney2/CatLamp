@@ -11,6 +11,7 @@ def checkKeys(configList: list, reqKeys: list):
 importAttempts = 0
 while True:
     try:
+        # the wall of imports
         import discord
         from discord.ext import commands
         import tables
@@ -38,8 +39,17 @@ while True:
         import re as regex
         import dbl
         import statcord
-
         from cogs.commands.help import EmbedHelpCommand
+
+        # try to upgrade (or possibly downgrade) modules using requirements.txt
+        print("Attempting to install/upgrade modules...")
+        try:
+            subprocess.check_call([sys.executable, "-m", "pip", "install", "--upgrade", "-r", "requirements.txt", "--user"])
+            print("Done! Continuing startup...")
+        except Exception as e:
+            print(f"Error while trying to install modules!\nFull error:\n{e}")
+            input("Press enter to close, then restart the bot when fixed.")
+            sys.exit(1)
 
         config = open("config.json", "r")
         config = json.load(config)
@@ -54,26 +64,27 @@ while True:
                   "README.md.")
             input("Press enter to close, then restart the bot when fixed.")
             sys.exit(1)
-    except (ModuleNotFoundError, ImportError) as mod:
+    except (ModuleNotFoundError, ImportError) as mod: # reinstall requirements.txt if import error
         if importAttempts <= 0:
-            print(f"One or more modules are missing or an error occurred trying to import one!\nFull error: {mod}")
-            print("Attempting to install from requirements.txt now.")
+            print(f"One or more modules are missing or an error occurred trying to import one!\nFull error:\n{mod}")
+            print("Attempting to install from requirements.txt...")
             importAttempts += 1
             try:
-                subprocess.check_call([sys.executable, "-m", "pip", "install", "-r", "requirements.txt", "--user"])
+                # run a pip install
+                subprocess.check_call([sys.executable, "-m", "pip", "install", "--upgrade", "-r", "requirements.txt", "--user"])
                 print("Done installed modules! Retrying...")
                 continue
             except Exception as e:
-                print(f"Error while trying to install modules!\nFull error: {e}")
+                print(f"Error while trying to install modules!\nFull error:\n{e}")
                 input("Press enter to close, then restart the bot when fixed.")
                 sys.exit(1)
         else:
-            print(f"Still unable to import a module!\nFull error: {mod}")
+            print(f"Still unable to import a module!\nFull error:\n{mod}")
             input("Press enter to close, then restart the bot when fixed.")
             sys.exit(1)
     except (FileNotFoundError, json.JSONDecodeError) as e:
         print("There was an error trying to get the config.json file! It doesn't exist or isn't formatted properly!")
-        print(f"Full error: {e}")
+        print(f"Full error:{e}")
         input("Press enter to close, then restart the bot when fixed.")
         sys.exit(1)
     break
