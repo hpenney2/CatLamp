@@ -8,86 +8,69 @@ def checkKeys(configList: list, reqKeys: list):
     reqKeysInConfig.sort()
     return reqKeysInConfig == reqKeys
 
-importAttempts = 0
-while True:
+try:
+    # the wall of imports
+    import discord
+    from discord.ext import commands
+    import tables
+    import logging
+    import json
+    import sys
+    import os
+    import subprocess
+    import random
+    import asyncio
+    import datetime
+    from hastebin import get_key
+    import ast
+    import praw
+    import prawcore  # because praw exceptions inherit from here
+    import math
+    import signal
+    # noinspection PyPep8Naming
+    import time as timeMod
+    import deeppyer
+    # noinspection PyPackageRequirements
+    from PIL import Image
+    from os import listdir
+    import io
+    import re as regex
+    import dbl
+    import statcord
+    from cogs.commands.help import EmbedHelpCommand
+
+    # try to upgrade (or possibly downgrade) modules using requirements.txt
+    print("Attempting to install/upgrade modules...")
     try:
-        # the wall of imports
-        import discord
-        from discord.ext import commands
-        import tables
-        import logging
-        import json
-        import sys
-        import os
-        import subprocess
-        import random
-        import asyncio
-        import datetime
-        from hastebin import get_key
-        import ast
-        import praw
-        import prawcore  # because praw exceptions inherit from here
-        import math
-        import signal
-        # noinspection PyPep8Naming
-        import time as timeMod
-        import deeppyer
-        # noinspection PyPackageRequirements
-        from PIL import Image
-        from os import listdir
-        import io
-        import re as regex
-        import dbl
-        import statcord
-        from cogs.commands.help import EmbedHelpCommand
-
-        # try to upgrade (or possibly downgrade) modules using requirements.txt
-        print("Attempting to install/upgrade modules...")
-        try:
-            subprocess.check_call([sys.executable, "-m", "pip", "install", "--upgrade", "-r", "requirements.txt", "--user"])
-            print("Done! Continuing startup...")
-        except Exception as e:
-            print(f"Error while trying to install modules!\nFull error:\n{e}")
-            input("Press enter to close, then restart the bot when fixed.")
-            sys.exit(1)
-
-        config = open("config.json", "r")
-        config = json.load(config)
-        a = []  # make a list of everything in config
-        for configuration in config:
-            a.append(configuration)
-        a.sort()  # sort the list for consistency
-        # make sure the sorted list has everything we need (also in a sorted list), no more, no less
-        requiredKeys = ['githubPAT', 'githubUser', 'redditCID', 'redditSecret', 'token'] # If a config key is REQUIRED, add it here.
-        if not checkKeys(a, requiredKeys):
-            print("The config.json file is missing at least one entry! Please make sure the format matches the "
-                  "README.md.")
-            input("Press enter to close, then restart the bot when fixed.")
-            sys.exit(1)
-    except (ModuleNotFoundError, ImportError) as mod: # reinstall requirements.txt if import error
-        if importAttempts <= 0:
-            print(f"One or more modules are missing or an error occurred trying to import one!\nFull error:\n{mod}")
-            print("Attempting to install from requirements.txt...")
-            importAttempts += 1
-            try:
-                # run a pip install
-                subprocess.check_call([sys.executable, "-m", "pip", "install", "--upgrade", "-r", "requirements.txt", "--user"])
-                print("Done installed modules! Retrying...")
-                continue
-            except Exception as e:
-                print(f"Error while trying to install modules!\nFull error:\n{e}")
-                input("Press enter to close, then restart the bot when fixed.")
-                sys.exit(1)
-        else:
-            print(f"Still unable to import a module!\nFull error:\n{mod}")
-            input("Press enter to close, then restart the bot when fixed.")
-            sys.exit(1)
-    except (FileNotFoundError, json.JSONDecodeError) as e:
-        print("There was an error trying to get the config.json file! It doesn't exist or isn't formatted properly!")
-        print(f"Full error:{e}")
+        subprocess.check_call([sys.executable, "-m", "pip", "install", "--upgrade", "-r", "requirements.txt", "--user"])
+        print("Done! Continuing startup...")
+    except Exception as e:
+        print(f"Error while trying to install modules!\nFull error:\n{e}")
         input("Press enter to close, then restart the bot when fixed.")
         sys.exit(1)
-    break
+
+    config = open("config.json", "r")
+    config = json.load(config)
+    a = []  # make a list of everything in config
+    for configuration in config:
+        a.append(configuration)
+    a.sort()  # sort the list for consistency
+    # make sure the sorted list has everything we need (also in a sorted list), no more, no less
+    requiredKeys = ['githubPAT', 'githubUser', 'redditCID', 'redditSecret', 'token'] # If a config key is REQUIRED, add it here.
+    if not checkKeys(a, requiredKeys):
+        print("The config.json file is missing at least one entry! Please make sure the format matches the "
+              "README.md.")
+        input("Press enter to close, then restart the bot when fixed.")
+        sys.exit(1)
+except (ModuleNotFoundError, ImportError) as mod: # reinstall requirements.txt if import error
+    print(f"One or more modules are missing or an error occurred trying to import one!\nFull error:\n{mod}")
+    input("Press enter to close, then restart the bot when fixed.")
+    sys.exit(1)
+except (FileNotFoundError, json.JSONDecodeError) as e:
+    print("There was an error trying to get the config.json file! It doesn't exist or isn't formatted properly!")
+    print(f"Full error:\n{e}")
+    input("Press enter to close, then restart the bot when fixed.")
+    sys.exit(1)
 
 logging.basicConfig(level=logging.INFO, format="[%(asctime)s] %(levelname)s %(name)s | %(message)s")
 intents = discord.Intents.default()
