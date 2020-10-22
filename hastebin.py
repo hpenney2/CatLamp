@@ -3,11 +3,12 @@
 
 import requests
 import json
+from urllib.parse import quote
 
 
 def get_key(data):
     req = requests.post('https://hastebin.com/documents',
-                        # headers={},
+                        headers={"Content-Type" : "text/plain"},
                         data=data)
 
     key = json.loads(req.content)
