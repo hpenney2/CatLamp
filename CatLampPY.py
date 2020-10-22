@@ -40,6 +40,7 @@ while True:
         import dbl
         import statcord
         from cogs.commands.help import EmbedHelpCommand
+        import pymongo
 
         # try to upgrade (or possibly downgrade) modules using requirements.txt
         print("Attempting to install/upgrade modules...")
@@ -64,6 +65,11 @@ while True:
                   "README.md.")
             input("Press enter to close, then restart the bot when fixed.")
             sys.exit(1)
+
+        print("Checking if the MongoDB daemeon is running...")
+        mongoTestClient = pymongo.MongoClient("mongodb://localhost:27017/", serverSelectionTimeoutMS=3000)
+        mongoTestClient.server_info()
+        print("MongoDB is running. Continuing startup...")
     except (ModuleNotFoundError, ImportError) as mod: # reinstall requirements.txt if import error
         if importAttempts <= 0:
             print(f"One or more modules are missing or an error occurred trying to import one!\nFull error:\n{mod}")
@@ -87,6 +93,10 @@ while True:
         print(f"Full error:{e}")
         input("Press enter to close, then restart the bot when fixed.")
         sys.exit(1)
+    except pymongo.errors.ServerSelectionTimeoutError:
+        print('The MongoDB server is not currently running. Please read the "Setting up MongoDB" section in README.md.')
+        input("Press enter to close, then restart the bot when fixed.")
+        sys.exit(1)
     break
 
 logging.basicConfig(level=logging.INFO, format="[%(asctime)s] %(levelname)s %(name)s | %(message)s")
@@ -96,6 +106,7 @@ client = commands.AutoShardedBot(
     command_prefix=commands.when_mentioned_or('+'), case_insensitive=True, intents=intents,
     help_command=EmbedHelpCommand(verify_checks=False, show_hidden=False), chunk_guilds_at_startup=False
 )
+client.mongo = pymongo.MongoClient("mongodb://localhost:27017/")
 client.cmds = []
 client.helpEmbeds = []
 client.reminders = {}
