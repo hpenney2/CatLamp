@@ -28,7 +28,8 @@ class Utility(commands.Cog):
     @commands.command(aliases=["announcement"])
     @isGuild()
     async def announce(self, ctx, channel: discord.TextChannel, *, message: str):
-        """Sends a nicely formatted announcement embed to the specified channel, or if none, the current channel."""
+        """Sends a nicely formatted announcement embed to the specified channel.
+        Requires you to have the Manage Messages permission in the specified channel."""
         if channel is None:
             channel = ctx.channel
         if not channel.guild.id or channel.guild.id != ctx.guild.id:
