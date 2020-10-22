@@ -2,16 +2,16 @@
  CatLamp, the all-in-one Discord bot.
 
 # Getting the bot running
- 1. Preferably, but not necessary, be running a Linux system.
+ 1. Preferably, but not necessary, be running an Ubuntu system.
  2. Run `python3 -m pip install -r requirements.txt`.
  3. (Only if on an Ubuntu server) Run `sudo apt update`, then `sudo apt install libgl1-mesa-glx`.
  4. (Only if on an Ubuntu server) Run `sudo apt-get install gcc python3-dev` (C compiler, needed for some PyPi packages like statcord.py)
- 5. Set up a `config.json` file in the repository root with the format below or run `gen_config.py`.
+ 5. Set up a `config.json` file in the repository root with the format below ~~or run `gen_config.py`~~.
  6. Start the bot with `python3 CatLampPY.py.`
 
 # `config.json` format (subject to change)
 You can either copy the format below (recommended) or run the included `gen_config.py` file included.
-Optional keys are noted in parentheses, however these must be removed from the actual json file.
+Optional keys are noted in parentheses, however make sure to remove the parentheses from the actual JSON file.
 ```json
 {
 	"token": "bot_token_here",
