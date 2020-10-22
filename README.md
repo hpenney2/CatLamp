@@ -11,7 +11,12 @@
 
 ## Setting up MongoDB
 **The bot will NOT run without MongoDB being properly installed.**
-Follow the intructions [in the MongoDB documentation](https://docs.mongodb.com/manual/installation/) to install MongoDB.
+Follow the intructions [in the MongoDB documentation](https://docs.mongodb.com/manual/installation/) to install MongoDB.  
+After installing, make sure MongoDB is running before starting the bot.
+
+If you're on Ubuntu, you can have MongoDB start up with your system with the command `sudo systemctl enable mongod.service`.
+
+If you're on Windows, MongoDB should automatically start up with your system, however if it does not, you can make it by starting `services.msc` from the Run dialog (press Win + R), finding the `MongoDB Server` service, then changing its startup type to `Automatic`.
 
 ## `config.json` format (subject to change)
 You can either copy the format below (recommended) or run the included `gen_config.py` file included.
