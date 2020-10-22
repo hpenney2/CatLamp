@@ -9,7 +9,7 @@ from urllib.parse import quote
 def get_key(data):
     req = requests.post('https://hastebin.com/documents',
                         headers={"Content-Type" : "text/plain"},
-                        data=data)
+                        data=quote(data, safe=""))
 
     key = json.loads(req.content)
     return key['key']
