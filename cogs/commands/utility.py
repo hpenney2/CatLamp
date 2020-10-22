@@ -6,7 +6,8 @@ from json import load
 import discord
 from discord.ext import commands
 
-from CatLampPY import isGuild, CommandErrorMsg  # pylint: disable=import-error
+# pylint: disable=import-error
+from CatLampPY import isGuild, CommandErrorMsg
 from tables import *
 
 colors = getColors() # pylint: disable=undefined-variable
