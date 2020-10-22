@@ -281,7 +281,7 @@ class Administration(commands.Cog):
             }
             exec(compile(parsed, filename="<ast>", mode="exec"), env)
             result = (await eval(f"{fn_name}()", env))
-            if len(str(result)) > 2048:
+            if len(str(result)) >= 2048:
                 embed = discord.Embed(title="Result too long",
                                       description=f"The result was too long, so it was uploaded to Hastebin.\n"
                                                   f"https://hastebin.com/{get_key(result)}",
@@ -293,7 +293,7 @@ class Administration(commands.Cog):
                 embed.set_footer(text="Executed successfully.")
                 await ctx.send(embed=embed)
         except Exception as exception:
-            if len(str(exception)) > 2048:  # I doubt this is needed, but just in case
+            if len(str(exception)) >= 2048:  # I doubt this is needed, but just in case
                 embed = discord.Embed(title="Error too long",
                                       description=f"The error was too long, so it was uploaded to Hastebin.\n"
                                                   f"https://hastebin.com/{get_key(str(exception))}",
