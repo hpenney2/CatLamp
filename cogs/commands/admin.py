@@ -195,6 +195,10 @@ class Administration(commands.Cog):
                 print("Done saving reminders!")
         else:
             print("No reminders to save, not creating a reminders.json file.")
+            try:
+                os.remove("reminders.json")
+            except FileNotFoundError:
+                pass
 
     async def check(self, ctx, verb: str, noun: str):
         confirmMess = await ctx.send(f'Are you sure you want to {verb} the bot?')
@@ -252,7 +256,7 @@ class Administration(commands.Cog):
                 code = code[6:]
 
             if "config" in code:
-                raise CommandErrorMsg("No token for you dumb dumb")
+                raise CommandErrorMsg("no")
             # add a layer of indentation
             code = "\n".join(f"    {i}" for i in code.splitlines())
 
@@ -277,7 +281,7 @@ class Administration(commands.Cog):
             }
             exec(compile(parsed, filename="<ast>", mode="exec"), env)
             result = (await eval(f"{fn_name}()", env))
-            if len(str(result)) > 2048:
+            if len(str(result)) >= 2048:
                 embed = discord.Embed(title="Result too long",
                                       description=f"The result was too long, so it was uploaded to Hastebin.\n"
                                                   f"https://hastebin.com/{get_key(result)}",
@@ -289,7 +293,7 @@ class Administration(commands.Cog):
                 embed.set_footer(text="Executed successfully.")
                 await ctx.send(embed=embed)
         except Exception as exception:
-            if len(str(exception)) > 2048:  # I doubt this is needed, but just in case
+            if len(str(exception)) >= 2048:  # I doubt this is needed, but just in case
                 embed = discord.Embed(title="Error too long",
                                       description=f"The error was too long, so it was uploaded to Hastebin.\n"
                                                   f"https://hastebin.com/{get_key(str(exception))}",
