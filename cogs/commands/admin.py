@@ -8,7 +8,7 @@ import sys
 import discord
 from discord.ext import commands
 from json import dump
-from CatLampPY import colors, config, insert_returns, reddit, CommandErrorMsg, miscCogs
+from CatLampPY import colors, config, insert_returns, reddit, CommandErrorMsg
 from cogs.misc.isAdmin import isAdmin
 from hastebin import get_key
 from cogs.listeners.exceptions import Exceptions
@@ -69,12 +69,18 @@ class Administration(commands.Cog):
                 if cog.endswith(
                         '.py'):  # bot tries to load all .py files in said folders, use cogs/misc for non-cog things
                     fullName = loadDir + cog[:-3]
-                    if fullName == "cogs.listeners.statcord" and not self.client.runStatcord:
-                        print("Statcord API key not found in config.json, not loading the Statcord cog.")
+                    if (fullName in self.client.optionalCogs) and \
+                            not self.getClientVar(self.client.optionalCogs[fullName]['boolName']):
+                        cogData = self.client.optionalCogs[fullName]
+                        print(f"{cogData['name']} not previously found in config.json, "
+                              f"not loading the {cogData['cog name']} cog.")
                         continue
-                    elif fullName == "cogs.listeners.dbl" and not self.client.runDBL:
-                        print("DBL token not found in config.json, not loading the DBL cog.")
-                        continue
+                    # if fullName == "cogs.listeners.statcord" and not self.client.runStatcord:
+                    #     print("Statcord API key not found in config.json, not loading the Statcord cog.")
+                    #     continue
+                    # elif fullName == "cogs.listeners.dbl" and not self.client.runDBL:
+                    #     print("DBL token not found in config.json, not loading the DBL cog.")
+                    #     continue
                     try:
                         self.client.load_extension(loadDir + cog[:-3])
                     except commands.NoEntryPointError:
@@ -103,6 +109,13 @@ class Administration(commands.Cog):
             embed.description = f"Reloaded successfully without errors!"
             await msg.edit(embed=embed)
 
+    def getClientVar(self, varName: str):
+        """Function to get a bot var. Why? because dynamic string shenanigans)"""
+        env = {
+            'bot': self.client,
+        }
+        return eval(f"bot.{varName}", env)  # potential problems here due to stringing but shut the up
+
     @commands.command(hidden=True)
     @commands.check(isAdmin)
     async def miscReload(self, ctx, save: bool = True):
@@ -120,7 +133,7 @@ class Administration(commands.Cog):
         self.client.cmds = []
         # load misc cogs
         errorInfo = ""
-        for cog in miscCogs:
+        for cog in self.client.miscCogs:
             try:
                 self.client.reload_extension('cogs.misc.' + cog)
             except commands.NoEntryPointError:
