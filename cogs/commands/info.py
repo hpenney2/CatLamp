@@ -98,7 +98,7 @@ class Info(commands.Cog, name="Bot Info"):
 
     @commands.command()
     async def server(self, ctx):
-        """Sends CatLamp's server invite to your DMs."""
+        """Sends CatLamp's server invite to your DMs. Join to get support with CatLamp, report bugs, and get notified about updates!"""
         # static server.id is better than getting a server (with the same id, might I add), then using it for comparison
         try:
             if ctx.guild.id == 712487389121216584:
