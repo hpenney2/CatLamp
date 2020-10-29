@@ -18,7 +18,7 @@ We collect server identification, member count, and owner names for our audit lo
 
 ### User-Submitted Content
 - We save the note attached to any reminders (`+remind`) for reference.
-- We also anonymously save search queries provided in the reddit command (`+reddit`).
+- We anonymously save search queries provided in the reddit command (`+reddit`).
 
 ### Involved Users' IDs
 If you are involved in the development of CatLamp or are listed as an Administrator, your identification number is saved for reference in bot functions (attribution and permission checks are the common uses).
