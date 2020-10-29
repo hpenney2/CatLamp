@@ -2,6 +2,7 @@ import discord
 from discord.ext import commands
 import math
 
+# pylint: disable=import-error
 from cogs.misc.isAdmin import isAdmin
 from cogs.listeners.pagination import Pagination
 from cogs.misc.mdbed import uh
@@ -122,7 +123,12 @@ class Info(commands.Cog, name="Bot Info"):
     @commands.command()
     async def ping(self, ctx):
         """Gets the current latency between the bot and Discord."""
-        await ctx.send(f"Pong!\nLatency: {round(self.client.latency * 1000)}ms")
+        message = await ctx.send("Measuring ping...")
+        ping = round((message.created_at.timestamp() - ctx.message.created_at.timestamp()) * 1000)
+        embed = discord.Embed(title="Pong!")
+        embed.add_field(name="API Latency", value=f"{round(self.client.latency * 1000)}ms")
+        embed.add_field(name="Measured Ping", value=f"{ping}ms")
+        await message.edit(content=None, embed=embed)
 
 
 def setup(bot):
