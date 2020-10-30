@@ -107,12 +107,11 @@ class Utility(commands.Cog):
             del self.client.reminderTasks[userId]
             channel = self.client.get_channel(channelId)
             user = None
-            readPerms = True
             if isinstance(channel, discord.TextChannel):
+                if not channel.guild.chunked:
+                    await channel.guild.chunk()
                 user = channel.guild.get_member(userId)
-                userPerms = user.permissions_in(channel)
-                readPerms = userPerms.read_messages
-            if channel and user and readPerms:
+            if channel and user:
                 await channel.send(f"<@{userId}> Your reminder for {o} {unit} is up!{note}")
             else:
                 usr = await self.client.fetch_user(userId)
@@ -177,16 +176,11 @@ class Utility(commands.Cog):
             # noinspection PyUnusedLocal
             async for tab in self.client.reminders.find():
                 remainingTime = (tab["startTime"] + tab["timeSeconds"]) - datetime.datetime.utcnow().timestamp()
-                if remainingTime <= 1:
-                    asyncio.ensure_future(
-                        self.timer(tab["channelId"], tab["_id"], remainingTime, tab["originalTime"], tab["unit"],
-                                   tab["note"]))
-                else:
-                    task = asyncio.ensure_future(self.timer(tab["channelId"], tab["_id"], remainingTime,
-                                                            tab["originalTime"], tab["unit"], tab["note"]))
-                    # await self.client.reminders.update_one({ "_id": tab["userId"] }, { "$set": { "task": task } })
-                    self.client.reminderTasks[tab["_id"]] = task
-            print("Done loading reminders!")
+                task = asyncio.ensure_future(self.timer(tab["channelId"], tab["_id"], remainingTime,
+                                                        tab["originalTime"], tab["unit"], tab["note"]))
+                # await self.client.reminders.update_one({ "_id": tab["userId"] }, { "$set": { "task": task } })
+                self.client.reminderTasks[tab["_id"]] = task
+            print(f"Done loading {await self.client.reminders.count_documents({})} reminders!")
 
 
 def setup(bot):
