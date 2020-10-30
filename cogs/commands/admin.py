@@ -34,7 +34,7 @@ class Administration(commands.Cog):
             text=f"Restart initiated by {str(ctx.author)} ({ctx.author.id})")
         await ctx.send(embed=embed)
         await self.client.change_presence(activity=discord.Game("Restarting..."))
-        self.saveReminders()
+        # self.saveReminders()
         await self.client.logout()
         print("Bot connection closed.")
         print("Restarting...")
@@ -45,7 +45,7 @@ class Administration(commands.Cog):
 
     @commands.command(hidden=True)
     @commands.check(isAdmin)
-    async def reload(self, ctx, save: bool = True):
+    async def reload(self, ctx):
         """Reloads the bot commands and listeners. Only runnable by admins."""
         print(f"Reload initiated by {str(ctx.author)} ({ctx.author.id})")
         embed = discord.Embed(title="Reloading...",
@@ -55,8 +55,8 @@ class Administration(commands.Cog):
         msg = await ctx.send(embed=embed)
         await self.client.change_presence(activity=discord.Game("Reloading..."))
         print("Reloading...")
-        if save:
-            self.saveReminders()
+        # if save:
+        #     self.saveReminders()
         self.client.cmds = []
         # *reload commands and listeners
         from os import listdir
@@ -105,7 +105,7 @@ class Administration(commands.Cog):
 
     @commands.command(hidden=True)
     @commands.check(isAdmin)
-    async def miscReload(self, ctx, save: bool = True):
+    async def miscReload(self, ctx):
         """Reloads the registered cogs in cogs.misc. Only runnable by admins."""
         print(f"Reload initiated by {str(ctx.author)} ({ctx.author.id})")
         embed = discord.Embed(title="Reloading...",
@@ -115,8 +115,8 @@ class Administration(commands.Cog):
         msg = await ctx.send(embed=embed)
         await self.client.change_presence(activity=discord.Game("Partially reloading..."))
         print("Reloading...")
-        if save:
-            self.saveReminders()
+        # if save:
+        #     self.saveReminders()
         self.client.cmds = []
         # load misc cogs
         errorInfo = ""
@@ -162,10 +162,10 @@ class Administration(commands.Cog):
                 await self.client.change_presence(activity=discord.Game("Restarting..."))
             except Exception as e:
                 print(f'Presence change failed with exception {e}')
-            try:
-                self.saveReminders()
-            except Exception as e:
-                print(f'Reminder saving failed with exception {e}')
+            # try:
+            #     self.saveReminders()
+            # except Exception as e:
+            #     print(f'Reminder saving failed with exception {e}')
             try:
                 await self.client.logout()
                 print("Bot connection closed.")
@@ -180,6 +180,8 @@ class Administration(commands.Cog):
                 print('fuck we\'re fucked')
                 raise e
 
+    # Deprecated: Reminder saving has been replaced by MongoDB and now edits the DB at runtime.
+    # Using saveReminders() WILL cause an exception as it was designed for a dictionary, not a MongoDB collection.
     def saveReminders(self):
         if len(self.client.reminders) > 0:
             print("Saving current reminders...")
@@ -274,10 +276,8 @@ class Administration(commands.Cog):
                 'discord': discord,
                 'colors': colors,
                 'commands': commands,
-                'cmds': self.client.cmds,
                 'ctx': ctx,
-                'reddit': reddit,
-                'reminders': self.client.reminders
+                'reddit': reddit
             }
             exec(compile(parsed, filename="<ast>", mode="exec"), env)
             result = (await eval(f"{fn_name}()", env))
