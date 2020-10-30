@@ -1,15 +1,25 @@
 # CatLamp [![Codacy Badge](https://app.codacy.com/project/badge/Grade/3f06c8cbb6fd49eebd345e057de3614d)](https://www.codacy.com?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=hpenney2/CatLamp&amp;utm_campaign=Badge_Grade)
  CatLamp, the all-in-one Discord bot.
 
-# Getting the bot running
+## Getting the bot running
  1. Preferably, but not necessary, be running an Ubuntu system.
  2. Run `python3 -m pip install -r requirements.txt`.
  3. (Only if on an Ubuntu server) Run `sudo apt update`, then `sudo apt install libgl1-mesa-glx`.
  4. (Only if on an Ubuntu server) Run `sudo apt-get install gcc python3-dev` (C compiler, needed for some PyPi packages like statcord.py)
  5. Set up a `config.json` file in the repository root with the format below ~~or run `gen_config.py`~~.
- 6. Start the bot with `python3 CatLampPY.py.`
+ 6. Follow the *Setting up MongoDB* guide below.
+ 7. Start the bot with `python3 CatLampPY.py.`
 
-# `config.json` format (subject to change)
+## Setting up MongoDB
+**The bot will NOT run without MongoDB being properly installed.**
+Follow the intructions [in the MongoDB documentation](https://docs.mongodb.com/manual/installation/) to install MongoDB.  
+After installing, make sure MongoDB is running before starting the bot. **If you have an old `reminders.json` file, run `remindersJSONtoMongo.py` to convert it to MongoDB.**
+
+If you're on Ubuntu, you can have MongoDB start up with your system with the command `sudo systemctl enable mongod.service`.
+
+If you're on Windows, MongoDB should automatically start up with your system, however if it does not, you can make it by starting `services.msc` from the Run dialog (press Win + R), finding the `MongoDB Server` service, then changing its startup type to `Automatic`.
+
+## `config.json` format (subject to change)
 You can either copy the format below (recommended) or run the included `gen_config.py` file included.
 Optional keys are noted in parentheses, however make sure to remove the parentheses from the actual JSON file.
 ```json
