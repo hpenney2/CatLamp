@@ -107,7 +107,8 @@ class Utility(commands.Cog):
             if channel:
                 await channel.send(f"<@{userId}> Your reminder for {o} {unit} is up!{note}")
             await self.client.reminders.delete_one({ "_id": userId })
-        except asyncio.CancelledError:
+            del self.client.reminderTasks[userId]
+        except (asyncio.CancelledError, KeyError):
             pass
 
     @commands.command(aliases=["cancelRemind", "cancelTimer"])
@@ -120,6 +121,7 @@ class Utility(commands.Cog):
             try:
                 task = self.client.reminderTasks[ctx.author.id]
                 task.cancel()
+                del self.client.reminderTasks[ctx.author.id]
                 await self.client.reminders.delete_one({ "_id": ctx.author.id })
                 await ctx.send("Reminder cancelled.")
             except KeyError:
