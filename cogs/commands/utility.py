@@ -27,7 +27,7 @@ class Utility(commands.Cog):
 
     # @commands.command() for a command
 
-    async def reminderExists(self, user: int):
+    async def reminderExists(self, user: str):
         return await self.client.reminders.count_documents({"_id": user}, limit=1) == 1
 
     @commands.command(aliases=["announcement"])
@@ -87,33 +87,33 @@ class Utility(commands.Cog):
 
         task = asyncio.ensure_future(self.timer(ctx.channel.id, ctx.author.id, time, originalTime, unit, reminder_note))
         reminderDict = {
-            "_id": ctx.author.id,
+            "_id": str(ctx.author.id),
             "startTime": datetime.datetime.utcnow().timestamp(),
             "timeSeconds": time,
             "originalTime": originalTime,
             "unit": unit,
-            "channelId": ctx.channel.id,
+            "channelId": str(ctx.channel.id),
             "note": reminder_note
         }
         await self.client.reminders.insert_one(reminderDict)
-        self.client.reminderTasks[ctx.author.id] = task
+        self.client.reminderTasks[int(ctx.author.id)] = task
         await ctx.send(f"Reminder set! I'll @ you in {originalTime} {unit}.{reminder_note}")
 
     async def timer(self, channelId, userId, time, o, unit: str, note: str):
         try:
             await asyncio.sleep(time)
-            await self.client.reminders.delete_one({"_id": userId})
-            del self.client.reminderTasks[userId]
-            channel = self.client.get_channel(channelId)
+            await self.client.reminders.delete_one({"_id": str(userId)})
+            del self.client.reminderTasks[int(userId)]
+            channel = self.client.get_channel(int(channelId))
             user = None
             if isinstance(channel, discord.TextChannel):
                 if not channel.guild.chunked:
                     await channel.guild.chunk()
-                user = channel.guild.get_member(userId)
+                user = channel.guild.get_member(int(userId))
             if channel and user:
                 await channel.send(f"<@{userId}> Your reminder for {o} {unit} is up!{note}")
             else:
-                usr = await self.client.fetch_user(userId)
+                usr = await self.client.fetch_user(int(userId))
                 await usr.send(f"(I couldn't message you where you asked to be reminded originally, "
                                f"so I DMed you instead.)\n<@{userId}> Your reminder for {o} {unit} is up!{note}")
         except (asyncio.CancelledError, discord.NotFound, discord.Forbidden, KeyError):
@@ -122,7 +122,7 @@ class Utility(commands.Cog):
     @commands.command(aliases=["cancelRemind", "cancelTimer"])
     async def cancelReminder(self, ctx):
         """Cancels your current reminder if you have one."""
-        if not await self.reminderExists(ctx.author.id):
+        if not await self.reminderExists(str(ctx.author.id)):
             await ctx.send("You don't have a reminder! Use `+remind` to set one.")
             return
         else:
@@ -130,20 +130,20 @@ class Utility(commands.Cog):
                 task = self.client.reminderTasks[ctx.author.id]
                 task.cancel()
                 del self.client.reminderTasks[ctx.author.id]
-                await self.client.reminders.delete_one({"_id": ctx.author.id})
+                await self.client.reminders.delete_one({"_id": str(ctx.author.id)})
                 await ctx.send("Reminder cancelled.")
             except KeyError:
-                raise CommandErrorMsg("The DB and the cancellation table has somehow become desynchronized!"
+                raise CommandErrorMsg("The DB and the cancellation table has somehow become desynchronized! "
                                       "Please report this bug to the developers in the CatLamp server (+server).")
 
     @commands.command()
     async def timeLeft(self, ctx):
         """Checks how much time is left on your current reminder if you have one."""
-        if not await self.reminderExists(ctx.author.id):
+        if not await self.reminderExists(str(ctx.author.id)):
             await ctx.send("You don't have a reminder! Use `+remind` to set one.")
             return
         else:
-            tab = await self.client.reminders.find_one({"_id": ctx.author.id})
+            tab = await self.client.reminders.find_one({"_id": str(ctx.author.id)})
             remainingTime = (tab["startTime"] + tab["timeSeconds"]) - datetime.datetime.utcnow().timestamp()
             m, s = divmod(remainingTime, 60)
             h, m = divmod(m, 60)
@@ -176,7 +176,7 @@ class Utility(commands.Cog):
                 task = asyncio.ensure_future(self.timer(tab["channelId"], tab["_id"], remainingTime,
                                                         tab["originalTime"], tab["unit"], tab["note"]))
                 # await self.client.reminders.update_one({ "_id": tab["userId"] }, { "$set": { "task": task } })
-                self.client.reminderTasks[tab["_id"]] = task
+                self.client.reminderTasks[int(tab["_id"])] = task
             print(f"Done loading {await self.client.reminders.count_documents({})} reminders!")
 
 
