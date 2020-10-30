@@ -4,7 +4,7 @@ import datetime
 # import os
 # from json import load
 #
-# import discord
+import discord
 from discord.ext import commands
 
 # pylint: disable=import-error
