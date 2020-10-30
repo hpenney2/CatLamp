@@ -24,6 +24,10 @@ if os.path.isfile("reminders.json"):
         del rem["userId"]
         rem["_id"] = str(id)
         rem["channelId"] = str(rem["channelId"])
+        rem["startTime"] = str(rem["startTime"])
+        rem["timeSeconds"] = str(rem["timeSeconds"])
+        rem["originalTime"] = str(rem["originalTime"])
+        print(rem)
         remindersDB.insert_one(rem)
     print("Conversion complete. It is now safe to delete reminders.json.")
 else:

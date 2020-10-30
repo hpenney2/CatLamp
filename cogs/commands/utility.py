@@ -6,6 +6,7 @@ import datetime
 #
 import discord
 from discord.ext import commands
+from typing import Union
 
 # pylint: disable=import-error
 from CatLampPY import isGuild, CommandErrorMsg
@@ -27,8 +28,8 @@ class Utility(commands.Cog):
 
     # @commands.command() for a command
 
-    async def reminderExists(self, user: str):
-        return await self.client.reminders.count_documents({"_id": user}, limit=1) == 1
+    async def reminderExists(self, user: Union[int, str]):
+        return await self.client.reminders.count_documents({"_id": str(user)}, limit=1) == 1
 
     @commands.command(aliases=["announcement"])
     @isGuild()
@@ -63,7 +64,7 @@ class Utility(commands.Cog):
     @commands.command(aliases=["reminder", "timer"])
     async def remind(self, ctx, time: float, unit: str = "minutes", *, reminder_note: str = ""):
         """Sets a reminder, optionally with a note. Valid time units are seconds, minutes, and hours."""
-        if await self.reminderExists(ctx.author.id):
+        if await self.reminderExists(str(ctx.author.id)):
             await ctx.send("You already have a reminder set! Use `+cancelReminder` to cancel it.")
             return
         if time <= 0:
@@ -88,9 +89,9 @@ class Utility(commands.Cog):
         task = asyncio.ensure_future(self.timer(ctx.channel.id, ctx.author.id, time, originalTime, unit, reminder_note))
         reminderDict = {
             "_id": str(ctx.author.id),
-            "startTime": datetime.datetime.utcnow().timestamp(),
-            "timeSeconds": time,
-            "originalTime": originalTime,
+            "startTime": str(datetime.datetime.utcnow().timestamp()),
+            "timeSeconds": str(time),
+            "originalTime": str(originalTime),
             "unit": unit,
             "channelId": str(ctx.channel.id),
             "note": reminder_note
@@ -101,7 +102,7 @@ class Utility(commands.Cog):
 
     async def timer(self, channelId, userId, time, o, unit: str, note: str):
         try:
-            await asyncio.sleep(time)
+            await asyncio.sleep(float(time))
             await self.client.reminders.delete_one({"_id": str(userId)})
             del self.client.reminderTasks[int(userId)]
             channel = self.client.get_channel(int(channelId))
@@ -144,7 +145,7 @@ class Utility(commands.Cog):
             return
         else:
             tab = await self.client.reminders.find_one({"_id": str(ctx.author.id)})
-            remainingTime = (tab["startTime"] + tab["timeSeconds"]) - datetime.datetime.utcnow().timestamp()
+            remainingTime = (float(tab["startTime"]) + float(tab["timeSeconds"])) - datetime.datetime.utcnow().timestamp()
             m, s = divmod(remainingTime, 60)
             h, m = divmod(m, 60)
             d, h = divmod(h, 24)
@@ -172,7 +173,7 @@ class Utility(commands.Cog):
             print("Loading reminders from MongoDB...")
             # noinspection PyUnusedLocal
             async for tab in self.client.reminders.find():
-                remainingTime = (tab["startTime"] + tab["timeSeconds"]) - datetime.datetime.utcnow().timestamp()
+                remainingTime = (float(tab["startTime"]) + float(tab["timeSeconds"])) - datetime.datetime.utcnow().timestamp()
                 task = asyncio.ensure_future(self.timer(tab["channelId"], tab["_id"], remainingTime,
                                                         tab["originalTime"], tab["unit"], tab["note"]))
                 # await self.client.reminders.update_one({ "_id": tab["userId"] }, { "$set": { "task": task } })
