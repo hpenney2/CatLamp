@@ -51,6 +51,7 @@ try:
     import statcord
     from cogs.commands.help import EmbedHelpCommand
     import pymongo
+    from pymongo import errors as mongo_errors  # specifically import errors because it is separate from the main module
     import motor.motor_asyncio
 
     config = open("config.json", "r")
@@ -69,7 +70,8 @@ try:
         sys.exit(1)
 
     print("Checking if the MongoDB daemeon is running...")
-    mongoTestClient = motor.motor_asyncio.AsyncIOMotorClient("mongodb://localhost:27017/", serverSelectionTimeoutMS=3000)
+    mongoTestClient = motor.motor_asyncio.AsyncIOMotorClient("mongodb://localhost:27017/",
+                                                             serverSelectionTimeoutMS=3000)
     mongoTestClient.server_info()
     print("MongoDB is running. Continuing startup...")
 except (ModuleNotFoundError, ImportError) as mod:  # reinstall requirements.txt if import error
@@ -81,7 +83,7 @@ except (FileNotFoundError, json.JSONDecodeError) as e:
     print(f"Full error:\n{e}")
     input("Press enter to close, then restart the bot when fixed.")
     sys.exit(1)
-except pymongo.errors.ServerSelectionTimeoutError:
+except mongo_errors.ServerSelectionTimeoutError:
     print('The MongoDB server is not currently running. Please read the "Setting up MongoDB" section in README.md.')
     input("Press enter to close, then restart the bot when fixed.")
     sys.exit(1)
