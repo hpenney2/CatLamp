@@ -1,17 +1,18 @@
 import asyncio
 import datetime
-import os
-from json import load
-
-import discord
+# linter didn't find any usages for these
+# import os
+# from json import load
+#
+# import discord
 from discord.ext import commands
 
 # pylint: disable=import-error
 from CatLampPY import isGuild, CommandErrorMsg
 from tables import *
 
-colors = getColors() # pylint: disable=undefined-variable
-times = getTimes() # pylint: disable=undefined-variable
+colors = getColors()  # pylint: disable=undefined-variable
+times = getTimes()  # pylint: disable=undefined-variable
 
 
 class Utility(commands.Cog):
@@ -26,10 +27,8 @@ class Utility(commands.Cog):
 
     # @commands.command() for a command
 
-
     async def reminderExists(self, user: int):
-        return await self.client.reminders.count_documents({ "_id": user }, limit=1) == 1
-
+        return await self.client.reminders.count_documents({"_id": user}, limit=1) == 1
 
     @commands.command(aliases=["announcement"])
     @isGuild()
@@ -103,7 +102,7 @@ class Utility(commands.Cog):
     async def timer(self, channelId, userId, time, o, unit: str, note: str):
         try:
             await asyncio.sleep(time)
-            await self.client.reminders.delete_one({ "_id": userId })
+            await self.client.reminders.delete_one({"_id": userId})
             del self.client.reminderTasks[userId]
             channel = self.client.get_channel(channelId)
             user = None
@@ -115,8 +114,8 @@ class Utility(commands.Cog):
                 await channel.send(f"<@{userId}> Your reminder for {o} {unit} is up!{note}")
             else:
                 usr = await self.client.fetch_user(userId)
-                await usr.send(f"(I couldn't message you where you asked to be reminded originally, so I DMed you instead.)\n"
-                               f"<@{userId}> Your reminder for {o} {unit} is up!{note}")
+                await usr.send(f"(I couldn't message you where you asked to be reminded originally, "
+                               f"so I DMed you instead.)\n<@{userId}> Your reminder for {o} {unit} is up!{note}")
         except (asyncio.CancelledError, discord.NotFound, discord.Forbidden, KeyError):
             pass
 
@@ -131,12 +130,11 @@ class Utility(commands.Cog):
                 task = self.client.reminderTasks[ctx.author.id]
                 task.cancel()
                 del self.client.reminderTasks[ctx.author.id]
-                await self.client.reminders.delete_one({ "_id": ctx.author.id })
+                await self.client.reminders.delete_one({"_id": ctx.author.id})
                 await ctx.send("Reminder cancelled.")
             except KeyError:
-                raise CommandErrorMsg("The DB and the cancellation table somehow got desynced!"
+                raise CommandErrorMsg("The DB and the cancellation table has somehow become desynchronized!"
                                       "Please report this bug to the developers in the CatLamp server (+server).")
-
 
     @commands.command()
     async def timeLeft(self, ctx):
@@ -145,7 +143,7 @@ class Utility(commands.Cog):
             await ctx.send("You don't have a reminder! Use `+remind` to set one.")
             return
         else:
-            tab = await self.client.reminders.find_one({ "_id": ctx.author.id })
+            tab = await self.client.reminders.find_one({"_id": ctx.author.id})
             remainingTime = (tab["startTime"] + tab["timeSeconds"]) - datetime.datetime.utcnow().timestamp()
             m, s = divmod(remainingTime, 60)
             h, m = divmod(m, 60)
@@ -163,7 +161,6 @@ class Utility(commands.Cog):
                 valid[valid.index(time)] = f"{round(time)} {unit}"
             remWithUnits = ", ".join(valid)
             await ctx.send(f"Remaining time on current reminder: {remWithUnits}")
-
 
     # stuffing this here for the timer reloading
     @commands.Cog.listener()
