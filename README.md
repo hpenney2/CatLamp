@@ -13,7 +13,7 @@
 ## Setting up MongoDB
 **The bot will NOT run without MongoDB being properly installed.**
 Follow the intructions [in the MongoDB documentation](https://docs.mongodb.com/manual/installation/) to install MongoDB.  
-After installing, make sure MongoDB is running before starting the bot.
+After installing, make sure MongoDB is running before starting the bot. **If you have an old `reminders.json` file, run `remindersJSONtoMongo.py` to convert it to MongoDB.**
 
 If you're on Ubuntu, you can have MongoDB start up with your system with the command `sudo systemctl enable mongod.service`.
 
