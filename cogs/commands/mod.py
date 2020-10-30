@@ -16,12 +16,10 @@ class Moderation(commands.Cog):
         user = self.bot.get_user(user_id)
         if not user:
             try:
-                # noinspection PyUnusedLocal
                 user = await self.bot.fetch_user(user_id)
             except discord.NotFound:
                 raise CommandErrorMsg(f"No user with the ID {str(user_id)} was found!")
-        else:
-            return user
+        return user
 
     @commands.command(aliases=["bulkDelete"])
     @isGuild()

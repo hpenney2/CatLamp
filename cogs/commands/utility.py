@@ -103,12 +103,22 @@ class Utility(commands.Cog):
     async def timer(self, channelId, userId, time, o, unit: str, note: str):
         try:
             await asyncio.sleep(time)
-            channel = self.client.get_channel(channelId)
-            if channel:
-                await channel.send(f"<@{userId}> Your reminder for {o} {unit} is up!{note}")
             await self.client.reminders.delete_one({ "_id": userId })
             del self.client.reminderTasks[userId]
-        except (asyncio.CancelledError, KeyError):
+            channel = self.client.get_channel(channelId)
+            user = None
+            readPerms = True
+            if isinstance(channel, discord.TextChannel):
+                user = channel.guild.get_member(userId)
+                userPerms = user.permissions_in(channel)
+                readPerms = userPerms.read_messages
+            if channel and user and readPerms:
+                await channel.send(f"<@{userId}> Your reminder for {o} {unit} is up!{note}")
+            else:
+                usr = await self.client.fetch_user(userId)
+                await usr.send(f"(I couldn't message you where you asked to be reminded originally, so I DMed you instead.)\n"
+                               f"<@{userId}> Your reminder for {o} {unit} is up!{note}")
+        except (asyncio.CancelledError, discord.NotFound, discord.Forbidden, KeyError):
             pass
 
     @commands.command(aliases=["cancelRemind", "cancelTimer"])
