@@ -24,7 +24,7 @@ if os.path.isfile("reminders.json"):
         del rem["userId"]
         rem["_id"] = id
         remindersDB.insert_one(rem)
-    print("Conversion complete.")
+    print("Conversion complete. It is now safe to delete reminders.json.")
 else:
     print("There is no reminders.json file, no conversion to be made.")
     sys.exit(0)
