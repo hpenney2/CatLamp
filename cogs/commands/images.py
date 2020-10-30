@@ -278,7 +278,6 @@ class Images(commands.Cog, name="Image Manipulation"):
 
             await sendImage(ctx, image, "grayscale.png")
 
-
     @commands.command(cooldown_after_parsing=True)
     @commands.cooldown(1, 5, commands.BucketType.user)
     async def saturate(self, ctx, user: discord.User = None):
