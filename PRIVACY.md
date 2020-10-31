@@ -14,11 +14,11 @@ If you are considered an Involved User, you may request that your attribution is
 We collect user IDs for reference in reminders (`+remind`).
 
 ### Server Data
-We collect server identification, member count, and owner names for our audit logs.
+We collect server IDs and server names (on join and leave) for our audit logs.
 
 ### User-Submitted Content
 - We save the note attached to any reminders (`+remind`) for reference.
-- We also anonymously save search queries provided in the reddit command (`+reddit`).
+- We anonymously save search queries provided in the reddit command (`+reddit`).
 
 ### Involved Users' IDs
 If you are involved in the development of CatLamp or are listed as an Administrator, your identification number is saved for reference in bot functions (attribution and permission checks are the common uses).

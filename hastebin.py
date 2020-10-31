@@ -7,8 +7,8 @@ import json
 
 def get_key(data):
     req = requests.post('https://hastebin.com/documents',
-                        # headers={},
-                        data=data)
+                        headers={"Content-Type" : "text/plain"},
+                        data=str(data))
 
     key = json.loads(req.content)
     return key['key']

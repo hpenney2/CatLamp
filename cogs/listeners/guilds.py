@@ -1,4 +1,4 @@
-from CatLampPY import colors
+from CatLampPY import colors # pylint: disable=import-error
 import datetime
 import discord
 from discord.ext import commands
@@ -19,8 +19,10 @@ class Guilds(commands.Cog):
             embed.set_thumbnail(url=str(guild.icon_url))
         if not guild.chunked:
             await guild.chunk()
-        embed.add_field(name="Owner", value=f"`{guild.owner}`")  # str()ing a User returns the thing properly formatted
-        embed.add_field(name="Members", value=guild.member_count)
+        # Owner and members fields disabled because Discord
+        # doesn't like the member intent being used like that
+        # embed.add_field(name="Owner", value=f"`{guild.owner}`")  # str()ing a User returns the thing properly formatted
+        # embed.add_field(name="Members", value=guild.member_count)
         embed.add_field(name="Shard ID", value=guild.shard_id)
         channel = self.client.get_channel(712489826330345534)
         if channel:

@@ -1,6 +1,6 @@
 import deeppyer
 # noinspection PyPackageRequirements
-from PIL import Image, ImageOps
+from PIL import Image, ImageOps, ImageEnhance
 import io
 import discord
 from discord.ext import commands
@@ -275,6 +275,22 @@ class Images(commands.Cog, name="Image Manipulation"):
 
             image = image.convert('RGB')  # i dunno, ImageOps wants an RGB
             image = ImageOps.grayscale(image)
+
+            await sendImage(ctx, image, "grayscale.png")
+
+
+    @commands.command(cooldown_after_parsing=True)
+    @commands.cooldown(1, 5, commands.BucketType.user)
+    async def saturate(self, ctx, user: discord.User = None):
+        """Saturates the attached image or your/the mentioned user's avatar."""
+        async with ctx.channel.typing():
+            image = await getImage(ctx, user)
+
+            image = image.convert('RGB')  # i dunno, ImageEnhance might want an RGB
+            enhancer = ImageEnhance.Contrast(image)
+            image = enhancer.enhance(2)
+            enhancer = ImageEnhance.Color(image)
+            image = enhancer.enhance(3)
 
             await sendImage(ctx, image, "grayscale.png")
 

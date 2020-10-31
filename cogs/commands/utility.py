@@ -6,7 +6,8 @@ from json import load
 import discord
 from discord.ext import commands
 
-from CatLampPY import isGuild, CommandErrorMsg  # pylint: disable=import-error
+# pylint: disable=import-error
+from CatLampPY import isGuild, CommandErrorMsg
 from tables import *
 
 colors = getColors() # pylint: disable=undefined-variable
@@ -28,7 +29,8 @@ class Utility(commands.Cog):
     @commands.command(aliases=["announcement"])
     @isGuild()
     async def announce(self, ctx, channel: discord.TextChannel, *, message: str):
-        """Sends a nicely formatted announcement embed to the specified channel, or if none, the current channel."""
+        """Sends a nicely formatted announcement embed to the specified channel.
+        Requires you to have the Manage Messages permission in the specified channel."""
         if channel is None:
             channel = ctx.channel
         if not channel.guild.id or channel.guild.id != ctx.guild.id:
@@ -96,15 +98,25 @@ class Utility(commands.Cog):
         try:
             await asyncio.sleep(time)
             channel = self.client.get_channel(channelId)
-            if channel:
+            user = None
+            readPerms = True
+            if isinstance(channel, discord.TextChannel):
+                user = channel.guild.get_member(userId)
+                userPerms = user.permissions_in(channel)
+                readPerms = userPerms.read_messages
+            if channel and user and readPerms:
                 await channel.send(f"<@{userId}> Your reminder for {o} {unit} is up!{note}")
+            else:
+                usr = await self.client.fetch_user(userId)
+                await usr.send(f"(I couldn't message you where you asked to be reminded originally, so I DMed you instead.)\n"
+                               f"<@{userId}> Your reminder for {o} {unit} is up!{note}")
             self.client.reminders.pop(userId)
-        except asyncio.CancelledError:
+        except (asyncio.CancelledError, discord.NotFound, discord.Forbidden):
             pass
 
     @commands.command(aliases=["cancelRemind", "cancelTimer"])
     async def cancelReminder(self, ctx):
-        """Cancels your current reminder."""
+        """Cancels your current reminder if you have one."""
         if ctx.author.id not in self.client.reminders:
             await ctx.send("You don't have a reminder! Use `+remind` to set one.")
             return
@@ -113,6 +125,34 @@ class Utility(commands.Cog):
             task.cancel()
             self.client.reminders.pop(ctx.author.id)
             await ctx.send("Reminder cancelled.")
+
+
+    @commands.command()
+    async def timeLeft(self, ctx):
+        """Checks how much time is left on your current reminder if you have one."""
+        if ctx.author.id not in self.client.reminders:
+            await ctx.send("You don't have a reminder! Use `+remind` to set one.")
+            return
+        else:
+            tab = self.client.reminders[ctx.author.id]
+            remainingTime = (tab["startTime"] + tab["timeSeconds"]) - datetime.datetime.utcnow().timestamp()
+            m, s = divmod(remainingTime, 60)
+            h, m = divmod(m, 60)
+            d, h = divmod(h, 24)
+            valid = [d, h, m, s]
+            names = ["days", "hours", "minutes", "seconds"]
+            while valid[0] < 1 and len(valid) != 1:
+                del valid[0]
+                del names[0]
+            for time in valid:
+                index = valid.index(time)
+                unit = names[index]
+                if time == 1:
+                    unit = unit[:-1]
+                valid[valid.index(time)] = f"{round(time)} {unit}"
+            remWithUnits = ", ".join(valid)
+            await ctx.send(f"Remaining time on current reminder: {remWithUnits}")
+
 
     # stuffing this here for the timer reloading
     @commands.Cog.listener()

@@ -8,75 +8,71 @@ def checkKeys(configList: list, reqKeys: list):
     reqKeysInConfig.sort()
     return reqKeysInConfig == reqKeys
 
-importAttempts = 0
-while True:
+
+try:
+    # the wall of imports
+    import discord
+    from discord.ext import commands
+    import tables
+    import logging
+    import json
+    import sys
+    import os
+    import subprocess
+    import random
+    import asyncio
+    import datetime
+    from hastebin import get_key
+    import ast
+    import praw
+    import prawcore  # because praw exceptions inherit from here
+    import math
+    import signal
+    # noinspection PyPep8Naming
+    import time as timeMod
+    import deeppyer
+    # noinspection PyPackageRequirements
+    from PIL import Image
+    from os import listdir
+    import io
+    import re as regex
+    import dbl
+    import statcord
+    from cogs.commands.help import EmbedHelpCommand
+
+    # try to upgrade (or possibly downgrade) modules using requirements.txt
+    print("Attempting to install/upgrade modules...")
     try:
-        import discord
-        from discord.ext import commands
-        import tables
-        import logging
-        import json
-        import sys
-        import os
-        import subprocess
-        import random
-        import asyncio
-        import datetime
-        from hastebin import get_key
-        import ast
-        import praw
-        import prawcore  # because praw exceptions inherit from here
-        import math
-        import signal
-        # noinspection PyPep8Naming
-        import time as timeMod
-        import deeppyer
-        # noinspection PyPackageRequirements
-        from PIL import Image
-        from os import listdir
-        import io
-        import re as regex
-        import dbl
-        import statcord
-
-        from cogs.commands.help import EmbedHelpCommand
-
-        config = open("config.json", "r")
-        config = json.load(config)
-        a = []  # make a list of everything in config
-        for configuration in config:
-            a.append(configuration)
-        a.sort()  # sort the list for consistency
-        # make sure the sorted list has everything we need (also in a sorted list), no more, no less
-        requiredKeys = ['githubPAT', 'githubUser', 'redditCID', 'redditSecret', 'token'] # If a config key is REQUIRED, add it here.
-        if not checkKeys(a, requiredKeys):
-            print("The config.json file is missing at least one entry! Please make sure the format matches the "
-                  "README.md.")
-            input("Press enter to close, then restart the bot when fixed.")
-            sys.exit(1)
-    except (ModuleNotFoundError, ImportError) as mod:
-        if importAttempts <= 0:
-            print(f"One or more modules are missing or an error occurred trying to import one!\nFull error: {mod}")
-            print("Attempting to install from requirements.txt now.")
-            importAttempts += 1
-            try:
-                subprocess.check_call([sys.executable, "-m", "pip", "install", "-r", "requirements.txt", "--user"])
-                print("Done installed modules! Retrying...")
-                continue
-            except Exception as e:
-                print(f"Error while trying to install modules!\nFull error: {e}")
-                input("Press enter to close, then restart the bot when fixed.")
-                sys.exit(1)
-        else:
-            print(f"Still unable to import a module!\nFull error: {mod}")
-            input("Press enter to close, then restart the bot when fixed.")
-            sys.exit(1)
-    except (FileNotFoundError, json.JSONDecodeError) as e:
-        print("There was an error trying to get the config.json file! It doesn't exist or isn't formatted properly!")
-        print(f"Full error: {e}")
+        subprocess.check_call([sys.executable, "-m", "pip", "install", "--upgrade", "-r", "requirements.txt", "--user"])
+        print("Done! Continuing startup...")
+    except Exception as e:
+        print(f"Error while trying to install modules!\nFull error:\n{e}")
         input("Press enter to close, then restart the bot when fixed.")
         sys.exit(1)
-    break
+
+    config = open("config.json", "r")
+    config = json.load(config)
+    a = []  # make a list of everything in config
+    for configuration in config:
+        a.append(configuration)
+    a.sort()  # sort the list for consistency
+    # make sure the sorted list has everything we need (also in a sorted list), no more, no less
+    # If a config key is REQUIRED, add it here.
+    requiredKeys = ['githubPAT', 'githubUser', 'redditCID', 'redditSecret', 'token']
+    if not checkKeys(a, requiredKeys):
+        print("The config.json file is missing at least one entry! Please make sure the format matches the "
+              "README.md.")
+        input("Press enter to close, then restart the bot when fixed.")
+        sys.exit(1)
+except (ModuleNotFoundError, ImportError) as mod:  # reinstall requirements.txt if import error
+    print(f"One or more modules are missing or an error occurred trying to import one!\nFull error:\n{mod}")
+    input("Press enter to close, then restart the bot when fixed.")
+    sys.exit(1)
+except (FileNotFoundError, json.JSONDecodeError) as e:
+    print("There was an error trying to get the config.json file! It doesn't exist or isn't formatted properly!")
+    print(f"Full error:\n{e}")
+    input("Press enter to close, then restart the bot when fixed.")
+    sys.exit(1)
 
 logging.basicConfig(level=logging.INFO, format="[%(asctime)s] %(levelname)s %(name)s | %(message)s")
 intents = discord.Intents.default()
@@ -90,6 +86,7 @@ client.helpEmbeds = []
 client.reminders = {}
 client.redditStats = {'Date': datetime.date.today()}  # initialize the statistics with a timestamp of the current day
 colors = tables.getColors()
+# noinspection PyUnboundLocalVariable
 reddit = praw.Reddit(client_id=config["redditCID"],
                      client_secret=config["redditSecret"],
                      user_agent="CatLamp (by /u/hpenney2)")
@@ -172,6 +169,7 @@ def insert_returns(body):
 
 
 # Events (should be in a listener cog if possible)
+# noinspection PyUnusedLocal
 @client.event
 async def on_error(event, *args, **kwargs):
     if event != ('on_command_error' or (sys.exc_info()[0] == discord.Forbidden)):
@@ -182,27 +180,41 @@ async def on_error(event, *args, **kwargs):
         await client.get_channel(712489826330345534).send(embed=embed)
     raise sys.exc_info()[1]
 
-miscCogs = ['redditReset']
-
 
 if __name__ == "__main__":
 
     # load commands and listeners
-    client.runStatcord = True
-    client.runDBL = True
-    cogDirectories = ['cogs/commands/', 'cogs/listeners/']  # bot will look for python files in these directories
-    for cogDir in cogDirectories:
+    client.cogDirectories = ['cogs/commands/', 'cogs/listeners/']  # bot will look for python files in these directories
+    client.miscCogs = ['redditReset']
+    client.optionalCogs = {
+        "cogs.listeners.statcord": {'key name': "statcordKey", 'cog name': "Statcord", 'name': "Statcord API key",
+                                    'boolName': 'runStatcord'},
+        "cogs.listeners.dbl": {'key name': 'dblToken', 'cog name': "DBL", 'name': "DBL token", "boolName": 'runDBL'}
+    }
+
+
+    def setClientVar(varName: str, value):
+        """Temporary function to set a bot var. Why? because dynamic string shenanigans"""
+        env = {
+            'bot': client,
+        }
+        if isinstance(value, str):  # so passing a string won't just implode
+            value = f'"{value}"'
+        exec(f"bot.{varName} = {value}", env)  # potential problems here due to stringing but shut the up
+
+    for cog in client.optionalCogs.values():
+        setClientVar(cog['boolName'], True)
+
+    for cogDir in client.cogDirectories:
         loadDir = cogDir.replace('/', '.')
         for cog in listdir(cogDir):
             if cog.endswith('.py'):  # bot tries to load all .py files in said folders, use cogs/misc for non-cog things
                 fullName = loadDir + cog[:-3]
-                if fullName == "cogs.listeners.statcord" and not "statcordKey" in config:
-                    print("Statcord API key not found in config.json, not loading the Statcord cog.")
-                    client.runStatcord = False
-                    continue
-                elif fullName == "cogs.listeners.dbl" and not 'dblToken' in config:
-                    print("DBL token not found in config.json, not loading the DBL cog.")
-                    client.runDBL = False
+                if (fullName in client.optionalCogs) and client.optionalCogs[fullName]['key name'] not in config:
+                    cogData = client.optionalCogs[fullName]
+                    print(f"{cogData['name']} not found in config.json, "
+                          f"not loading the {cogData['cog name']} cog.")
+                    setClientVar(cogData['boolName'], False)
                     continue
                 try:
                     client.load_extension(loadDir + cog[:-3])
@@ -215,7 +227,7 @@ if __name__ == "__main__":
                     print(f'{failure.name} failed! booooo')
 
     # load misc cogs
-    for cog in miscCogs:
+    for cog in client.miscCogs:
         try:
             client.load_extension('cogs.misc.' + cog)
         except commands.NoEntryPointError:
@@ -226,5 +238,7 @@ if __name__ == "__main__":
             print(f'{failure.name} failed! booooo')
 
     timeMod.sleep(0.000000001)  # load cogs before running token
+
+    del setClientVar  # sweep sweep cleaning up memory i think maybe i dunno
 
     client.run(config["token"])
