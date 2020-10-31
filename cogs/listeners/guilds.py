@@ -52,4 +52,4 @@ class Guilds(commands.Cog):
 def setup(bot):
     g = Guilds(bot)
     bot.add_cog(g)
-    bot.loop.create_task(g.chunkGuildsAsync())
+    # bot.loop.create_task(g.chunkGuildsAsync())

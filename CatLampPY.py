@@ -10,15 +10,26 @@ def checkKeys(configList: list, reqKeys: list):
 
 
 try:
+    import subprocess
+    import sys
+
+    # try to upgrade (or possibly downgrade) modules using requirements.txt
+    print("Attempting to install/upgrade modules...")
+    try:
+        subprocess.check_call([sys.executable, "-m", "pip", "install", "--upgrade", "-r", "requirements.txt", "--user"])
+        print("Done! Continuing startup...")
+    except Exception as e:
+        print(f"Error while trying to install modules!\nFull error:\n{e}")
+        input("Press enter to close, then restart the bot when fixed.")
+        sys.exit(1)
+        
     # the wall of imports
     import discord
     from discord.ext import commands
     import tables
     import logging
     import json
-    import sys
     import os
-    import subprocess
     import random
     import asyncio
     import datetime
@@ -39,16 +50,9 @@ try:
     import dbl
     import statcord
     from cogs.commands.help import EmbedHelpCommand
-
-    # try to upgrade (or possibly downgrade) modules using requirements.txt
-    print("Attempting to install/upgrade modules...")
-    try:
-        subprocess.check_call([sys.executable, "-m", "pip", "install", "--upgrade", "-r", "requirements.txt", "--user"])
-        print("Done! Continuing startup...")
-    except Exception as e:
-        print(f"Error while trying to install modules!\nFull error:\n{e}")
-        input("Press enter to close, then restart the bot when fixed.")
-        sys.exit(1)
+    import pymongo
+    from pymongo import errors as mongo_errors  # specifically import errors because it is separate from the main module
+    import motor.motor_asyncio
 
     config = open("config.json", "r")
     config = json.load(config)
@@ -64,6 +68,12 @@ try:
               "README.md.")
         input("Press enter to close, then restart the bot when fixed.")
         sys.exit(1)
+
+    print("Checking if the MongoDB daemeon is running...")
+    mongoTestClient = motor.motor_asyncio.AsyncIOMotorClient("mongodb://localhost:27017/",
+                                                             serverSelectionTimeoutMS=3000)
+    mongoTestClient.server_info()
+    print("MongoDB is running. Continuing startup...")
 except (ModuleNotFoundError, ImportError) as mod:  # reinstall requirements.txt if import error
     print(f"One or more modules are missing or an error occurred trying to import one!\nFull error:\n{mod}")
     input("Press enter to close, then restart the bot when fixed.")
@@ -73,6 +83,11 @@ except (FileNotFoundError, json.JSONDecodeError) as e:
     print(f"Full error:\n{e}")
     input("Press enter to close, then restart the bot when fixed.")
     sys.exit(1)
+except mongo_errors.ServerSelectionTimeoutError:
+    print('The MongoDB server is not currently running. Please read the "Setting up MongoDB" section in README.md.')
+    input("Press enter to close, then restart the bot when fixed.")
+    sys.exit(1)
+
 
 logging.basicConfig(level=logging.INFO, format="[%(asctime)s] %(levelname)s %(name)s | %(message)s")
 intents = discord.Intents.default()
@@ -81,9 +96,15 @@ client = commands.AutoShardedBot(
     command_prefix=commands.when_mentioned_or('+'), case_insensitive=True, intents=intents,
     help_command=EmbedHelpCommand(verify_checks=False, show_hidden=False), chunk_guilds_at_startup=False
 )
+client.mongo = motor.motor_asyncio.AsyncIOMotorClient("mongodb://localhost:27017/")
+# Examples:
+# client.mongo["db"]["reminders"]
+# client.mongo["db"]["settings"]
+# etc.
 client.cmds = []
 client.helpEmbeds = []
-client.reminders = {}
+client.reminders = client.mongo["db"]["reminders"]
+client.reminderTasks = {}
 client.redditStats = {'Date': datetime.date.today()}  # initialize the statistics with a timestamp of the current day
 colors = tables.getColors()
 # noinspection PyUnboundLocalVariable
