@@ -267,7 +267,7 @@ class Images(commands.Cog, name="Image Manipulation"):
             outImg = Image.alpha_composite(image, overlay)
 
             # final prep and stuff for sending to the *internet*
-            await sendImage(ctx, outImg, "flushed.png")
+            await sendImage(ctx, outImg, "joy.png")
 
     @commands.command(cooldown_after_parsing=True)
     @commands.cooldown(1, 5, commands.BucketType.user)
