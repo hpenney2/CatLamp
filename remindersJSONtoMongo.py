@@ -28,7 +28,7 @@ if os.path.isfile("reminders.json"):
         rem["timeSeconds"] = str(rem["timeSeconds"])
         rem["originalTime"] = str(rem["originalTime"])
         print(rem)
-        remindersDB.insert_one(rem)
+        remindersDB.replace_one({"_id": str(id)}, rem, upsert=True)
     print("Conversion complete. It is now safe to delete reminders.json.")
 else:
     print("There is no reminders.json file, no conversion to be made.")
