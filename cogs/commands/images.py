@@ -126,10 +126,12 @@ class Images(commands.Cog, name="Image Manipulation"):
             self.catLampTemplate = Image.open('images/catlamp-outlineonly.png', mode='r').convert('RGBA')
             self.dioTemplate = Image.open('images/dio.png', mode='r').convert('RGBA')
             self.flushedTemplate = Image.open('images/flushed.png', mode='r').convert('RGBA')
+            self.joyTemplate = Image.open('images/joy.png', mode='r').convert('RGBA')
         except FileNotFoundError:
             self.catLampTemplate = Image.open('cogs/commands/images/catlamp-outlineonly.png', mode='r').convert('RGBA')
             self.dioTemplate = Image.open('cogs/commands/images/dio.png', mode='r').convert('RGBA')
             self.flushedTemplate = Image.open('cogs/commands/images/flushed.png', mode='r').convert('RGBA')
+            self.joyTemplate = Image.open('cogs/commands/images/joy.png', mode='r').convert('RGBA')
 
     @commands.command(cooldown_after_parsing=True)
     @commands.cooldown(1, 5, commands.BucketType.user)
@@ -241,7 +243,35 @@ class Images(commands.Cog, name="Image Manipulation"):
 
     @commands.command(cooldown_after_parsing=True)
     @commands.cooldown(1, 5, commands.BucketType.user)
-    async def invert(self, ctx, *, user: discord.Member = None):
+    async def joy(self, ctx, user: discord.User = None):
+        """😂😂😂 This command makes the attached image or your/the mentioned user's avatar a joke. 😂😂😂"""
+        async with ctx.channel.typing():
+            # set the images
+            image = await getImage(ctx, user)
+            overlay = self.joyTemplate.copy()
+
+            # convert the images to be equal in size and mode for compatibility
+            image = forceSquare(image)
+
+            # cut hole in template (remove the magenta pixels)
+            overlay = hippityHoppityThisColorIsDisappearity(overlay, (255, 0, 255, 255))
+
+            if image.size > overlay.size:
+                image.thumbnail(overlay.size)
+            else:
+                overlay.thumbnail(image.size)  # this son of the bitches is the problem
+
+            image = image.convert(mode=overlay.mode)
+
+            # combine dio with image
+            outImg = Image.alpha_composite(image, overlay)
+
+            # final prep and stuff for sending to the *internet*
+            await sendImage(ctx, outImg, "flushed.png")
+
+    @commands.command(cooldown_after_parsing=True)
+    @commands.cooldown(1, 5, commands.BucketType.user)
+    async def invert(self, ctx, user: discord.User = None):
         """Inverts the attached image or your/the mentioned user's avatar."""
         async with ctx.channel.typing():
             image = await getImage(ctx, user)
