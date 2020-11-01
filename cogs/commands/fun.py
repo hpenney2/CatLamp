@@ -133,7 +133,7 @@ class Fun(commands.Cog):
         self.degenerates = []
         self.inGame = []
 
-    @commands.command(aliases=["flip"])
+    @commands.command(aliases=["flip", "coinToss"])
     async def coinFlip(self, ctx):
         """Flips a coin."""
         rand = random.randint(0, 1)
