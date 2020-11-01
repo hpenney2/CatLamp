@@ -7,7 +7,7 @@ from discord.ext import commands
 import random
 
 
-async def getImage(ctx, user: discord.Member = None):
+async def getImage(ctx, *, user: discord.Member = None):
     image = Image.open(io.BytesIO(await ctx.author.avatar_url_as(format="png").read()))
     if len(ctx.message.attachments) > 0 and ctx.message.attachments[0].url[-4:] in ('.png', '.jpg', 'jpeg', '.gif'):
         image = Image.open(io.BytesIO(await ctx.message.attachments[0].read(use_cached=True)))
@@ -133,7 +133,7 @@ class Images(commands.Cog, name="Image Manipulation"):
 
     @commands.command(cooldown_after_parsing=True)
     @commands.cooldown(1, 5, commands.BucketType.user)
-    async def deepfry(self, ctx, user: discord.Member = None):
+    async def deepfry(self, ctx, *, user: discord.Member = None):
         """Deepfries the attached image or your/the mentioned user's avatar."""
         async with ctx.channel.typing():
             image = await getImage(ctx, user)
@@ -143,7 +143,7 @@ class Images(commands.Cog, name="Image Manipulation"):
 
     @commands.command(cooldown_after_parsing=True)
     @commands.cooldown(1, 5, commands.BucketType.user)
-    async def catLamp(self, ctx, user: discord.Member = None):
+    async def catLamp(self, ctx, *, user: discord.Member = None):
         """Generates a Catlamp of the attached image or your/the mentioned user's avatar."""
         async with ctx.channel.typing():
             # set the images
@@ -185,7 +185,7 @@ class Images(commands.Cog, name="Image Manipulation"):
 
     @commands.command(cooldown_after_parsing=True)
     @commands.cooldown(1, 5, commands.BucketType.user)
-    async def dio(self, ctx, user: discord.Member = None):
+    async def dio(self, ctx, *, user: discord.Member = None):
         """You expected the attached image or your/the mentioned user's avatar, but it was I, Dio!"""
         async with ctx.channel.typing():
             # set the images
@@ -213,7 +213,7 @@ class Images(commands.Cog, name="Image Manipulation"):
 
     @commands.command(cooldown_after_parsing=True)
     @commands.cooldown(1, 5, commands.BucketType.user)
-    async def flushed(self, ctx, user: discord.Member = None):
+    async def flushed(self, ctx, *, user: discord.Member = None):
         """The attached image or your/the mentioned user's avatar: 😳"""
         async with ctx.channel.typing():
             # set the images
@@ -241,7 +241,7 @@ class Images(commands.Cog, name="Image Manipulation"):
 
     @commands.command(cooldown_after_parsing=True)
     @commands.cooldown(1, 5, commands.BucketType.user)
-    async def invert(self, ctx, user: discord.Member = None):
+    async def invert(self, ctx, *, user: discord.Member = None):
         """Inverts the attached image or your/the mentioned user's avatar."""
         async with ctx.channel.typing():
             image = await getImage(ctx, user)
@@ -268,7 +268,7 @@ class Images(commands.Cog, name="Image Manipulation"):
 
     @commands.command(cooldown_after_parsing=True)
     @commands.cooldown(1, 5, commands.BucketType.user)
-    async def sadden(self, ctx, user: discord.Member = None):
+    async def sadden(self, ctx, *, user: discord.Member = None):
         """😔"""
         async with ctx.channel.typing():
             image = await getImage(ctx, user)
@@ -280,7 +280,7 @@ class Images(commands.Cog, name="Image Manipulation"):
 
     @commands.command(cooldown_after_parsing=True)
     @commands.cooldown(1, 5, commands.BucketType.user)
-    async def saturate(self, ctx, user: discord.Member = None):
+    async def saturate(self, ctx, *, user: discord.Member = None):
         """Saturates the attached image or your/the mentioned user's avatar."""
         async with ctx.channel.typing():
             image = await getImage(ctx, user)
@@ -300,7 +300,7 @@ def setup(bot):
 # general template because I can
 #     @commands.command(cooldown_after_parsing=True)
 #     @commands.cooldown(1, 5, commands.BucketType.user)
-#     async def name(self, ctx, user: discord.Member = None):
+#     async def name(self, ctx, *, user: discord.Member = None):
 #         """document here"""
 #         async with ctx.channel.typing():
 #             image = await getImage(ctx, user)
@@ -312,7 +312,7 @@ def setup(bot):
 # cookie-cutter ImageOps command template
 #     @commands.command(cooldown_after_parsing=True)
 #     @commands.cooldown(1, 5, commands.BucketType.user)
-#     async def name(self, ctx, user: discord.Member = None):
+#     async def name(self, ctx, *, user: discord.Member = None):
 #         """Inverts the attached image or your/the mentioned user's avatar."""
 #         async with ctx.channel.typing():
 #             image = await getImage(ctx, user)
