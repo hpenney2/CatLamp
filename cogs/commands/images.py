@@ -7,7 +7,7 @@ from discord.ext import commands
 import random
 
 
-async def getImage(ctx, *, user: discord.Member = None):
+async def getImage(ctx, user: discord.Member = None):
     image = Image.open(io.BytesIO(await ctx.author.avatar_url_as(format="png").read()))
     if len(ctx.message.attachments) > 0 and ctx.message.attachments[0].url[-4:] in ('.png', '.jpg', 'jpeg', '.gif'):
         image = Image.open(io.BytesIO(await ctx.message.attachments[0].read(use_cached=True)))
