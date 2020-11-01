@@ -243,7 +243,7 @@ class Images(commands.Cog, name="Image Manipulation"):
 
     @commands.command(cooldown_after_parsing=True)
     @commands.cooldown(1, 5, commands.BucketType.user)
-    async def joy(self, ctx, user: discord.User = None):
+    async def joy(self, ctx, user: discord.Member = None):
         """😂😂😂 This command makes the attached image or your/the mentioned user's avatar a joke. 😂😂😂"""
         async with ctx.channel.typing():
             # set the images
@@ -271,7 +271,7 @@ class Images(commands.Cog, name="Image Manipulation"):
 
     @commands.command(cooldown_after_parsing=True)
     @commands.cooldown(1, 5, commands.BucketType.user)
-    async def invert(self, ctx, user: discord.User = None):
+    async def invert(self, ctx, user: discord.Member = None):
         """Inverts the attached image or your/the mentioned user's avatar."""
         async with ctx.channel.typing():
             image = await getImage(ctx, user)
@@ -322,6 +322,41 @@ class Images(commands.Cog, name="Image Manipulation"):
             image = enhancer.enhance(3)
 
             await sendImage(ctx, image, "grayscale.png")
+
+    @commands.command(cooldown_after_parsing=True, aliases=["xFlip", "sideFlip"])
+    @commands.cooldown(1, 5, commands.BucketType.user)
+    async def mirror(self, ctx, user: discord.Member = None):
+        """Creates a mirrored image of the attached image or your/the mentioned user's avatar."""
+        async with ctx.channel.typing():
+            image = await getImage(ctx, user)
+
+            outImg = image.transpose(method=Image.FLIP_LEFT_RIGHT)  # processing here
+
+            await sendImage(ctx, outImg, "mirror.png")
+
+    @commands.command(cooldown_after_parsing=True, aliases=["yFlip", "topFlip", "bottomFlip"])
+    @commands.cooldown(1, 5, commands.BucketType.user)
+    async def imFlip(self, ctx, user: discord.Member = None):
+        """Creates an upside-down copy of the attached image or your/the mentioned user's avatar."""
+        async with ctx.channel.typing():
+            image = await getImage(ctx, user)
+
+            outImg = image.transpose(method=Image.FLIP_TOP_BOTTOM)  # processing here
+            outImg = outImg.transpose(method=Image.FLIP_LEFT_RIGHT)  # top bottom makes it also flip on the x
+
+            await sendImage(ctx, outImg, "upside_down.png")
+
+    @commands.command(cooldown_after_parsing=True)
+    @commands.cooldown(1, 5, commands.BucketType.user)
+    async def rotate(self, ctx, degrees: float, user: discord.Member = None):
+        """Rotates the attached image or your/the mentioned user's avatar
+        clockwise by the specified number of degrees."""
+        async with ctx.channel.typing():
+            image = await getImage(ctx, user)
+
+            outImg = image.rotate(angle=-degrees)  # for some cursed reason, rotate() defaults to counterclockwise
+
+            await sendImage(ctx, outImg, "rotate.png")
 
 
 def setup(bot):
