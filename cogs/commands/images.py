@@ -336,7 +336,7 @@ class Images(commands.Cog, name="Image Manipulation"):
 
     @commands.command(cooldown_after_parsing=True, aliases=["yFlip", "topFlip", "bottomFlip"])
     @commands.cooldown(1, 5, commands.BucketType.user)
-    async def imFlip(self, ctx, user: discord.Member = None):
+    async def flip(self, ctx, *, user: discord.Member = None):
         """Creates an upside-down copy of the attached image or your/the mentioned user's avatar."""
         async with ctx.channel.typing():
             image = await getImage(ctx, user)
