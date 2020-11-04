@@ -5,14 +5,33 @@ import io
 import discord
 from discord.ext import commands
 import random
+from typing import Union, Optional
+import re as regex
+import aiohttp
+# pylint: disable=import-error
+from CatLampPY import CommandErrorMsg
 
 
-async def getImage(ctx, user: discord.Member = None):
+async def getImage(ctx, user: Optional[discord.Member, str] = None):
     image = Image.open(io.BytesIO(await ctx.author.avatar_url_as(format="png").read()))
     if len(ctx.message.attachments) > 0 and ctx.message.attachments[0].url[-4:] in ('.png', '.jpg', 'jpeg', '.gif'):
         image = Image.open(io.BytesIO(await ctx.message.attachments[0].read(use_cached=True)))
-    elif user:
+    elif user and isinstance(user, discord.Member):
         image = Image.open(io.BytesIO(await user.avatar_url_as(format="png").read()))
+    elif user and isinstance(user, str):
+        matcher = regex.compile(
+            r'^(?:http|ftp)s?://' # http:// or https://
+            r'(?:(?:[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?\.)+(?:[A-Z]{2,6}\.?|[A-Z0-9-]{2,}\.?)|' # domain...
+            # r'localhost|' #localhost...
+            r'\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})' # ...or ip
+            r'(?::\d+)?' # optional port
+            r'(?:/?|[/?]\S+)$', regex.IGNORECASE)
+        if regex.match(matcher, user) and user[-4:] in ('.png', '.jpg', 'jpeg', '.gif'):
+            async with aiohttp.ClientSession() as session, session.get(user) as res:
+                if res.status == 200:
+                    image = io.BytesIO(await res.read())
+        else:
+            raise CommandErrorMsg(f'"{user}" is not a valid user or image URL!')
     return image
 
 
@@ -135,10 +154,10 @@ class Images(commands.Cog, name="Image Manipulation"):
 
     @commands.command(cooldown_after_parsing=True)
     @commands.cooldown(1, 5, commands.BucketType.user)
-    async def deepfry(self, ctx, *, user: discord.Member = None):
+    async def deepfry(self, ctx, *, user_or_url: Optional[discord.Member, str] = None):
         """Deepfries the attached image or your/the mentioned user's avatar."""
         async with ctx.channel.typing():
-            image = await getImage(ctx, user)
+            image = await getImage(ctx, user_or_url)
             deepImg = await deeppyer.deepfry(image, flares=False)
             deepImg = deepImg.convert('RGBA')  # i dunno, deepImg is an Image.py, but sendImage() wants Image
             await sendImage(ctx, deepImg, "deepfry.png")
