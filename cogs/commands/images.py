@@ -29,7 +29,7 @@ async def getImage(ctx, user: Union[discord.Member, str, None] = None):
         if regex.match(matcher, user) and user[-4:] in ('.png', '.jpg', 'jpeg', '.gif'):
             async with aiohttp.ClientSession() as session, session.get(user) as res:
                 if res.status == 200:
-                    image = io.BytesIO(await res.read())
+                    image = Image.open(io.BytesIO(await res.read()))
         else:
             raise CommandErrorMsg(f'"{user}" is not a valid user or image URL!')
     return image
