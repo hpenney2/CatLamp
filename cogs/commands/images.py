@@ -12,7 +12,7 @@ import aiohttp
 from CatLampPY import CommandErrorMsg
 
 
-async def getImage(ctx, user: Optional[discord.Member, str] = None):
+async def getImage(ctx, user: Union[discord.Member, str, None] = None):
     image = Image.open(io.BytesIO(await ctx.author.avatar_url_as(format="png").read()))
     if len(ctx.message.attachments) > 0 and ctx.message.attachments[0].url[-4:] in ('.png', '.jpg', 'jpeg', '.gif'):
         image = Image.open(io.BytesIO(await ctx.message.attachments[0].read(use_cached=True)))
@@ -154,7 +154,7 @@ class Images(commands.Cog, name="Image Manipulation"):
 
     @commands.command(cooldown_after_parsing=True)
     @commands.cooldown(1, 5, commands.BucketType.user)
-    async def deepfry(self, ctx, *, user_or_url: Optional[discord.Member, str] = None):
+    async def deepfry(self, ctx, *, user_or_url: Union[discord.Member, str, None] = None):
         """Deepfries the attached image or your/the mentioned user's avatar."""
         async with ctx.channel.typing():
             image = await getImage(ctx, user_or_url)
