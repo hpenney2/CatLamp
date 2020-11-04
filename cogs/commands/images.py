@@ -5,7 +5,7 @@ import io
 import discord
 from discord.ext import commands
 import random
-from typing import Union, Optional
+from typing import Union
 import re as regex
 import aiohttp
 # pylint: disable=import-error
@@ -20,18 +20,18 @@ async def getImage(ctx, user: Union[discord.Member, str, None] = None):
         image = Image.open(io.BytesIO(await user.avatar_url_as(format="png").read()))
     elif user and isinstance(user, str):
         matcher = regex.compile(
-            r'^(?:http|ftp)s?://' # http:// or https://
-            r'(?:(?:[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?\.)+(?:[A-Z]{2,6}\.?|[A-Z0-9-]{2,}\.?)|' # domain...
+            r'^(?:http|ftp)s?://'  # http:// or https://
+            r'(?:(?:[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?\.)+(?:[A-Z]{2,6}\.?|[A-Z0-9-]{2,}\.?)|'  # domain...
             # r'localhost|' #localhost...
-            r'\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})' # ...or ip
-            r'(?::\d+)?' # optional port
+            r'\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})'  # ...or ip
+            r'(?::\d+)?'  # optional port
             r'(?:/?|[/?]\S+)$', regex.IGNORECASE)
         if regex.match(matcher, user) and user[-4:] in ('.png', '.jpg', 'jpeg', '.gif'):
             async with aiohttp.ClientSession() as session, session.get(user) as res:
                 if res.status == 200:
                     image = Image.open(io.BytesIO(await res.read()))
                 else:
-                    raise CommandErrorMsg(f'"{user}" is not a valid user or image URL!')
+                    raise CommandErrorMsg(f'There was an issue getting the URL "{user}"!')
         else:
             raise CommandErrorMsg(f'"{user}" is not a valid user or image URL!')
     return image
