@@ -5,14 +5,35 @@ import io
 import discord
 from discord.ext import commands
 import random
+from typing import Union
+import re as regex
+import aiohttp
+# pylint: disable=import-error
+from CatLampPY import CommandErrorMsg
 
 
-async def getImage(ctx, user: discord.Member = None):
+async def getImage(ctx, user: Union[discord.Member, str, None] = None):
     image = Image.open(io.BytesIO(await ctx.author.avatar_url_as(format="png").read()))
     if len(ctx.message.attachments) > 0 and ctx.message.attachments[0].url[-4:] in ('.png', '.jpg', 'jpeg', '.gif'):
         image = Image.open(io.BytesIO(await ctx.message.attachments[0].read(use_cached=True)))
-    elif user:
+    elif user and isinstance(user, discord.Member):
         image = Image.open(io.BytesIO(await user.avatar_url_as(format="png").read()))
+    elif user and isinstance(user, str):
+        matcher = regex.compile(
+            r'^(?:http|ftp)s?://'  # http:// or https://
+            r'(?:(?:[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?\.)+(?:[A-Z]{2,6}\.?|[A-Z0-9-]{2,}\.?)|'  # domain...
+            # r'localhost|' #localhost...
+            r'\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})'  # ...or ip
+            r'(?::\d+)?'  # optional port
+            r'(?:/?|[/?]\S+)$', regex.IGNORECASE)
+        if regex.match(matcher, user) and user[-4:] in ('.png', '.jpg', 'jpeg', '.gif'):
+            async with aiohttp.ClientSession() as session, session.get(user) as res:
+                if res.status == 200:
+                    image = Image.open(io.BytesIO(await res.read()))
+                else:
+                    raise CommandErrorMsg(f'There was an issue getting the URL "{user}"!')
+        else:
+            raise CommandErrorMsg(f'"{user}" is not a valid user or image URL!')
     return image
 
 
@@ -135,21 +156,21 @@ class Images(commands.Cog, name="Image Manipulation"):
 
     @commands.command(cooldown_after_parsing=True)
     @commands.cooldown(1, 5, commands.BucketType.user)
-    async def deepfry(self, ctx, *, user: discord.Member = None):
+    async def deepfry(self, ctx, *, user_or_url: Union[discord.Member, str, None] = None):
         """Deepfries the attached image or your/the mentioned user's avatar."""
         async with ctx.channel.typing():
-            image = await getImage(ctx, user)
+            image = await getImage(ctx, user_or_url)
             deepImg = await deeppyer.deepfry(image, flares=False)
             deepImg = deepImg.convert('RGBA')  # i dunno, deepImg is an Image.py, but sendImage() wants Image
             await sendImage(ctx, deepImg, "deepfry.png")
 
     @commands.command(cooldown_after_parsing=True)
     @commands.cooldown(1, 5, commands.BucketType.user)
-    async def catLamp(self, ctx, *, user: discord.Member = None):
+    async def catLamp(self, ctx, *, user_or_url: Union[discord.Member, str, None] = None):
         """Generates a Catlamp of the attached image or your/the mentioned user's avatar."""
         async with ctx.channel.typing():
             # set the images
-            image = await getImage(ctx, user)
+            image = await getImage(ctx, user_or_url)
             overlay = self.catLampTemplate.copy()
 
             # find a color not in either image so we can use it for transparency in the final product
@@ -187,11 +208,11 @@ class Images(commands.Cog, name="Image Manipulation"):
 
     @commands.command(cooldown_after_parsing=True)
     @commands.cooldown(1, 5, commands.BucketType.user)
-    async def dio(self, ctx, *, user: discord.Member = None):
+    async def dio(self, ctx, *, user_or_url: Union[discord.Member, str, None] = None):
         """You expected the attached image or your/the mentioned user's avatar, but it was I, Dio!"""
         async with ctx.channel.typing():
             # set the images
-            image = await getImage(ctx, user)
+            image = await getImage(ctx, user_or_url)
             overlay = self.dioTemplate.copy()
 
             # convert the images to be equal in size and mode for compatibility
@@ -215,11 +236,11 @@ class Images(commands.Cog, name="Image Manipulation"):
 
     @commands.command(cooldown_after_parsing=True)
     @commands.cooldown(1, 5, commands.BucketType.user)
-    async def flushed(self, ctx, *, user: discord.Member = None):
+    async def flushed(self, ctx, *, user_or_url: Union[discord.Member, str, None] = None):
         """The attached image or your/the mentioned user's avatar: 😳"""
         async with ctx.channel.typing():
             # set the images
-            image = await getImage(ctx, user)
+            image = await getImage(ctx, user_or_url)
             overlay = self.flushedTemplate.copy()
 
             # convert the images to be equal in size and mode for compatibility
@@ -243,11 +264,11 @@ class Images(commands.Cog, name="Image Manipulation"):
 
     @commands.command(cooldown_after_parsing=True)
     @commands.cooldown(1, 5, commands.BucketType.user)
-    async def joy(self, ctx, user: discord.Member = None):
+    async def joy(self, ctx, *, user_or_url: Union[discord.Member, str, None] = None):
         """😂😂😂 This command makes the attached image or your/the mentioned user's avatar a joke. 😂😂😂"""
         async with ctx.channel.typing():
             # set the images
-            image = await getImage(ctx, user)
+            image = await getImage(ctx, user_or_url)
             overlay = self.joyTemplate.copy()
 
             # convert the images to be equal in size and mode for compatibility
@@ -271,10 +292,10 @@ class Images(commands.Cog, name="Image Manipulation"):
 
     @commands.command(cooldown_after_parsing=True)
     @commands.cooldown(1, 5, commands.BucketType.user)
-    async def invert(self, ctx, user: discord.Member = None):
+    async def invert(self, ctx, *, user_or_url: Union[discord.Member, str, None] = None):
         """Inverts the attached image or your/the mentioned user's avatar."""
         async with ctx.channel.typing():
-            image = await getImage(ctx, user)
+            image = await getImage(ctx, user_or_url)
 
             if image.mode == "RGBA":
                 alpha = findMonoAlphaTarget(image)
@@ -298,10 +319,10 @@ class Images(commands.Cog, name="Image Manipulation"):
 
     @commands.command(cooldown_after_parsing=True)
     @commands.cooldown(1, 5, commands.BucketType.user)
-    async def sadden(self, ctx, *, user: discord.Member = None):
+    async def sadden(self, ctx, *, user_or_url: Union[discord.Member, str, None] = None):
         """😔"""
         async with ctx.channel.typing():
-            image = await getImage(ctx, user)
+            image = await getImage(ctx, user_or_url)
 
             image = image.convert('RGB')  # i dunno, ImageOps wants an RGB
             image = ImageOps.grayscale(image)
@@ -310,10 +331,10 @@ class Images(commands.Cog, name="Image Manipulation"):
 
     @commands.command(cooldown_after_parsing=True)
     @commands.cooldown(1, 5, commands.BucketType.user)
-    async def saturate(self, ctx, *, user: discord.Member = None):
+    async def saturate(self, ctx, *, user_or_url: Union[discord.Member, str, None] = None):
         """Saturates the attached image or your/the mentioned user's avatar."""
         async with ctx.channel.typing():
-            image = await getImage(ctx, user)
+            image = await getImage(ctx, user_or_url)
 
             image = image.convert('RGB')  # i dunno, ImageEnhance might want an RGB
             enhancer = ImageEnhance.Contrast(image)
@@ -325,10 +346,10 @@ class Images(commands.Cog, name="Image Manipulation"):
 
     @commands.command(cooldown_after_parsing=True, aliases=["xFlip", "sideFlip"])
     @commands.cooldown(1, 5, commands.BucketType.user)
-    async def mirror(self, ctx, user: discord.Member = None):
+    async def mirror(self, ctx, *, user_or_url: Union[discord.Member, str, None] = None):
         """Creates a mirrored image of the attached image or your/the mentioned user's avatar."""
         async with ctx.channel.typing():
-            image = await getImage(ctx, user)
+            image = await getImage(ctx, user_or_url)
 
             outImg = image.transpose(method=Image.FLIP_LEFT_RIGHT)  # processing here
 
@@ -336,10 +357,10 @@ class Images(commands.Cog, name="Image Manipulation"):
 
     @commands.command(cooldown_after_parsing=True, aliases=["yFlip", "topFlip", "bottomFlip"])
     @commands.cooldown(1, 5, commands.BucketType.user)
-    async def flip(self, ctx, *, user: discord.Member = None):
+    async def flip(self, ctx, *, user_or_url: Union[discord.Member, str, None] = None):
         """Creates an upside-down copy of the attached image or your/the mentioned user's avatar."""
         async with ctx.channel.typing():
-            image = await getImage(ctx, user)
+            image = await getImage(ctx, user_or_url)
 
             outImg = image.transpose(method=Image.FLIP_TOP_BOTTOM)  # processing here
             outImg = outImg.transpose(method=Image.FLIP_LEFT_RIGHT)  # top bottom makes it also flip on the x
@@ -348,11 +369,11 @@ class Images(commands.Cog, name="Image Manipulation"):
 
     @commands.command(cooldown_after_parsing=True)
     @commands.cooldown(1, 5, commands.BucketType.user)
-    async def rotate(self, ctx, degrees: float, user: discord.Member = None):
+    async def rotate(self, ctx, degrees: float, *, user_or_url: Union[discord.Member, str, None] = None):
         """Rotates the attached image or your/the mentioned user's avatar
         clockwise by the specified number of degrees."""
         async with ctx.channel.typing():
-            image = await getImage(ctx, user)
+            image = await getImage(ctx, user_or_url)
 
             outImg = image.rotate(angle=-degrees)  # for some cursed reason, rotate() defaults to counterclockwise
 
@@ -365,10 +386,10 @@ def setup(bot):
 # general template because I can
 #     @commands.command(cooldown_after_parsing=True)
 #     @commands.cooldown(1, 5, commands.BucketType.user)
-#     async def name(self, ctx, *, user: discord.Member = None):
+#     async def name(self, ctx, *, user_or_url: Union[discord.Member, str, None] = None):
 #         """document here"""
 #         async with ctx.channel.typing():
-#             image = await getImage(ctx, user)
+#             image = await getImage(ctx, user_or_url)
 #
 #             outImg = None  # processing here
 #
@@ -377,10 +398,10 @@ def setup(bot):
 # cookie-cutter ImageOps command template
 #     @commands.command(cooldown_after_parsing=True)
 #     @commands.cooldown(1, 5, commands.BucketType.user)
-#     async def name(self, ctx, *, user: discord.Member = None):
+#     async def name(self, ctx, *, user_or_url: Union[discord.Member, str, None] = None):
 #         """Inverts the attached image or your/the mentioned user's avatar."""
 #         async with ctx.channel.typing():
-#             image = await getImage(ctx, user)
+#             image = await getImage(ctx, user_or_url)
 #
 #             if image.mode == "RGBA":
 #                 alpha = findMonoAlphaTarget(image)
