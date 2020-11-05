@@ -32,7 +32,7 @@ class Exceptions(commands.Cog):
                                               f"```{errorStr or str(error)}```",
                                   color=colors["error"])
             embed.set_footer(
-                text=f"If think this shouldn't happen, contact a developer for help "
+                text=f"If you think this shouldn't happen, contact a developer for help "
                      f"in the CatLamp server. (+server)")
             await ctx.send(embed=embed)
             print(f"An error occurred while trying to run '{ctx.message.content}'!")
