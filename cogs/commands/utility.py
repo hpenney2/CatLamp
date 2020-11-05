@@ -111,6 +111,8 @@ class Utility(commands.Cog):
                 if not channel.guild.chunked:
                     await channel.guild.chunk()
                 user = channel.guild.get_member(int(userId))
+            elif isinstance(channel, discord.DMChannel):
+                user = channel.recipient
             if channel and user:
                 await channel.send(f"<@{userId}> Your reminder for {o} {unit} is up!{note}")
             else:
