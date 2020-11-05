@@ -25,7 +25,8 @@ class Exceptions(commands.Cog):
                     errorStr = f"{param} must be a number."
             elif isinstance(error, commands.MissingRequiredArgument):
                 errorStr = "This command requires more arguments. Check +help for details."
-            elif isinstance(error, commands.BadUnionArgument) and str(error).startswith('Could not convert "user" into User or int.'):
+            elif isinstance(error, commands.BadUnionArgument) and \
+                    str(error).startswith('Could not convert "user" into User or int.'):
                 errorStr = f"User not found!"
             embed = discord.Embed(title="Error",
                                   description=f"An error occurred while trying to run `{commandName}`!\n"
