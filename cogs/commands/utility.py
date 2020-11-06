@@ -108,9 +108,7 @@ class Utility(commands.Cog):
             channel = self.client.get_channel(int(channelId))
             user = None
             if isinstance(channel, discord.TextChannel):
-                if not channel.guild.chunked:
-                    await channel.guild.chunk()
-                user = channel.guild.get_member(int(userId))
+                user = channel.guild.fetch_member(int(userId))
             elif isinstance(channel, discord.DMChannel):
                 user = channel.recipient
             if channel and user:
