@@ -74,7 +74,8 @@ class Moderation(commands.Cog):
                 await ctx.send(":(")
                 return
             try:
-                await ctx.guild.ban(user, reason=f"Banned by {str(ctx.author)} ({ctx.author.id}) with reason: '{reason}'",
+                await ctx.guild.ban(user, reason=f"Banned by {str(ctx.author)} "
+                                                 f"({ctx.author.id}) with reason: '{reason}'",
                                     delete_message_days=days_of_messages_to_delete)
             except discord.Forbidden:
                 raise CommandErrorMsg("I'm not high enough in the role hierarchy to ban that person!")
