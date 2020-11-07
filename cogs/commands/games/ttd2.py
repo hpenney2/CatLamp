@@ -1,8 +1,9 @@
 import asyncio
-# import discord (DiscordX already has discord)
+import discord  # (DiscordX already has discord, but pylint hates me)
 from discord.ext import commands
 import random
 
+# pylint: disable=import-error, undefined-variable
 from cogs.commands.games.DInput import DInput
 from cogs.commands.games.DiscordX import *
 from cogs.commands.games.tictacterminal import ticTacToe
