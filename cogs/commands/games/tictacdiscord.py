@@ -1,5 +1,5 @@
 import asyncio
-# import discord (DiscordX already has discord)
+import discord  # (DiscordX already has discord, but pylint hates me)
 from discord.ext import commands
 import random
 
