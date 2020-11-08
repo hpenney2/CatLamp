@@ -362,7 +362,7 @@ class Images(commands.Cog, name="Image Manipulation"):
             enhancer = ImageEnhance.Color(image)
             image = enhancer.enhance(3)
 
-            await sendImage(ctx, image, "grayscale.png")
+            await sendImage(ctx, image, "saturate.png")
 
     @commands.command(cooldown_after_parsing=True, aliases=["xFlip", "sideFlip"])
     @commands.cooldown(1, 5, commands.BucketType.user)
