@@ -104,6 +104,7 @@ client.mongo = motor.motor_asyncio.AsyncIOMotorClient("mongodb://localhost:27017
 client.cmds = []
 client.helpEmbeds = []
 client.reminders = client.mongo["db"]["reminders"]
+client.profiles = client.mongo["db"]["users"]
 client.reminderTasks = {}
 client.redditStats = {'Date': datetime.date.today()}  # initialize the statistics with a timestamp of the current day
 colors = tables.getColors()
@@ -245,7 +246,8 @@ if __name__ == "__main__":
                 except commands.ExtensionAlreadyLoaded:
                     print('you should not be seeing this\n if you do, youre screwed')
                 except commands.ExtensionFailed as failure:
-                    print(f'{failure.name} failed! booooo')
+                    print(f'{failure.name} failed! booo\n'
+                          f'Original exception for {failure.name}: {failure.original}')
 
     # load misc cogs
     for cog in client.miscCogs:
