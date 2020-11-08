@@ -20,7 +20,7 @@ class Economy(commands.Cog):
         else:
             newProfile = {
                 "_id": str(user.id),
-                "balance": 50,
+                "balance": 50.00,
                 "collectedDaily": False
             }
             await self.econ.insert_one(newProfile)
@@ -47,8 +47,12 @@ class Economy(commands.Cog):
                                             "$inc": {"balance": 25},
                                             "$set": {"collectedDaily": True}
                                        })
+            coins = str(round(profile.get("balance", 0.00), 2))
+            if coins.endswith(".0"):
+                coins += "0"
             embed = discord.Embed(title="Daily collected",
-                                  description="Collected 25 coins! Come back tomorrow for more coins.",
+                                  description=f"Collected 25 coins! *Your new balance is {coins} coins.*\n"
+                                              f"Come back tomorrow for more coins.",
                                   color=colors["success"])
             embed.set_footer(text="You can get more coins by voting for us on top.gg. See +vote for more details.")
             await ctx.send(embed=embed)
@@ -71,7 +75,9 @@ class Economy(commands.Cog):
     @commands.command(aliases=["bal"])
     async def balance(self, ctx):
         profile = await self.getProfile(ctx.author)
-        coins = profile.get("balance", 0)
+        coins = str(round(profile.get("balance", 0.00), 2))
+        if coins.endswith(".0"):
+            coins += "0"
         embed = discord.Embed(title=f"{ctx.author.name}'s balance",
                               color=discord.Color.from_rgb(random.randint(0, 255), random.randint(0, 255),
                                                            random.randint(0, 255)))
