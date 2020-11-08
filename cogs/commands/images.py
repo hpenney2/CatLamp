@@ -403,18 +403,20 @@ class Images(commands.Cog, name="Image Manipulation"):
             offsetFactor = (degrees / abs(degrees))
             originalHeight = image.height
             originalWidth = image.width
-            if abs(degrees % 180) == 90:  # handling for rotating by multiples 90 that aren't multiples of 180
-                image, mode = simpSquare(image)
-            else:
-                # why did i sin()?
-                # cos() i'm bad at math hahaha help me
-                # thank you very much https://stackoverflow.com/questions/3231176/how-to-get-size-of-a-rotated-rectangle
-                angle = abs(degrees % 180)
-                a = math.ceil(abs(image.width * math.sin(angle)) + abs(image.height * math.cos(angle)))
-                b = math.ceil(abs(image.width * math.cos(angle)) + abs(image.height * math.sin(angle)))
-                result = Image.new(image.mode, (a, b), (0, 0, 0, 0))
-                result.paste(image, ((result.height // 2) - image.height // 2, (result.width // 2) - image.width // 2))
-                image = result
+            # if abs(degrees % 180) == 90:  # handling for rotating by multiples 90 that aren't multiples of 180
+            #     image, mode = simpSquare(image)
+            # else:
+            # why did i sin()?
+            # cos() i'm bad at math hahaha help me
+            # thank you very much https://stackoverflow.com/questions/3231176/how-to-get-size-of-a-rotated-rectangle
+            angle = degrees / (math.pi / 180)  # degrees  # abs(degrees % 180)
+
+            a = math.ceil(abs(image.width * math.sin(angle)) + abs(image.height * math.cos(angle)))
+            b = math.ceil(abs(image.width * math.cos(angle)) + abs(image.height * math.sin(angle)))
+            print(a, b)
+            result = Image.new(image.mode, (a, b), (0, 0, 0, 0))
+            result.paste(image, ((result.width // 2) - (image.width // 2), (result.height // 2) - image.height // 2))
+            image = result
 
             outImg = image.rotate(angle=-degrees)  # for some cursed reason, rotate() defaults to counterclockwise
 
