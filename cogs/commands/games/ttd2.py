@@ -1,8 +1,13 @@
-# pylint: disable=import-error, undefined-variable
 import asyncio
 import discord  # (DiscordX already has discord, but pylint hates me)
 from discord.ext import commands
 import random
+
+# pylint: disable=import-error, undefined-variable
+from cogs.commands.games.DInput import DInput
+from cogs.commands.games.DiscordX import *
+from cogs.commands.games.tictacterminal import ticTacToe
+
 
 def selectInit(pieces: dict):
     new = 'a1'
@@ -59,10 +64,6 @@ directionShuffle = {
 # noinspection PyAttributeOutsideInit,PyPropertyAccess,PyMethodOverriding
 class discordTicTac(ticTacToe):
     def __init__(self, ctx: commands.Context, p2: discord.user):
-        from cogs.commands.games.DInput import DInput
-        from cogs.commands.games.DiscordX import *
-        from cogs.commands.games.tictacterminal import ticTacToe
-        
         ticTacToe.__init__(self)
         self.ctx = ctx
 
