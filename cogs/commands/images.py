@@ -1,3 +1,5 @@
+import math
+
 import deeppyer
 # noinspection PyPackageRequirements
 from PIL import Image, ImageOps, ImageEnhance
@@ -38,7 +40,9 @@ async def getImage(ctx, user: Union[discord.Member, str, None] = None):
 
 
 # stole off the site with best SEO, https://note.nkmk.me/en/python-pillow-square-circle-thumbnail/
-def forceSquare(pil_img):
+def centerSquare(pil_img: Image.Image):
+    """Adds padding on both sides to make an image square. (Centered)"""
+    pil_img = pil_img.convert('RGBA')  # ensure transparency
     background_color = (0, 0, 0, 0)
     width, height = pil_img.size
     if width == height:
@@ -51,6 +55,22 @@ def forceSquare(pil_img):
         result = Image.new(pil_img.mode, (height, height), background_color)
         result.paste(pil_img, ((height - width) // 2, 0))
         return result
+
+
+def simpSquare(pil_img: Image.Image):
+    """Adds padding to the bottom or right of an image to make it square."""
+    background_color = (0, 0, 0, 0)
+    width, height = pil_img.size
+    if width == height:
+        return pil_img
+    elif width > height:
+        result = Image.new(pil_img.mode, (width, width), background_color)
+        result.paste(pil_img, (0, 0))
+        return result, 'Y'
+    else:
+        result = Image.new(pil_img.mode, (height, height), background_color)
+        result.paste(pil_img, (0, 0))
+        return result, 'X'
 
 
 def hippityHoppityThisColorIsDisappearity(img: Image.Image, color: tuple = (0, 255, 0)):
@@ -177,7 +197,7 @@ class Images(commands.Cog, name="Image Manipulation"):
             alpha = findDualAlphaTarget(image, overlay)
 
             # convert the images to be equal in size and mode for compatibility
-            image = forceSquare(image)
+            image = centerSquare(image)
 
             if image.size > overlay.size:
                 image.thumbnail(overlay.size)
@@ -216,7 +236,7 @@ class Images(commands.Cog, name="Image Manipulation"):
             overlay = self.dioTemplate.copy()
 
             # convert the images to be equal in size and mode for compatibility
-            image = forceSquare(image)
+            image = centerSquare(image)
 
             # cut hole in template (remove the magenta pixels)
             overlay = hippityHoppityThisColorIsDisappearity(overlay, (255, 0, 255, 255))
@@ -244,7 +264,7 @@ class Images(commands.Cog, name="Image Manipulation"):
             overlay = self.flushedTemplate.copy()
 
             # convert the images to be equal in size and mode for compatibility
-            image = forceSquare(image)
+            image = centerSquare(image)
 
             # cut hole in template (remove the magenta pixels)
             overlay = hippityHoppityThisColorIsDisappearity(overlay, (255, 0, 255, 255))
@@ -272,7 +292,7 @@ class Images(commands.Cog, name="Image Manipulation"):
             overlay = self.joyTemplate.copy()
 
             # convert the images to be equal in size and mode for compatibility
-            image = forceSquare(image)
+            image = centerSquare(image)
 
             # cut hole in template (remove the magenta pixels)
             overlay = hippityHoppityThisColorIsDisappearity(overlay, (255, 0, 255, 255))
@@ -375,7 +395,31 @@ class Images(commands.Cog, name="Image Manipulation"):
         async with ctx.channel.typing():
             image = await getImage(ctx, user_or_url)
 
+            image = image.convert('RGBA')  # make it so transparency generates instead of black
+
+            mode = None
+            offsetFactor = (degrees / abs(degrees))
+            originalHeight = image.height
+            originalWidth = image.width
+            if abs(degrees % 180) == 90:  # handling for rotating by multiples 90 that aren't multiples of 180
+                image, mode = simpSquare(image)
+            else:
+                # why did i sin()?
+                # cos() i'm bad at math hahaha help me
+                # thank you very much https://stackoverflow.com/questions/3231176/how-to-get-size-of-a-rotated-rectangle
+                angle = abs(degrees % 180)
+                a = math.ceil(abs(image.width * math.sin(angle)) + abs(image.height * math.cos(angle)))
+                b = math.ceil(abs(image.width * math.cos(angle)) + abs(image.height * math.sin(angle)))
+                result = Image.new(image.mode, (a, b), (0, 0, 0, 0))
+                result.paste(image, ((result.height // 2) - image.height // 2, (result.width // 2) - image.width // 2))
+                image = result
+
             outImg = image.rotate(angle=-degrees)  # for some cursed reason, rotate() defaults to counterclockwise
+
+            if mode == 'Y':  # trim off the extra width
+                outImg = outImg.crop(((outImg.width - offsetFactor * originalHeight), 0, outImg.width, outImg.height))
+            elif mode == 'X':  # trim off the extra height
+                outImg = outImg.crop((0, 0, outImg.width, (offsetFactor * originalWidth)))
 
             await sendImage(ctx, outImg, "rotate.png")
 
