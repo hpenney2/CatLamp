@@ -69,7 +69,7 @@ try:
         input("Press enter to close, then restart the bot when fixed.")
         sys.exit(1)
 
-    print("Checking if the MongoDB daemeon is running...")
+    print("Checking if the MongoDB daemon is running...")
     mongoTestClient = motor.motor_asyncio.AsyncIOMotorClient("mongodb://localhost:27017/",
                                                              serverSelectionTimeoutMS=3000)
     mongoTestClient.server_info()
