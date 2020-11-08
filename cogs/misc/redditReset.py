@@ -39,8 +39,8 @@ class Name(commands.Cog):
     async def before_daily(self):
         await self.client.wait_until_ready()
         # sleep until 12 AM
-        now = datetime.datetime.now()
-        remaining = (now.replace(day=now.day + 1, hour=0, minute=0, second=0, microsecond=0) - now).total_seconds()
+        now = datetime.datetime.now() + datetime.timedelta(days=1)
+        remaining = (now.replace(hour=0, minute=0, second=0, microsecond=0) - now).total_seconds()
         await asyncio.sleep(remaining)
 
 
