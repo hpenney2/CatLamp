@@ -47,7 +47,7 @@ class Economy(commands.Cog):
                                             "$inc": {"balance": 25},
                                             "$set": {"collectedDaily": True}
                                        })
-            coins = str(round(profile.get("balance", 0.00), 2))
+            coins = str(round(profile.get("balance", 0.00) + 25, 2))
             if coins.endswith(".0"):
                 coins += "0"
             embed = discord.Embed(title="Daily collected",

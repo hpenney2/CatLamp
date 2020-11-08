@@ -47,10 +47,11 @@ class DBL(commands.Cog):
                         userName = str(await self.bot.fetch_user(user))
                     except discord.NotFound:
                         userName = "Unknown User"
-                    await botlogs.send(f"User `{userName} ({user})` voted for the bot on DBL.")
+                    await botlogs.send(f"User `{userName} ({user})` voted for the bot on DBL and has been awarded "
+                                       f"15 coins.")
                     await self.econ.update_one({"_id": str(user)},
                                                {
-                                                   "$inc": {"balance": 25}
+                                                   "$inc": {"balance": 15}
                                                })
                     return web.json_response({"status": "upvote_handled_successfully"})
                 else:
