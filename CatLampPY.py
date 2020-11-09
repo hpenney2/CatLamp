@@ -58,9 +58,7 @@ try:
 
     config = open("config.json", "r")
     config = json.load(config)
-    a = []  # make a list of everything in config
-    for configuration in config:
-        a.append(configuration)
+    a = list(config)
     a.sort()  # sort the list for consistency
     # make sure the sorted list has everything we need (also in a sorted list), no more, no less
     # If a config key is REQUIRED, add it here.
