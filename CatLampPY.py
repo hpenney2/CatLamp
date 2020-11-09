@@ -13,16 +13,18 @@ try:
     import subprocess
     import sys
 
-    # try to upgrade (or possibly downgrade) modules using requirements.txt
-    print("Attempting to install/upgrade modules...")
-    try:
-        subprocess.check_call([sys.executable, "-m", "pip", "install", "--upgrade", "-r", "requirements.txt", "--user"])
-        print("Done! Continuing startup...")
-    except Exception as e:
-        print(f"Error while trying to install modules!\nFull error:\n{e}")
-        input("Press enter to close, then restart the bot when fixed.")
-        sys.exit(1)
-        
+    if __name__ == '__main__':
+        # try to upgrade (or possibly downgrade) modules using requirements.txt
+        print("Attempting to install/upgrade modules...")
+        try:
+            subprocess.check_call([sys.executable, "-m", "pip", "install", "--upgrade", "-r", "requirements.txt",
+                                   "--user"])
+            print("Done! Continuing startup...")
+        except Exception as e:
+            print(f"Error while trying to install modules!\nFull error:\n{e}")
+            input("Press enter to close, then restart the bot when fixed.")
+            sys.exit(1)
+
     # the wall of imports
     import discord
     from discord.ext import commands
@@ -69,11 +71,12 @@ try:
         input("Press enter to close, then restart the bot when fixed.")
         sys.exit(1)
 
-    print("Checking if the MongoDB daemon is running...")
-    mongoTestClient = motor.motor_asyncio.AsyncIOMotorClient("mongodb://localhost:27017/",
-                                                             serverSelectionTimeoutMS=3000)
-    mongoTestClient.server_info()
-    print("MongoDB is running. Continuing startup...")
+    if __name__ == '__main__':
+        print("Checking if the MongoDB daemon is running...")
+        mongoTestClient = motor.motor_asyncio.AsyncIOMotorClient("mongodb://localhost:27017/",
+                                                                 serverSelectionTimeoutMS=3000)
+        mongoTestClient.server_info()
+        print("MongoDB is running. Continuing startup...")
 except (ModuleNotFoundError, ImportError) as mod:  # reinstall requirements.txt if import error
     print(f"One or more modules are missing or an error occurred trying to import one!\nFull error:\n{mod}")
     input("Press enter to close, then restart the bot when fixed.")
