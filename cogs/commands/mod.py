@@ -64,17 +64,22 @@ class Moderation(commands.Cog):
         Requires the Ban Members permission."""
         if isinstance(user, int):
             user = await self.gf_user(user)
-        if user.id == self.bot.user.id:
-            await ctx.send(":(")
-            return
-        elif user.id == ctx.guild.owner.id:
-            raise CommandErrorMsg("I can't ban the server owner!")
         try:
-            await ctx.guild.ban(user, reason=f"Banned by {str(ctx.author)} ({ctx.author.id}) with reason: '{reason}'",
-                                delete_message_days=days_of_messages_to_delete)
-        except discord.Forbidden:
-            raise CommandErrorMsg("I'm not high enough in the role hierarchy to ban that person!")
-        await ctx.send(f"{user.mention} ({str(user)}) has been banned from the server with reason: '{reason}'")
+            await ctx.guild.fetch_ban(user)
+            # Since an exception wasn't raised, a ban for this user already exists.
+            await ctx.send("That user is already banned!")
+            return
+        except discord.NotFound:
+            if user.id == self.bot.user.id:
+                await ctx.send(":(")
+                return
+            try:
+                await ctx.guild.ban(user, reason=f"Banned by {str(ctx.author)} "
+                                                 f"({ctx.author.id}) with reason: '{reason}'",
+                                    delete_message_days=days_of_messages_to_delete)
+            except discord.Forbidden:
+                raise CommandErrorMsg("I'm not high enough in the role hierarchy to ban that person!")
+            await ctx.send(f"{user.mention} ({str(user)}) has been banned from the server with reason: '{reason}'")
     
     @commands.command(cooldown_after_parsing=True)
     @commands.cooldown(1, 10, commands.BucketType.member)
