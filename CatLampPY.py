@@ -1,4 +1,8 @@
 ### Startup ###
+import subprocess
+import sys
+
+
 def checkKeys(configList: list, reqKeys: list):
     reqKeysInConfig = []
     for configItem in configList:
@@ -9,56 +13,54 @@ def checkKeys(configList: list, reqKeys: list):
     return reqKeysInConfig == reqKeys
 
 
-try:
-    import subprocess
-    import sys
-
-    # try to upgrade (or possibly downgrade) modules using requirements.txt
+def requirementsInstall():
+    """Try to upgrade (or possibly downgrade) modules using requirements.txt."""
     print("Attempting to install/upgrade modules...")
     try:
-        subprocess.check_call([sys.executable, "-m", "pip", "install", "--upgrade", "-r", "requirements.txt", "--user"])
+        subprocess.check_call([sys.executable, "-m", "pip", "install", "--upgrade", "-r", "requirements.txt",
+                               "--user"])
         print("Done! Continuing startup...")
-    except Exception as e:
-        print(f"Error while trying to install modules!\nFull error:\n{e}")
+    except Exception as requireE:
+        print(f"Error while trying to install modules!\nFull error:\n{requireE}")
         input("Press enter to close, then restart the bot when fixed.")
         sys.exit(1)
-        
-    # the wall of imports
+
+
+try:
+
+    if __name__ == '__main__':
+        requirementsInstall()
+
+        print("Checking if all required modules are installed...")
+        from pkgutil import find_loader
+        checkMods = ['discord', 'praw', 'deeppyer', 'PIL', 'dbl', 'statcord', 'pymongo', 'motor']
+        for i in checkMods:
+            if not find_loader(i):
+                raise ModuleNotFoundError(f"No module named '{i}'")
+            else:
+                print(f"Found module '{i}'")
+        print("Done! Continuing startup...")
+
+    # All imports below are used within this file and should not be removed.
     import discord
     from discord.ext import commands
     import tables
     import logging
     import json
-    import os
-    import random
-    import asyncio
     import datetime
-    from hastebin import get_key
     import ast
     import praw
-    import prawcore  # because praw exceptions inherit from here
-    import math
-    import signal
     # noinspection PyPep8Naming
     import time as timeMod
-    import deeppyer
     # noinspection PyPackageRequirements
-    from PIL import Image
     from os import listdir
-    import io
-    import re as regex
-    import dbl
-    import statcord
     from cogs.commands.help import EmbedHelpCommand
-    import pymongo
     from pymongo import errors as mongo_errors  # specifically import errors because it is separate from the main module
     import motor.motor_asyncio
 
     config = open("config.json", "r")
     config = json.load(config)
-    a = []  # make a list of everything in config
-    for configuration in config:
-        a.append(configuration)
+    a = list(config)
     a.sort()  # sort the list for consistency
     # make sure the sorted list has everything we need (also in a sorted list), no more, no less
     # If a config key is REQUIRED, add it here.
@@ -69,11 +71,12 @@ try:
         input("Press enter to close, then restart the bot when fixed.")
         sys.exit(1)
 
-    print("Checking if the MongoDB daemon is running...")
-    mongoTestClient = motor.motor_asyncio.AsyncIOMotorClient("mongodb://localhost:27017/",
-                                                             serverSelectionTimeoutMS=3000)
-    mongoTestClient.server_info()
-    print("MongoDB is running. Continuing startup...")
+    if __name__ == '__main__':
+        print("Checking if the MongoDB daemon is running...")
+        mongoTestClient = motor.motor_asyncio.AsyncIOMotorClient("mongodb://localhost:27017/",
+                                                                 serverSelectionTimeoutMS=3000)
+        mongoTestClient.server_info()
+        print("MongoDB is running. Continuing startup...")
 except (ModuleNotFoundError, ImportError) as mod:  # reinstall requirements.txt if import error
     print(f"One or more modules are missing or an error occurred trying to import one!\nFull error:\n{mod}")
     input("Press enter to close, then restart the bot when fixed.")
