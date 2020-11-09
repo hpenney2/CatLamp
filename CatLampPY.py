@@ -1,4 +1,8 @@
 ### Startup ###
+import subprocess
+import sys
+
+
 def checkKeys(configList: list, reqKeys: list):
     reqKeysInConfig = []
     for configItem in configList:
@@ -9,23 +13,31 @@ def checkKeys(configList: list, reqKeys: list):
     return reqKeysInConfig == reqKeys
 
 
+def requirementsInstall():
+    """Try to upgrade (or possibly downgrade) modules using requirements.txt."""
+    print("Attempting to install/upgrade modules...")
+    try:
+        subprocess.check_call([sys.executable, "-m", "pip", "install", "--upgrade", "-r", "requirements.txt",
+                               "--user"])
+        print("Done! Continuing startup...")
+    except Exception as requireE:
+        print(f"Error while trying to install modules!\nFull error:\n{requireE}")
+        input("Press enter to close, then restart the bot when fixed.")
+        sys.exit(1)
+
+
 try:
-    import subprocess
-    import sys
 
     if __name__ == '__main__':
-        # try to upgrade (or possibly downgrade) modules using requirements.txt
-        print("Attempting to install/upgrade modules...")
-        try:
-            subprocess.check_call([sys.executable, "-m", "pip", "install", "--upgrade", "-r", "requirements.txt",
-                                   "--user"])
-            print("Done! Continuing startup...")
-        except Exception as e:
-            print(f"Error while trying to install modules!\nFull error:\n{e}")
-            input("Press enter to close, then restart the bot when fixed.")
-            sys.exit(1)
+        requirementsInstall()
+        
+        from pkgutil import find_loader
+        checkMods = ['discord', 'sdadsadasd']
+        for i in checkMods:
+            if not find_loader(i):
+                raise ModuleNotFoundError(f"No module named '{i}'")
 
-    # the wall of imports
+    # the imports
     import discord
     from discord.ext import commands
     import tables
