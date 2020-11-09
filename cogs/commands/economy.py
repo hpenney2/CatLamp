@@ -21,31 +21,35 @@ class Economy(commands.Cog):
             newProfile = {
                 "_id": str(user.id),
                 "balance": 50.00,
-                "collectedDaily": False
+                "dailyLastCollected": datetime.datetime(2000, 1, 1)
             }
             await self.econ.insert_one(newProfile)
             return newProfile
 
-    async def resetDaily(self):
-        resetTime = datetime.time(hour=0)
-        while True:
-            now = datetime.datetime.utcnow()
-            date = now.date()
-            if now.time() > resetTime:
-                date = now.date() + datetime.timedelta(days=1)
-            then = datetime.datetime.combine(date, resetTime)
-            await discord.utils.sleep_until(then)
-            result = await self.econ.update_many({}, {"$set": {"collectedDaily": False}})
-            print(f"! Reset {result.modified_count} dailies. !")
+    # Removed due to changing the daily checking method. Commented out just in case, but may be removed.
+    # async def resetDaily(self):
+    #     resetTime = datetime.time(hour=0)
+    #     while True:
+    #         now = datetime.datetime.utcnow()
+    #         date = now.date()
+    #         if now.time() > resetTime:
+    #             date = now.date() + datetime.timedelta(days=1)
+    #         then = datetime.datetime.combine(date, resetTime)
+    #         await discord.utils.sleep_until(then)
+    #         result = await self.econ.update_many({}, {"$set": {"collectedDaily": False}})
+    #         print(f"! Reset {result.modified_count} dailies. !")
 
     @commands.command()
     async def daily(self, ctx):
         profile = await self.getProfile(ctx.author)
-        if not profile.get("collectedDaily"):
+        lastDaily = profile.get("dailyLastCollected", datetime.datetime(2000, 1, 1))
+        nextDaily = lastDaily + datetime.timedelta(hours=24)
+        now = datetime.datetime.utcnow()
+        if now >= nextDaily:
             await self.econ.update_one({"_id": str(ctx.author.id)},
                                        {
                                             "$inc": {"balance": 25},
-                                            "$set": {"collectedDaily": True}
+                                            "$set": {"dailyLastCollected": datetime.datetime.utcnow()}
                                        })
             coins = str(round(profile.get("balance", 0.00) + 25, 2))
             if coins.endswith(".0"):
@@ -57,13 +61,7 @@ class Economy(commands.Cog):
             embed.set_footer(text="You can get more coins by voting for us on top.gg. See +vote for more details.")
             await ctx.send(embed=embed)
         else:
-            resetTime = datetime.time(hour=0)
-            now = datetime.datetime.utcnow()
-            date = now.date()
-            if now.time() > resetTime:
-                date = now.date() + datetime.timedelta(days=1)
-            then = datetime.datetime.combine(date, resetTime)
-            remainingTime = then - datetime.datetime.utcnow()
+            remainingTime = nextDaily - datetime.datetime.utcnow()
             m, s = divmod(remainingTime.total_seconds(), 60)
             h, m = divmod(m, 60)
             embed = discord.Embed(title="Daily already collected today",
@@ -90,4 +88,4 @@ class Economy(commands.Cog):
 def setup(bot):
     econ = Economy(bot)
     bot.add_cog(econ)
-    bot.loop.create_task(econ.resetDaily())
+    # bot.loop.create_task(econ.resetDaily())
