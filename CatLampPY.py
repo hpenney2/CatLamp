@@ -33,7 +33,7 @@ try:
 
         print("Checking if all required modules are installed...")
         from pkgutil import find_loader
-        checkMods = ['discord', 'sdadsadasd']
+        checkMods = ['discord', 'praw', 'deeppyer', 'PIL', 'dbl', 'statcord', 'pymongo', 'motor']
         for i in checkMods:
             if not find_loader(i):
                 raise ModuleNotFoundError(f"No module named '{i}'")
@@ -41,34 +41,20 @@ try:
                 print(f"Found module '{i}'")
         print("Done! Continuing startup...")
 
-    # the imports
+    # All imports below are used within this file and should not be removed.
     import discord
     from discord.ext import commands
     import tables
     import logging
     import json
-    import os
-    import random
-    import asyncio
     import datetime
-    from hastebin import get_key
     import ast
     import praw
-    import prawcore  # because praw exceptions inherit from here
-    import math
-    import signal
     # noinspection PyPep8Naming
     import time as timeMod
-    import deeppyer
     # noinspection PyPackageRequirements
-    from PIL import Image
     from os import listdir
-    import io
-    import re as regex
-    import dbl
-    import statcord
     from cogs.commands.help import EmbedHelpCommand
-    import pymongo
     from pymongo import errors as mongo_errors  # specifically import errors because it is separate from the main module
     import motor.motor_asyncio
 
