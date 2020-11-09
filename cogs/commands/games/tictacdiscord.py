@@ -76,7 +76,7 @@ class discordTicTac(ticTacToe):
             self.p2 = ctx.author
 
     async def run(self):
-        self.embed = discord.Embed(title=f'Starting {self.ctx.author}\' game of TicTacToe...',
+        self.embed = discord.Embed(title=f'Starting {self.ctx.author}\'s game of TicTacToe...',
                                    description=f"⬛⬛⬛\n⬛⬛⬛\n⬛⬛⬛", color=0x00ff00)
 
         self.confirmMess = await self.ctx.send(embed=self.embed)
@@ -115,7 +115,7 @@ class discordTicTac(ticTacToe):
                 await self.announceWin(curPlayer, self.currentPlayerID)
                 return
         await self.cleanBoard()
-        await self.ctx.send('wow a tie amazing')
+        await self.ctx.send('The game tied.')
 
     # noinspection PyTypeChecker
     async def awaitP1Input(self):
@@ -152,7 +152,7 @@ class discordTicTac(ticTacToe):
             else:
                 thing = await self.p2In.awaitInput()
             if type(thing) == asyncio.exceptions.TimeoutError:  # if theres a timeout
-                await self.ctx.send(f'{p.mention}\'s game timed-out. Be quicker bro!!!')
+                await self.ctx.send(f'{p.mention}\'s game timed-out. Be quicker next time!')
                 return p
             else:
                 if thing == '✅':
@@ -165,12 +165,12 @@ class discordTicTac(ticTacToe):
 
     async def processInput(self, Input):
         if self.pieces[Input] is not None:
-            errorEmb = discord.Embed(title='Error: Invalid Selection.',
+            errorEmb = discord.Embed(title='Error: Invalid Selection',
                                      description="That space is occupied!",
                                      color=0xff0000)
             await self.ctx.send(embed=errorEmb, delete_after=7.5)
         elif Input not in self.pieces:  # this shouldn't happen but fuck you
-            errorEmb = discord.Embed(title='Error: Invalid Input.',
+            errorEmb = discord.Embed(title='Error: Invalid Input',
                                      description="You can only have A-C and 1-3 as inputs!",
                                      color=0xff0000)
             await self.ctx.send(embed=errorEmb, delete_after=7.5)

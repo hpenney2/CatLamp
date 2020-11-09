@@ -3,7 +3,7 @@ import discord
 from discord.ext import commands
 import random
 
-from CatLampPY import colors
+from CatLampPY import colors, CommandErrorMsg
 from cogs.commands.games.tictacdiscord import discordTicTac
 from cogs.misc.isAdmin import isAdmin
 
@@ -100,11 +100,12 @@ class Economy(commands.Cog):
                     game = discordTicTac(ctx, victim)
                     await game.run()
                 else:
-                    await ctx.send('hey if you cant see the game, is it even fair?')
+                    raise CommandErrorMsg("Doesn't seem very fair if they can't even see the game...\n"
+                                          "(Other user does not have read permissions for this channel.)")
             else:
-                await ctx.send('you cant play tictactoe against yourself lol')
+                raise CommandErrorMsg("You can't play against yourself!")
         else:
-            await ctx.send('mention a *human* to play dumb')
+            raise CommandErrorMsg("You can't play against a bot!")
 
     # @commands.command(aliases=['ttt', "tic_tac_toe"], brief='{@user}')
     # async def ticTacToe(self, ctx, victim: discord.User):
