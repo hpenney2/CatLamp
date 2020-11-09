@@ -2,6 +2,7 @@ import datetime
 import discord
 from discord.ext import commands
 import random
+import copy
 
 from CatLampPY import colors, CommandErrorMsg
 from cogs.commands.games.tictacdiscord import discordTicTac
@@ -12,15 +13,28 @@ async def hasProfile(db, user: discord.User):
     return await db.count_documents({"_id": str(user.id)}, limit=1) == 1
 
 
+defaultProfile = {
+    "balance": 50.00,
+    "dailyLastCollected": datetime.datetime(2000, 1, 1)
+}
+
+
 async def getProfile(db, user: discord.User):
     if await hasProfile(db, user):
-        return await db.find_one({"_id": str(user.id)})
+        currentProfile = await db.find_one({"_id": str(user.id)})
+        updated = False
+        for key in defaultProfile:
+            try:
+                currentProfile[key]
+            except KeyError:
+                currentProfile[key] = defaultProfile[key]
+                updated = True
+        if updated:
+            await db.replace_one({"_id": str(user.id)}, currentProfile)
+        return currentProfile
     else:
-        newProfile = {
-            "_id": str(user.id),
-            "balance": 50.00,
-            "dailyLastCollected": datetime.datetime(2000, 1, 1)
-        }
+        newProfile = copy.deepcopy(defaultProfile)
+        newProfile["_id"] = str(user.id)
         await db.insert_one(newProfile)
         return newProfile
 
