@@ -4,7 +4,8 @@ import asyncio
 from aiohttp import web
 from discord.ext import commands
 # pylint: disable=import-error
-from CatLampPY import config
+from CatLampPY import config, colors
+from cogs.commands.economy import getProfile
 
 
 # noinspection PyAttributeOutsideInit
@@ -41,18 +42,36 @@ class DBL(commands.Cog):
                     await botlogs.send("Hello, world! Webhook test received from DBL.")
                     return web.json_response({"hello": "world"})
                 elif postType == "upvote":
-                    user = post.get("user")
+                    userId = post.get("user")
+                    user = None
                     userName = None
                     try:
-                        userName = str(await self.bot.fetch_user(user))
+                        user = await self.bot.fetch_user(userId)
+                        userName = str(user)
                     except discord.NotFound:
                         userName = "Unknown User"
-                    await botlogs.send(f"User `{userName} ({user})` voted for the bot on DBL and has been awarded "
-                                       f"15 coins.")
-                    await self.econ.update_one({"_id": str(user)},
+
+                    profile = await getProfile(self.econ, user)
+                    await self.econ.update_one({"_id": str(userId)},
                                                {
                                                    "$inc": {"balance": 15}
                                                })
+
+                    await botlogs.send(f"User `{userName} ({userId})` voted for the bot on DBL and has been credited "
+                                       f"15 coins.")
+                    if user:
+                        try:
+                            coins = str(round(profile.get("balance", 0.00) + 15, 2))
+                            if coins.endswith(".0"):
+                                coins += "0"
+                            embed = discord.Embed(title="Vote reward credited",
+                                                  description=f"Thank you for voting for us! You have been credited "
+                                                              f"15 coins.\n*Your new balance is {coins} coins.*",
+                                                  color=colors["success"])
+                            await user.send(embed=embed)
+                        except discord.Forbidden:
+                            pass
+
                     return web.json_response({"status": "upvote_handled_successfully"})
                 else:
                     print(f"Unknown post type! Got '{postType}', expected 'upvote' or 'test'")

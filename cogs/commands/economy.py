@@ -8,25 +8,27 @@ from cogs.commands.games.tictacdiscord import discordTicTac
 from cogs.misc.isAdmin import isAdmin
 
 
+async def hasProfile(db, user: discord.User):
+    return await db.count_documents({"_id": str(user.id)}, limit=1) == 1
+
+
+async def getProfile(db, user: discord.User):
+    if await hasProfile(db, user):
+        return await db.find_one({"_id": str(user.id)})
+    else:
+        newProfile = {
+            "_id": str(user.id),
+            "balance": 50.00,
+            "dailyLastCollected": datetime.datetime(2000, 1, 1)
+        }
+        await db.insert_one(newProfile)
+        return newProfile
+
+
 class Economy(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.econ = bot.profiles
-
-    async def hasProfile(self, user: discord.User):
-        return await self.econ.count_documents({"_id": str(user.id)}, limit=1) == 1
-
-    async def getProfile(self, user: discord.User):
-        if await self.hasProfile(user):
-            return await self.econ.find_one({"_id": str(user.id)})
-        else:
-            newProfile = {
-                "_id": str(user.id),
-                "balance": 50.00,
-                "dailyLastCollected": datetime.datetime(2000, 1, 1)
-            }
-            await self.econ.insert_one(newProfile)
-            return newProfile
 
     # Removed due to changing the daily checking method. Commented out just in case, but may be removed.
     # async def resetDaily(self):
@@ -44,7 +46,7 @@ class Economy(commands.Cog):
     @commands.command()
     async def daily(self, ctx):
         """Collects your daily currency. You can collect 25 coins every 24 hours."""
-        profile = await self.getProfile(ctx.author)
+        profile = await getProfile(self.econ, ctx.author)
         lastDaily = profile.get("dailyLastCollected", datetime.datetime(2000, 1, 1))
         nextDaily = lastDaily + datetime.timedelta(hours=24)
         now = datetime.datetime.utcnow()
@@ -76,7 +78,7 @@ class Economy(commands.Cog):
     @commands.command(aliases=["bal"])
     async def balance(self, ctx):
         """Checks your current coin balance."""
-        profile = await self.getProfile(ctx.author)
+        profile = await getProfile(self.econ, ctx.author)
         coins = str(round(profile.get("balance", 0.00), 2))
         if coins.endswith(".0"):
             coins += "0"
