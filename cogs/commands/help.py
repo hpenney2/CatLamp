@@ -105,6 +105,13 @@ class EmbedHelpCommand(commands.HelpCommand):
         if not Command.hidden or isAdmin(self.context):
             embed = discord.Embed(title=self.get_command_signature(Command), colour=self.COLOUR)
 
+            if self.context.invoked_with.lower() != 'help':  # assumes that any ctx.send_help() is an arg error
+                # noinspection PyDunderSlots,PyUnresolvedReferences
+                embed.color = colors["error"]
+                embed.set_author(name="This command requires more arguments.",
+                                 icon_url='https://cdn.discordapp.com/'
+                                          'attachments/775506680926306306/775509240667963399/warning.png')
+
             if Command.qualified_name == 'help':
                 embed.description = "Displays the documentation for Catlamp."
             elif Command.help:

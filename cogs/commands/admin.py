@@ -94,7 +94,7 @@ class Administration(commands.Cog):
                     except commands.ExtensionFailed as failure:
                         errorInfo += f'{failure.name} failed! booooo\n'
         from cogs.commands.help import EmbedHelpCommand
-        self.client.help_command = EmbedHelpCommand()
+        self.client.help_command = EmbedHelpCommand(verify_checks=False, show_hidden=False)
         await self.client.change_presence(activity=None)
         if errorInfo != "":
             print(f"Reloaded with errors!\n{errorInfo}")

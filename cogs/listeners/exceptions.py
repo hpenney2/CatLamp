@@ -24,7 +24,9 @@ class Exceptions(commands.Cog):
                     param = str(error).split("parameter ", 1)[1][:-1]
                     errorStr = f"{param} must be a number."
             elif isinstance(error, commands.MissingRequiredArgument):
-                errorStr = "This command requires more arguments. Check +help for details."
+                # errorStr = "This command requires more arguments. Check +help for details."
+                await ctx.send_help(ctx.command)
+                return
             elif isinstance(error, commands.BadUnionArgument) and \
                     str(error).startswith('Could not convert "user" into User or int.'):
                 errorStr = f"User not found!"
