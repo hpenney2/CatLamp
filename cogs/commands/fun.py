@@ -6,7 +6,6 @@ import random
 import re as regex
 # pylint: disable=import-error
 from CatLampPY import reddit
-from cogs.commands.games.tictacdiscord import discordTicTac
 from cogs.misc.isAdmin import isAdmin
 import datetime
 from hastebin import get_key
@@ -291,34 +290,6 @@ class Fun(commands.Cog):
             await sendData(self.client, ctx)
         else:
             await ctx.send('This command is locked to <#712489826330345534>.')
-
-    @commands.command(hidden=True, aliases=['tttB', "tic_tac_toe_beta"])
-    @commands.check(isAdmin)
-    async def tictactoeBeta(self, ctx, victim: discord.Member):
-        """Beta tic tac toe thing"""
-        if not victim.bot:
-            if victim.id != ctx.author.id:
-                if victim.permissions_in(ctx.channel).read_messages:
-                    game = discordTicTac(ctx, victim)
-                    await game.run()
-                else:
-                    await ctx.send('hey if you cant see the game, is it even fair?')
-            else:
-                await ctx.send('you cant play tictactoe against yourself lol')
-        else:
-            await ctx.send('mention a *human* to play dumb')
-
-    # @commands.command(aliases=['ttt', "tic_tac_toe"], brief='{@user}')
-    # async def ticTacToe(self, ctx, victim: discord.User):
-    #     """Starts a game of tic-tac-toe against the mentioned user."""
-    #     if not victim.bot:
-    #         if victim.id != ctx.author.id:
-    #             game = discordTicTac(ctx, ctx.message.mentions[0])
-    #             await game.run()
-    #         else:
-    #             await ctx.send('you cant play tictactoe against yourself lol')
-    #     else:
-    #         await ctx.send('mention a *human* to play dumb')
 
 
 def setup(bot):

@@ -4,6 +4,8 @@ from discord.ext import commands
 import random
 
 from CatLampPY import colors
+from cogs.commands.games.tictacdiscord import discordTicTac
+from cogs.misc.isAdmin import isAdmin
 
 
 class Economy(commands.Cog):
@@ -41,6 +43,7 @@ class Economy(commands.Cog):
 
     @commands.command()
     async def daily(self, ctx):
+        """Collects your daily currency. You can collect 25 coins every 24 hours."""
         profile = await self.getProfile(ctx.author)
         lastDaily = profile.get("dailyLastCollected", datetime.datetime(2000, 1, 1))
         nextDaily = lastDaily + datetime.timedelta(hours=24)
@@ -72,6 +75,7 @@ class Economy(commands.Cog):
 
     @commands.command(aliases=["bal"])
     async def balance(self, ctx):
+        """Checks your current coin balance."""
         profile = await self.getProfile(ctx.author)
         coins = str(round(profile.get("balance", 0.00), 2))
         if coins.endswith(".0"):
@@ -83,6 +87,36 @@ class Economy(commands.Cog):
         embed.set_footer(text="You can get more coins by collecting your daily (+daily) "
                               "and by voting for us on top.gg (+vote).")
         await ctx.send(embed=embed)
+
+    # Games
+
+    @commands.command(hidden=True, aliases=['tttB', "tic_tac_toe_beta"])
+    @commands.check(isAdmin)
+    async def tictactoeBeta(self, ctx, victim: discord.Member):
+        """Beta tic tac toe thing"""
+        if not victim.bot:
+            if victim.id != ctx.author.id:
+                if victim.permissions_in(ctx.channel).read_messages:
+                    game = discordTicTac(ctx, victim)
+                    await game.run()
+                else:
+                    await ctx.send('hey if you cant see the game, is it even fair?')
+            else:
+                await ctx.send('you cant play tictactoe against yourself lol')
+        else:
+            await ctx.send('mention a *human* to play dumb')
+
+    # @commands.command(aliases=['ttt', "tic_tac_toe"], brief='{@user}')
+    # async def ticTacToe(self, ctx, victim: discord.User):
+    #     """Starts a game of tic-tac-toe against the mentioned user."""
+    #     if not victim.bot:
+    #         if victim.id != ctx.author.id:
+    #             game = discordTicTac(ctx, ctx.message.mentions[0])
+    #             await game.run()
+    #         else:
+    #             await ctx.send('you cant play tictactoe against yourself lol')
+    #     else:
+    #         await ctx.send('mention a *human* to play dumb')
 
 
 def setup(bot):
