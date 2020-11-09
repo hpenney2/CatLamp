@@ -30,12 +30,16 @@ try:
 
     if __name__ == '__main__':
         requirementsInstall()
-        
+
+        print("Checking if all required modules are installed...")
         from pkgutil import find_loader
         checkMods = ['discord', 'sdadsadasd']
         for i in checkMods:
             if not find_loader(i):
                 raise ModuleNotFoundError(f"No module named '{i}'")
+            else:
+                print(f"Found module '{i}'")
+        print("Done! Continuing startup...")
 
     # the imports
     import discord
