@@ -3,7 +3,7 @@ import datetime
 # linter didn't find any usages for these
 # import os
 # from json import load
-#
+# noinspection PyUnresolvedReferences
 import discord
 from discord.ext import commands
 from typing import Union
@@ -108,9 +108,9 @@ class Utility(commands.Cog):
             channel = self.client.get_channel(int(channelId))
             user = None
             if isinstance(channel, discord.TextChannel):
-                if not channel.guild.chunked:
-                    await channel.guild.chunk()
-                user = channel.guild.get_member(int(userId))
+                user = channel.guild.fetch_member(int(userId))
+            elif isinstance(channel, discord.DMChannel):
+                user = channel.recipient
             if channel and user:
                 await channel.send(f"<@{userId}> Your reminder for {o} {unit} is up!{note}")
             else:
@@ -145,7 +145,8 @@ class Utility(commands.Cog):
             return
         else:
             tab = await self.client.reminders.find_one({"_id": str(ctx.author.id)})
-            remainingTime = (float(tab["startTime"]) + float(tab["timeSeconds"])) - datetime.datetime.utcnow().timestamp()
+            remainingTime = (float(tab["startTime"]) + float(tab["timeSeconds"])) - \
+                datetime.datetime.utcnow().timestamp()  # thanks PEP 8
             m, s = divmod(remainingTime, 60)
             h, m = divmod(m, 60)
             d, h = divmod(h, 24)
@@ -173,7 +174,8 @@ class Utility(commands.Cog):
             print("Loading reminders from MongoDB...")
             # noinspection PyUnusedLocal
             async for tab in self.client.reminders.find():
-                remainingTime = (float(tab["startTime"]) + float(tab["timeSeconds"])) - datetime.datetime.utcnow().timestamp()
+                remainingTime = (float(tab["startTime"]) + float(tab["timeSeconds"])) - \
+                    datetime.datetime.utcnow().timestamp()  # thanks again PEP 8
                 task = asyncio.ensure_future(self.timer(tab["channelId"], tab["_id"], remainingTime,
                                                         tab["originalTime"], tab["unit"], tab["note"]))
                 # await self.client.reminders.update_one({ "_id": tab["userId"] }, { "$set": { "task": task } })
