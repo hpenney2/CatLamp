@@ -3,6 +3,7 @@ import discord
 from discord.ext import commands
 import random
 import copy
+import asyncio
 
 from CatLampPY import colors, CommandErrorMsg
 from cogs.commands.games.tictacdiscord import discordTicTac
@@ -20,23 +21,26 @@ defaultProfile = {
 
 
 async def getProfile(db, user: discord.User):
-    if await hasProfile(db, user):
-        currentProfile = await db.find_one({"_id": str(user.id)})
-        updated = False
-        for key in defaultProfile:
-            try:
-                currentProfile[key]
-            except KeyError:
-                currentProfile[key] = defaultProfile[key]
-                updated = True
-        if updated:
-            await db.replace_one({"_id": str(user.id)}, currentProfile)
-        return currentProfile
+    if not user.bot:
+        if await hasProfile(db, user):
+            currentProfile = await db.find_one({"_id": str(user.id)})
+            updated = False
+            for key in defaultProfile:
+                try:
+                    currentProfile[key]
+                except KeyError:
+                    currentProfile[key] = defaultProfile[key]
+                    updated = True
+            if updated:
+                await db.replace_one({"_id": str(user.id)}, currentProfile)
+            return currentProfile
+        else:
+            newProfile = copy.deepcopy(defaultProfile)
+            newProfile["_id"] = str(user.id)
+            await db.insert_one(newProfile)
+            return newProfile
     else:
-        newProfile = copy.deepcopy(defaultProfile)
-        newProfile["_id"] = str(user.id)
-        await db.insert_one(newProfile)
-        return newProfile
+        raise CommandErrorMsg("Bots can't have profiles!")
 
 
 class Economy(commands.Cog):
@@ -56,6 +60,56 @@ class Economy(commands.Cog):
     #         await discord.utils.sleep_until(then)
     #         result = await self.econ.update_many({}, {"$set": {"collectedDaily": False}})
     #         print(f"! Reset {result.modified_count} dailies. !")
+
+    async def negotiateBet(self, ctx: commands.Context, user1, user2, gameName: str,
+                           coins: float) -> bool:
+        coinsDoubled = str(round(coins * 2, 2))
+        coins = str(round(coins, 2))
+        if coins.endswith(".0"):
+            coins += "0"
+        if coinsDoubled.endswith(".0"):
+            coinsDoubled += "0"
+        embed = discord.Embed(title="Negotiate bet",
+                              description=f"{user2.mention} {str(user1)} wants to play **{gameName}** with you with a "
+                                          f"bet of **{coins} coins**. Do you want to play for **{coins} coins**?\n"
+                                          f"*You have 30 seconds to respond.*",
+                              color=colors["warning"])
+        embed.set_footer(text=f"If you win, you'll get {coinsDoubled} coins. If you lose, you'll lose {coins} coins.")
+        msg = await ctx.send(embed=embed)
+
+        for i in ("✅", "❌"):
+            try:
+                await msg.add_reaction(i)
+            except (discord.Forbidden, discord.NotFound):
+                pass
+
+        def confirm(react, reactor):
+            return reactor == user2 and str(react.emoji) in ("✅", "❌") \
+                   and ctx.message.id == react.message.id
+
+        try:
+            reaction, user = await self.bot.wait_for('reaction_add', timeout=30, check=confirm)
+        except asyncio.TimeoutError:  # timeout cancel
+            for i in ("✅", "❌"):
+                try:
+                    await msg.remove_reaction(i, ctx.bot.user)
+                except (discord.Forbidden, discord.NotFound):
+                    pass
+            await ctx.send("Negotiation timed out, game cancelled.")
+            return False
+        else:
+            for i in ("✅", "❌"):
+                try:
+                    await msg.remove_reaction(i, user2)
+                    await msg.remove_reaction(i, ctx.bot.user)
+                except (discord.Forbidden, discord.NotFound):
+                    pass
+
+            if reaction.emoji == "✅":
+                return True
+            else:
+                await ctx.send(f"Game cancelled by {user2.mention}.", allowed_mentions=discord.AllowedMentions.none())
+                return False
 
     @commands.command()
     async def daily(self, ctx):
@@ -108,13 +162,14 @@ class Economy(commands.Cog):
 
     @commands.command(hidden=True, aliases=['tttB', "tic_tac_toe_beta"])
     @commands.check(isAdmin)
-    async def tictactoeBeta(self, ctx, victim: discord.Member):
+    async def tictactoeBeta(self, ctx, victim: discord.Member, bet: float):
         """Beta tic tac toe thing"""
         if not victim.bot:
             if victim.id != ctx.author.id:
                 if victim.permissions_in(ctx.channel).read_messages:
-                    game = discordTicTac(ctx, victim)
-                    await game.run()
+                    if await self.negotiateBet(ctx, ctx.author, victim, "Tic-Tac-Toe", bet):
+                        game = discordTicTac(ctx, victim)
+                        await game.run()
                 else:
                     raise CommandErrorMsg("Doesn't seem very fair if they can't even see the game...\n"
                                           "(Other user does not have read permissions for this channel.)")
