@@ -2,7 +2,7 @@ import asyncio
 import discord
 
 
-async def confirm(ctx, targetUser: discord.User, confirmMess: discord.Message, timeout: int = 30):
+async def confirm(ctx, targetUser: discord.User, confirmMess: discord.Message, timeout: int = 30, delete: bool = False):
     """
     A general confirm prompt function that can be attached to any message.
 
@@ -24,7 +24,13 @@ async def confirm(ctx, targetUser: discord.User, confirmMess: discord.Message, t
         return e
     else:
         if reaction.emoji == '✅':
-            await confirmMess.delete()
+            if delete:
+                await confirmMess.delete()
+            else:
+                try:
+                    await confirmMess.remove_reaction('✅', user)
+                except (discord.Forbidden, discord.NotFound):
+                    pass
             return True
 
         else:  # ❌ react cancel
