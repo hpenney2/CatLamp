@@ -8,6 +8,7 @@ import asyncio
 from CatLampPY import colors, CommandErrorMsg
 from cogs.commands.games.tictacdiscord import discordTicTac
 from cogs.misc.isAdmin import isAdmin
+from cogs.misc.confirm import confirm
 
 
 async def hasProfile(db, user: discord.User):
@@ -77,19 +78,9 @@ class Economy(commands.Cog):
         embed.set_footer(text=f"If you win, you'll get {coinsDoubled} coins. If you lose, you'll lose {coins} coins.")
         msg = await ctx.send(embed=embed)
 
-        for i in ("✅", "❌"):
-            try:
-                await msg.add_reaction(i)
-            except (discord.Forbidden, discord.NotFound):
-                pass
+        response = await confirm(ctx, confirmMess=msg, targetUser=user2)
 
-        def confirm(react, reactor):
-            return reactor == user2 and str(react.emoji) in ("✅", "❌") \
-                   and ctx.message.id == react.message.id
-
-        try:
-            reaction, user = await self.bot.wait_for('reaction_add', timeout=30, check=confirm)
-        except asyncio.TimeoutError:  # timeout cancel
+        if isinstance(response, asyncio.TimeoutError):
             for i in ("✅", "❌"):
                 try:
                     await msg.remove_reaction(i, ctx.bot.user)
@@ -97,19 +88,44 @@ class Economy(commands.Cog):
                     pass
             await ctx.send("Negotiation timed out, game cancelled.")
             return False
-        else:
-            for i in ("✅", "❌"):
-                try:
-                    await msg.remove_reaction(i, user2)
-                    await msg.remove_reaction(i, ctx.bot.user)
-                except (discord.Forbidden, discord.NotFound):
-                    pass
+        elif response is False:
+            await ctx.send(f"Game cancelled by {user2.mention}.", allowed_mentions=discord.AllowedMentions.none())
+        return response  # if it's not Timeout, it has to be True or False
 
-            if reaction.emoji == "✅":
-                return True
-            else:
-                await ctx.send(f"Game cancelled by {user2.mention}.", allowed_mentions=discord.AllowedMentions.none())
-                return False
+        # for i in ("✅", "❌"):
+        #     try:
+        #         await msg.add_reaction(i)
+        #     except (discord.Forbidden, discord.NotFound):
+        #         pass
+
+    #
+    # def confirm(react, reactor):
+    #     return reactor == user2 and str(react.emoji) in ("✅", "❌") \
+    #            and ctx.message.id == react.message.id
+    #
+    # try:
+    #     reaction, user = await self.bot.wait_for('reaction_add', timeout=30, check=confirm)
+    # except asyncio.TimeoutError:  # timeout cancel
+    #     for i in ("✅", "❌"):
+    #         try:
+    #             await msg.remove_reaction(i, ctx.bot.user)
+    #         except (discord.Forbidden, discord.NotFound):
+    #             pass
+    #     await ctx.send("Negotiation timed out, game cancelled.")
+    #     return False
+    # else:
+    #     for i in ("✅", "❌"):
+    #         try:
+    #             await msg.remove_reaction(i, user2)
+    #             await msg.remove_reaction(i, ctx.bot.user)
+    #         except (discord.Forbidden, discord.NotFound):
+    #             pass
+    #
+    #     if reaction.emoji == "✅":
+    #         return True
+    #     else:
+    #         await ctx.send(f"Game cancelled by {user2.mention}.", allowed_mentions=discord.AllowedMentions.none())
+    #         return False
 
     @commands.command()
     async def daily(self, ctx):
@@ -121,8 +137,8 @@ class Economy(commands.Cog):
         if now >= nextDaily:
             await self.econ.update_one({"_id": str(ctx.author.id)},
                                        {
-                                            "$inc": {"balance": 25},
-                                            "$set": {"dailyLastCollected": datetime.datetime.utcnow()}
+                                           "$inc": {"balance": 25},
+                                           "$set": {"dailyLastCollected": datetime.datetime.utcnow()}
                                        })
             coins = str(round(profile.get("balance", 0.00) + 25, 2))
             if coins.endswith(".0"):
