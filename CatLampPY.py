@@ -99,7 +99,8 @@ client = commands.AutoShardedBot(
     command_prefix=commands.when_mentioned_or('+'), case_insensitive=True, intents=intents,
     help_command=EmbedHelpCommand(verify_checks=False, show_hidden=False), chunk_guilds_at_startup=False
 )
-client.mongo = motor.motor_asyncio.AsyncIOMotorClient("mongodb://localhost:27017/")
+client.mongo = motor.motor_asyncio.AsyncIOMotorClient("mongodb://localhost:27017/",
+                                                      serverSelectionTimeoutMS=10000)
 # Examples:
 # client.mongo["db"]["reminders"]
 # client.mongo["db"]["settings"]
