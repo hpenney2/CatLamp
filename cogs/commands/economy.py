@@ -80,8 +80,8 @@ class Economy(commands.Cog):
             coinsDoubled = "{:.2f}".format(float(coinsDoubled))
         embed = discord.Embed(title="Negotiate bet",
                               description=f"{user2.mention} {str(user1)} wants to play **{gameName}** with you with a "
-                                          f"bet of **{coinsStr} {clc}**. Do you want to play for **{coinsStr} {clc}**?\n"
-                                          f"*You have 30 seconds to respond.*",
+                                          f"bet of **{coinsStr} {clc}**. Do you want to play for **{coinsStr} {clc}**?"
+                                          f"\n*You have 30 seconds to respond.*",
                               color=colors["warning"])
         embed.set_footer(text=f"If you win, you'll get {coinsDoubled} coins. If you lose, you'll lose {coinsStr} coins.")
         msg = await ctx.send(embed=embed)

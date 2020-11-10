@@ -76,8 +76,10 @@ class discordTicTac(ticTacToe):
             self.p2 = ctx.author
 
     async def run(self):
+        none = "<:none:775835552079151144>"
         self.embed = discord.Embed(title=f'Starting {self.ctx.author}\'s game of TicTacToe...',
-                                   description=f"⬛⬛⬛\n⬛⬛⬛\n⬛⬛⬛", color=0x00ff00)
+                                   description=f"{none}{none}{none}\n{none}{none}{none}\n{none}{none}{none}",
+                                   color=0x00ff00)
 
         self.confirmMess = await self.ctx.send(embed=self.embed)
 
@@ -86,9 +88,9 @@ class discordTicTac(ticTacToe):
 
         self.gfx = DiscordX(target_message=self.confirmMess, data=dictToScanLines(self.pieces), resolution=[3, 3],
                             embed=self.embed,
-                            conversionTable={'None': '⬛', 'X': '❌', 'O': '⭕',
-                                             'oS': '<:oS:757696246755622923>', 'xS': '<:xS:757697702216597604>',
-                                             'noneS': '<:noneS:757697725906026547>'})
+                            conversionTable={'None': none, 'X': '<:x_:775857687450615818>',
+                                             'O': '<:o_:775857708246761473>', 'oS': '<:oS:775834581235531853>',
+                                             'xS': '<:xS:775834560989626438>', 'noneS': '<:noneS:775834603717918762>'})
 
         await self.p1In.initReactions()
 
