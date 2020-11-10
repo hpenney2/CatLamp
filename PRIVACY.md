@@ -17,7 +17,8 @@ We collect user IDs for reference in reminders (`+remind`).
 We collect server IDs and server names (on join and leave) for our audit logs.
 
 ### User-Submitted Content
-- We save the note attached to any reminders (`+remind`) for reference.
+- We save data related to any reminders (`+remind`) for reference and usage in command execution.
+- We log the identity of voters on our [top.gg page](https://top.gg/bot/712394747548794950) to ensure that rewards are awarded.
 - We anonymously save search queries provided in the reddit command (`+reddit`).
 
 ### Involved Users' IDs
