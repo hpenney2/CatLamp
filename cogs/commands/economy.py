@@ -44,6 +44,10 @@ async def getProfile(db, user: discord.User):
         raise CommandErrorMsg("Bots can't have profiles!")
 
 
+clc = "<:CLC:775829898958209044>"
+
+
+# noinspection PyMethodMayBeStatic
 class Economy(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
@@ -65,20 +69,24 @@ class Economy(commands.Cog):
     async def negotiateBet(self, ctx: commands.Context, user1, user2, gameName: str,
                            coins: float) -> bool:
         coinsDoubled = str(round(coins * 2, 2))
-        coins = str(round(coins, 2))
-        if coins.endswith(".0"):
-            coins += "0"
+        coinsStr = str(round(coins, 2))
+        if coinsStr.endswith(".0"):
+            coinsStr = int(float(coinsStr))
+        else:
+            coinsStr = "{:.2f}".format(float(coinsStr))
         if coinsDoubled.endswith(".0"):
-            coinsDoubled += "0"
+            coinsDoubled = int(float(coinsDoubled))
+        else:
+            coinsDoubled = "{:.2f}".format(float(coinsDoubled))
         embed = discord.Embed(title="Negotiate bet",
                               description=f"{user2.mention} {str(user1)} wants to play **{gameName}** with you with a "
-                                          f"bet of **{coins} coins**. Do you want to play for **{coins} coins**?\n"
+                                          f"bet of **{coinsStr} {clc}**. Do you want to play for **{coinsStr} {clc}**?\n"
                                           f"*You have 30 seconds to respond.*",
                               color=colors["warning"])
-        embed.set_footer(text=f"If you win, you'll get {coinsDoubled} coins. If you lose, you'll lose {coins} coins.")
+        embed.set_footer(text=f"If you win, you'll get {coinsDoubled} coins. If you lose, you'll lose {coinsStr} coins.")
         msg = await ctx.send(embed=embed)
 
-        response = await confirm(ctx, confirmMess=msg, targetUser=user2)
+        response = await confirm(ctx, confirmMess=msg, targetUser=user2, delete=True)
 
         if isinstance(response, asyncio.TimeoutError):
             for i in ("✅", "❌"):
@@ -142,9 +150,11 @@ class Economy(commands.Cog):
                                        })
             coins = str(round(profile.get("balance", 0.00) + 25, 2))
             if coins.endswith(".0"):
-                coins += "0"
+                coins = int(float(coins))
+            else:
+                coins = "{:.2f}".format(float(coins))
             embed = discord.Embed(title="Daily collected",
-                                  description=f"Collected 25 coins! *Your new balance is {coins} coins.*\n"
+                                  description=f"Collected 25 {clc}! *Your new balance is {coins} {clc}.*\n"
                                               f"Come back tomorrow for more coins.",
                                   color=colors["success"])
             embed.set_footer(text="You can get more coins by voting for us on top.gg. See +vote for more details.")
@@ -165,11 +175,13 @@ class Economy(commands.Cog):
         profile = await getProfile(self.econ, ctx.author)
         coins = str(round(profile.get("balance", 0.00), 2))
         if coins.endswith(".0"):
-            coins += "0"
+            coins = int(float(coins))
+        else:
+            coins = "{:.2f}".format(float(coins))
         embed = discord.Embed(title=f"{ctx.author.name}'s balance",
                               color=discord.Color.from_rgb(random.randint(0, 255), random.randint(0, 255),
                                                            random.randint(0, 255)))
-        embed.add_field(name="Coins", value=coins)
+        embed.add_field(name="Coins", value=coins + f" {clc}")
         embed.set_footer(text="You can get more coins by collecting your daily (+daily) "
                               "and by voting for us on top.gg (+vote).")
         await ctx.send(embed=embed)
