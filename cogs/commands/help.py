@@ -108,7 +108,7 @@ class EmbedHelpCommand(commands.HelpCommand):
             if self.context.invoked_with.lower() != 'help':  # assumes that any ctx.send_help() is an arg error
                 # noinspection PyDunderSlots,PyUnresolvedReferences
                 embed.color = colors["error"]
-                embed.set_author(name="This command requires more arguments.",
+                embed.set_author(name=self.context.invoked_with,
                                  icon_url='https://cdn.discordapp.com/'
                                           'attachments/775506680926306306/775509240667963399/warning.png')
 
