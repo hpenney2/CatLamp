@@ -40,7 +40,7 @@ class Name(commands.Cog):
         await self.client.wait_until_ready()
         # sleep until 12 AM
         now = datetime.datetime.now() + datetime.timedelta(days=1)
-        remaining = (now.replace(hour=0, minute=0, second=0, microsecond=0) - now).total_seconds()
+        remaining = abs(now.replace(hour=0, minute=0, second=0, microsecond=0) - now).total_seconds()
         await asyncio.sleep(remaining)
 
 
