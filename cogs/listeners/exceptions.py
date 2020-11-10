@@ -21,10 +21,14 @@ class Exceptions(commands.Cog):
             errorStr = None
             if isinstance(error, commands.BadArgument):
                 if "int" in str(error) or "float" in str(error):
-                    param = str(error).split("parameter ", 1)[1][:-1]
-                    errorStr = f"{param} must be a number."
+                    param = (str(error).split("parameter ", 1)[1][:-1]).replace("_", " ")
+                    ctx.invoked_with = f"{param} must be a number."
+                    await ctx.send_help(ctx.command)
+                    return
             elif isinstance(error, commands.MissingRequiredArgument):
-                errorStr = "This command requires more arguments. Check +help for details."
+                ctx.invoked_with = "This command requires more arguments. See below for details."
+                await ctx.send_help(ctx.command)
+                return
             elif isinstance(error, commands.BadUnionArgument) and \
                     str(error).startswith('Could not convert "user" into User or int.'):
                 errorStr = f"User not found!"

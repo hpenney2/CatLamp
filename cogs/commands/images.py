@@ -388,7 +388,7 @@ class Images(commands.Cog, name="Image Manipulation"):
 
             await sendImage(ctx, outImg, "upside_down.png")
 
-    @commands.command(cooldown_after_parsing=True)
+    @commands.command(cooldown_after_parsing=True, hidden=True)
     @commands.check(isAdmin)
     @commands.cooldown(1, 5, commands.BucketType.user)
     async def rotate(self, ctx, degrees: float, *, user_or_url: Union[discord.Member, str, None] = None):
