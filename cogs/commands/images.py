@@ -388,8 +388,7 @@ class Images(commands.Cog, name="Image Manipulation"):
 
             await sendImage(ctx, outImg, "upside_down.png")
 
-    @commands.command(cooldown_after_parsing=True, hidden=True)
-    @commands.check(isAdmin)
+    @commands.command(cooldown_after_parsing=True)
     @commands.cooldown(1, 5, commands.BucketType.user)
     async def rotate(self, ctx, degrees: float, *, user_or_url: Union[discord.Member, str, None] = None):
         """Rotates the attached image or your/the mentioned user's avatar clockwise by the specified number of degrees.
