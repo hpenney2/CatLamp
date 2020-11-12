@@ -12,7 +12,6 @@ import re as regex
 import aiohttp
 # pylint: disable=import-error
 from CatLampPY import CommandErrorMsg
-from cogs.misc.isAdmin import isAdmin
 
 
 async def getImage(ctx, user: Union[discord.Member, str, None] = None):
