@@ -388,40 +388,50 @@ class Images(commands.Cog, name="Image Manipulation"):
 
             await sendImage(ctx, outImg, "upside_down.png")
 
-    @commands.command(cooldown_after_parsing=True, hidden=True)
-    @commands.check(isAdmin)
+    @commands.command(cooldown_after_parsing=True)
     @commands.cooldown(1, 5, commands.BucketType.user)
     async def rotate(self, ctx, degrees: float, *, user_or_url: Union[discord.Member, str, None] = None):
-        """Rotates the attached image or your/the mentioned user's avatar
-        clockwise by the specified number of degrees."""
+        """Rotates the attached image or your/the mentioned user's avatar clockwise by the specified number of degrees.
+        (Algorithms contributed by Blue#1287 (494615059474153483))"""
         async with ctx.channel.typing():
             image = await getImage(ctx, user_or_url)
 
             image = image.convert('RGBA')  # make it so transparency generates instead of black
 
-            mode = None
-            offsetFactor = (degrees / abs(degrees))
-            originalHeight = image.height
-            originalWidth = image.width
-            if abs(degrees % 180) == 90:  # handling for rotating by multiples 90 that aren't multiples of 180
-                image, mode = simpSquare(image)
+            angleOffset = degrees % 180  # this is what we'll use instead of input
+
+            diagonal = math.sqrt(image.width ** 2 + image.height ** 2)  # finding the length of the rectangle's diagonal
+            
+            # this very well might return radians instead of degrees so we gotta convert
+            b = math.degrees(math.atan(image.width / image.height))
+
+            # finding angle of the diagonal of the rectangle to the uhhhh global 90 degree line uhhhhh
+            a = 90 - (angleOffset + b)
+
+            rotatedWidth = diagonal * math.cos(math.radians(a))  # this requires radians and not degrees
+            
+            b = math.degrees(math.atan(image.height / image.width))
+            
+            # finding angle of the diagonal of the rectangle to the uhhhh global 90 degree line uhhhhh
+            a = 90 - (angleOffset + b)
+
+            rotatedHeight = diagonal * math.cos(math.radians(a))  # this requires radians and not degrees
+
+            if rotatedWidth > rotatedHeight:
+                biggest = math.floor(rotatedWidth)
             else:
-                # why did i sin()?
-                # cos() i'm bad at math hahaha help me
-                # thank you very much https://stackoverflow.com/questions/3231176/how-to-get-size-of-a-rotated-rectangle
-                angle = abs(degrees % 180)
-                a = math.ceil(abs(image.width * math.sin(angle)) + abs(image.height * math.cos(angle)))
-                b = math.ceil(abs(image.width * math.cos(angle)) + abs(image.height * math.sin(angle)))
-                result = Image.new(image.mode, (a, b), (0, 0, 0, 0))
-                result.paste(image, ((result.height // 2) - image.height // 2, (result.width // 2) - image.width // 2))
-                image = result
+                biggest = math.floor(rotatedHeight)
+            result = Image.new(image.mode, (biggest, biggest), (0, 0, 0, 0))  # big image to prevent cutting off stuff
+            # paste the image on in a centered position
+            result.paste(image, ((result.width // 2) - (image.width // 2), (result.height // 2) - image.height // 2))
 
-            outImg = image.rotate(angle=-degrees)  # for some cursed reason, rotate() defaults to counterclockwise
+            outImg = result.rotate(angle=-degrees)  # for some cursed reason, rotate() defaults to counterclockwise
 
-            if mode == 'Y':  # trim off the extra width
-                outImg = outImg.crop(((outImg.width - offsetFactor * originalHeight), 0, outImg.width, outImg.height))
-            elif mode == 'X':  # trim off the extra height
-                outImg = outImg.crop((0, 0, outImg.width, (offsetFactor * originalWidth)))
+            # do some centering math stuff to find the coordinates of the actual content
+            outImg = outImg.crop((round(outImg.width / 2 - rotatedWidth / 2),
+                                  round(outImg.height / 2 - rotatedHeight / 2),
+                                  round(outImg.width / 2 + rotatedWidth / 2),
+                                  round(outImg.height / 2 + rotatedHeight / 2)))
 
             await sendImage(ctx, outImg, "rotate.png")
 
