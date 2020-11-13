@@ -6,6 +6,7 @@ coordinateTypeIThink = List[int]
 
 
 class DiscordX:
+    """Discord game display class utilizing emoji in embeds."""
     def __init__(self, target_message: discord.Message, data: list, resolution: coordinateTypeIThink,
                  embed: discord.Embed, conversionTable: dict = None, noWarn: bool = False):
         if conversionTable is not None:
@@ -34,6 +35,9 @@ class DiscordX:
         self.embed = data
 
     async def blit(self):
+        """
+        Convert the (list) scan-line data to emoji grids in an embed, then edit the target message with the new embed.
+        """
         interlaced = []
         temp = ''
         counter = 0
@@ -81,7 +85,17 @@ class DiscordX:
 
 
 def dictToScanLines(pieces: dict):
+    """Turns a dictionary into scan-line data in the order the dictionary data is presented."""
     icons = []
     for i in pieces.values():
         icons.append(i)
     return icons
+
+
+def twoDimensionalIndexToScanLines(pieces: list):
+    """Turns a 2D index into scan-line data."""
+    output = []
+    for row in pieces:
+        for o in row:
+            output.append(o)
+    return output
