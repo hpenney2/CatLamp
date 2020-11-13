@@ -5,7 +5,7 @@ from aiohttp import web
 from discord.ext import commands
 # pylint: disable=import-error
 from CatLampPY import config, colors
-from cogs.commands.economy import getProfile
+from cogs.commands.economy import getProfile, incBalance, nformat, clc
 
 
 # noinspection PyAttributeOutsideInit
@@ -51,22 +51,16 @@ class DBL(commands.Cog):
                     except discord.NotFound:
                         userName = "Unknown User"
 
-                    profile = await getProfile(self.econ, user)
-                    await self.econ.update_one({"_id": str(userId)},
-                                               {
-                                                   "$inc": {"balance": 15}
-                                               })
+                    coins = await incBalance(self.econ, user, 15)
+                    coins = nformat(coins)
 
                     await botlogs.send(f"User `{userName} ({userId})` voted for the bot on DBL and has been credited "
                                        f"15 coins.")
                     if user:
                         try:
-                            coins = str(round(profile.get("balance", 0.00) + 15, 2))
-                            if coins.endswith(".0"):
-                                coins += "0"
                             embed = discord.Embed(title="Vote reward credited",
                                                   description=f"Thank you for voting for us! You have been credited "
-                                                              f"15 coins.\n*Your new balance is {coins} coins.*",
+                                                              f"15 {clc}.\n*Your new balance is {coins} {clc}.*",
                                                   color=colors["success"])
                             await user.send(embed=embed)
                         except discord.Forbidden:

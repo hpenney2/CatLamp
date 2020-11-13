@@ -63,9 +63,11 @@ directionShuffle = {
 
 # noinspection PyAttributeOutsideInit,PyPropertyAccess,PyMethodOverriding
 class discordTicTac(ticTacToe):
-    def __init__(self, ctx: commands.Context, p2: discord.user):
+    def __init__(self, ctx: commands.Context, p2: discord.user, bet: float, db):
         ticTacToe.__init__(self)
         self.ctx = ctx
+        self.bet = bet
+        self.econ = db
 
         # randomize players
         if random.randrange(0, 2):
@@ -76,10 +78,12 @@ class discordTicTac(ticTacToe):
             self.p2 = ctx.author
 
     async def run(self):
+        from cogs.commands.economy import nformat
         none = "<:none:775835552079151144>"
         self.embed = discord.Embed(title=f'Starting {self.ctx.author}\'s game of TicTacToe...',
                                    description=f"{none}{none}{none}\n{none}{none}{none}\n{none}{none}{none}",
                                    color=0x00ff00)
+        self.embed.set_footer(text=f"Bet: {nformat(self.bet)} coins")
 
         self.confirmMess = await self.ctx.send(embed=self.embed)
 
@@ -183,7 +187,13 @@ class discordTicTac(ticTacToe):
         return True
 
     async def announceWin(self, winner: discord.User, ID: int):
-        await self.ctx.send(f'Player {winner.mention} ({self.IDtoMark(ID)}) wins!')
+        from cogs.commands.economy import incBalance, clc, nformat
+        if winner.id == self.p1.id:
+            loser = self.p2
+        else:
+            loser = self.p1
+        await incBalance(self.econ, loser, self.bet)
+        await self.ctx.send(f'Player {winner.mention} ({self.IDtoMark(ID)}) wins {nformat(self.bet * 2)} {clc}!')
 
     async def cleanBoard(self):
         asyncio.ensure_future(self.p1In.removeReactions(('⬆', '⬇', '⬅', '➡', '✅'), self.ctx.bot.user))

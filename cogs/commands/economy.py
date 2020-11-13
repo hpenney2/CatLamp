@@ -1,6 +1,7 @@
 import datetime
 import discord
 from discord.ext import commands
+from discord.ext.commands import BucketType
 import random
 import copy
 import asyncio
@@ -44,6 +45,48 @@ async def getProfile(db, user: discord.User):
         raise CommandErrorMsg("Bots can't have profiles!")
 
 
+async def userCanAfford(db, user: discord.User, coins: float):
+    if coins < 0:
+        return False
+    profile = await getProfile(db, user)
+    balance = profile.get("balance", 0.00)
+    if balance >= coins:
+        return True
+    else:
+        return False
+
+
+# noinspection PyDefaultArgument
+async def incBalance(db, user: discord.User, incrementBy: float, setDict: dict = None):
+    profile = await getProfile(db, user)
+    balance = profile.get("balance", 0.00)
+    if (balance + incrementBy) < 0:
+        incrementBy = -balance
+    if setDict:
+        setDict["balance"] = round(balance + incrementBy, 2)
+        await db.update_one({"_id": str(user.id)},
+                            {
+                                # "$inc": {"balance": incrementBy},
+                                "$set": setDict
+                            })
+    else:
+        await db.update_one({"_id": str(user.id)},
+                            {
+                                # "$inc": {"balance": incrementBy}
+                                "$set": {"balance": round(balance + incrementBy, 2)}
+                            })
+    newBalance = round(balance + incrementBy, 2)
+    return newBalance
+
+
+def nformat(number: float):
+    if str(number).endswith(".0"):
+        number = int(number)
+    else:
+        number = "{:.2f}".format(number)
+    return str(number)
+
+
 clc = "<:CLC:775829898958209044>"
 
 
@@ -68,24 +111,26 @@ class Economy(commands.Cog):
 
     async def negotiateBet(self, ctx: commands.Context, user1, user2, gameName: str,
                            coins: float) -> bool:
-        coinsDoubled = str(round(coins * 2, 2))
-        coinsStr = str(round(coins, 2))
-        if coinsStr.endswith(".0"):
-            coinsStr = int(float(coinsStr))
-        else:
-            coinsStr = "{:.2f}".format(float(coinsStr))
-        if coinsDoubled.endswith(".0"):
-            coinsDoubled = int(float(coinsDoubled))
-        else:
-            coinsDoubled = "{:.2f}".format(float(coinsDoubled))
-        embed = discord.Embed(title="Negotiate bet",
-                              description=f"{user2.mention} {str(user1)} wants to play **{gameName}** with you with a "
-                                          f"bet of **{coinsStr} {clc}**. Do you want to play for **{coinsStr} {clc}**?"
-                                          f"\n*You have 30 seconds to respond.*",
-                              color=colors["warning"])
-        embed.set_footer(text=f"If you win, you'll get {coinsDoubled} coins. If you lose, you'll lose {coinsStr} coins.")
-        msg = await ctx.send(embed=embed)
+        if not await userCanAfford(self.econ, user1, coins):
+            await ctx.send("You can't afford that bet!")
+            return False
+        elif not await userCanAfford(self.econ, user2, coins):
+            await ctx.send("The other user can't afford that bet!")
+            return False
+        coinsStr = round(coins, 2)
+        coinsStr = nformat(coinsStr)
+        coinsDoubled = round(coins, 2) * 2
+        coinsDoubled = nformat(coinsDoubled)
 
+        embed = discord.Embed(title="Negotiate bet",
+                              description=f"{user2.mention} **{user1.name}** wants to play **{gameName}** with you "
+                                          f"with a bet of **{coinsStr} {clc}**. Do you want to play for "
+                                          f"**{coinsStr} {clc}**?\n*You have 30 seconds to respond.*",
+                              color=colors["warning"])
+        embed.set_footer(text=f"If you win, you'll get {coinsDoubled} coins. "
+                              f"If you lose, you'll lose {coinsStr} coins.")
+
+        msg = await ctx.send(embed=embed)
         response = await confirm(ctx, confirmMess=msg, targetUser=user2, delete=True)
 
         if isinstance(response, asyncio.TimeoutError):
@@ -143,16 +188,8 @@ class Economy(commands.Cog):
         nextDaily = lastDaily + datetime.timedelta(hours=24)
         now = datetime.datetime.utcnow()
         if now >= nextDaily:
-            await self.econ.update_one({"_id": str(ctx.author.id)},
-                                       {
-                                           "$inc": {"balance": 25},
-                                           "$set": {"dailyLastCollected": datetime.datetime.utcnow()}
-                                       })
-            coins = str(round(profile.get("balance", 0.00) + 25, 2))
-            if coins.endswith(".0"):
-                coins = int(float(coins))
-            else:
-                coins = "{:.2f}".format(float(coins))
+            coins = await incBalance(self.econ, ctx.author, 25, {"dailyLastCollected": datetime.datetime.utcnow()})
+            coins = nformat(coins)
             embed = discord.Embed(title="Daily collected",
                                   description=f"Collected 25 {clc}! *Your new balance is {coins} {clc}.*\n"
                                               f"Come back tomorrow for more coins.",
@@ -170,18 +207,16 @@ class Economy(commands.Cog):
             await ctx.send(embed=embed)
 
     @commands.command(aliases=["bal"])
-    async def balance(self, ctx):
+    @commands.cooldown(5, 4, BucketType.user)
+    async def balance(self, ctx, user: discord.Member = None):
         """Checks your current coin balance."""
-        profile = await getProfile(self.econ, ctx.author)
-        coins = str(round(profile.get("balance", 0.00), 2))
-        if coins.endswith(".0"):
-            coins = int(float(coins))
-        else:
-            coins = "{:.2f}".format(float(coins))
-        embed = discord.Embed(title=f"{ctx.author.name}'s balance",
+        user = user or ctx.author
+        profile = await getProfile(self.econ, user)
+        coins = nformat(profile.get("balance", 0.00))
+        embed = discord.Embed(title=f"{user.name}'s balance",
                               color=discord.Color.from_rgb(random.randint(0, 255), random.randint(0, 255),
                                                            random.randint(0, 255)))
-        embed.add_field(name="Coins", value=coins + f" {clc}")
+        embed.add_field(name="Coins", value=f"{coins} {clc}")
         embed.set_footer(text="You can get more coins by collecting your daily (+daily) "
                               "and by voting for us on top.gg (+vote).")
         await ctx.send(embed=embed)
@@ -196,7 +231,8 @@ class Economy(commands.Cog):
             if victim.id != ctx.author.id:
                 if victim.permissions_in(ctx.channel).read_messages:
                     if await self.negotiateBet(ctx, ctx.author, victim, "Tic-Tac-Toe", bet):
-                        game = discordTicTac(ctx, victim)
+                        bet = round(bet, 2)
+                        game = discordTicTac(ctx, victim, bet, self.econ)
                         await game.run()
                 else:
                     raise CommandErrorMsg("Doesn't seem very fair if they can't even see the game...\n"

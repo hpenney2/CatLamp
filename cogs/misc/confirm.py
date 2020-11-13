@@ -28,16 +28,22 @@ async def confirm(ctx, targetUser: discord.User, confirmMess: discord.Message, t
                 await confirmMess.delete()
             else:
                 try:
+                    await confirmMess.clear_reactions()
+                except discord.Forbidden:
                     await confirmMess.remove_reaction('✅', user)
-                except (discord.Forbidden, discord.NotFound):
+                    await confirmMess.remove_reaction('✅', ctx.bot.user)
+                    await confirmMess.remove_reaction('❌', ctx.bot.user)
+                except discord.NotFound:
                     pass
             return True
 
         else:  # ❌ react cancel
-            await confirmMess.remove_reaction('✅', ctx.bot.user)
-            await confirmMess.remove_reaction('❌', ctx.bot.user)
-        try:
-            await confirmMess.remove_reaction('❌', user)
-        except (discord.Forbidden, discord.NotFound):
-            pass
-        return False
+            try:
+                await confirmMess.clear_reactions()
+            except discord.Forbidden:
+                await confirmMess.remove_reaction('❌', user)
+                await confirmMess.remove_reaction('✅', ctx.bot.user)
+                await confirmMess.remove_reaction('❌', ctx.bot.user)
+            except discord.NotFound:
+                pass
+            return False
