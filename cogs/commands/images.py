@@ -29,7 +29,7 @@ async def getImage(ctx, user: Union[discord.Member, str, None] = None):
             r'(?::\d+)?'  # optional port
             r'(?:/?|[/?]\S+)$', regex.IGNORECASE)
         if regex.match(matcher, user) and user[-4:] in ('.png', '.jpg', 'jpeg', '.gif'):
-            async with aiohttp.ClientSession() as session, session.get(user) as res:
+            async with aiohttp.request('get', user) as res:
                 if res.status == 200:
                     image = Image.open(io.BytesIO(await res.read()))
                 else:
