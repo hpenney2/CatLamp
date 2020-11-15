@@ -397,7 +397,7 @@ class Images(commands.Cog, name="Image Manipulation"):
 
             image = image.convert('RGBA')  # make it so transparency generates instead of black
 
-            angleOffset = degrees % 180  # this is what we'll use instead of input
+            angleOffset = degrees % 90  # this is what we'll use instead of input
 
             diagonal = math.sqrt(image.width ** 2 + image.height ** 2)  # finding the length of the rectangle's diagonal
             
