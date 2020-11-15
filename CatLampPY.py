@@ -29,7 +29,9 @@ def requirementsInstall():
 try:
 
     if __name__ == '__main__':
-        requirementsInstall()
+        turnModuleInstallOffForEgghead = False
+        if not turnModuleInstallOffForEgghead:
+            requirementsInstall()
 
         print("Checking if all required modules are installed...")
         from pkgutil import find_loader
@@ -107,6 +109,7 @@ client.mongo = motor.motor_asyncio.AsyncIOMotorClient("mongodb://localhost:27017
 client.cmds = []
 client.helpEmbeds = []
 client.reminders = client.mongo["db"]["reminders"]
+client.guildsDB = client.mongo["db"]["guilds"]
 client.reminderTasks = {}
 client.redditStats = {'Date': datetime.date.today().isoformat()}  # initialize the statistics with the current day
 colors = tables.getColors()
