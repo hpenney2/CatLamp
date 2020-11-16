@@ -401,6 +401,9 @@ class Images(commands.Cog, name="Image Manipulation"):
             image = image.convert('RGBA')  # make it so transparency generates instead of black
 
             angleOffset = degrees % 90  # this is what we'll use instead of input
+            if angleOffset == 0:
+                if degrees % 180 == 90:  # plot twist, the angle was also 90
+                    angleOffset = 90
 
             diagonal = math.sqrt(image.width ** 2 + image.height ** 2)  # finding the length of the rectangle's diagonal
             
