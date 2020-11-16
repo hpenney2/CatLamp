@@ -14,12 +14,16 @@ def getColors():
 def getTimes():
     """Returns table of time units for use with reminders."""
     return {
+        "s": 1,
         "second": 1,
         "seconds": 1,
+        "m": 60,
         "minute": 60,
         "minutes": 60,
+        "h": 3600,
         "hour": 3600,
         "hours": 3600,
+        "d": 3600 * 24,  # i cant math
         "day": 3600 * 24,  # i cant math
         "days": 3600 * 24
     }
