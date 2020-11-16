@@ -231,10 +231,10 @@ class Fun(commands.Cog):
             await ctx.send('oy something went wrong big oh no')
 
     async def redditMoment(self, ctx: commands.Context, method):
-        randPost = None
         satisfied = False
         errorMess = ''
         tries = 0
+        randPost = None
         while not satisfied:
             if tries >= 15:
                 errorMess = "Failed to get a post."
@@ -248,14 +248,13 @@ class Fun(commands.Cog):
                 len(randPost.selftext) > 2048) or \
                     (randPost.over_18 and not await self.nsfwCheck(ctx, "post")):
                 tries += 1
-                del randPost
+                randPost = None
                 continue
             if not (randPost.url or randPost.selftext):  # just because i'm a nervous idiot so i need to check
                 tries += 1
-                del randPost
+                randPost = None
                 continue
             satisfied = True
-        # noinspection PyUnboundLocalVariable
         return randPost, errorMess
 
     @commands.command(hidden=True)
