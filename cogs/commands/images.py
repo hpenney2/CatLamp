@@ -21,6 +21,9 @@ async def getImage(ctx, user: Union[discord.Member, str, None] = None):
     elif user and isinstance(user, discord.Member):
         image = Image.open(io.BytesIO(await user.avatar_url_as(format="png").read()))
     elif user and isinstance(user, str):
+        if "?" in user:  # remove get tags for processing and potentially higher quality (no resolution get tags)
+            user = user.split("?")[0]
+
         matcher = regex.compile(
             r'^(?:http|ftp)s?://'  # http:// or https://
             r'(?:(?:[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?\.)+(?:[A-Z]{2,6}\.?|[A-Z0-9-]{2,}\.?)|'  # domain...
