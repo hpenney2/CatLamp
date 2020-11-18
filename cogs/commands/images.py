@@ -15,11 +15,27 @@ from CatLampPY import CommandErrorMsg
 
 
 async def getImage(ctx, user: Union[discord.Member, str, None] = None):
-    image = Image.open(io.BytesIO(await ctx.author.avatar_url_as(format="png").read()))
+    try:
+        image = Image.open(io.BytesIO(await ctx.author.avatar_url_as(format="png").read()))
+    except discord.NotFound:
+        try:
+            image = Image.open(io.BytesIO((await ctx.bot.fetch_user(ctx.author.id)).avatar_url_as(format="png").read()))
+        except discord.NotFound:
+            image = CommandErrorMsg("Your profile picture could not be fetched at this time. "
+                                    "Try attaching an image instead.")
+
     if len(ctx.message.attachments) > 0 and ctx.message.attachments[0].url[-4:] in ('.png', '.jpg', 'jpeg', '.gif'):
         image = Image.open(io.BytesIO(await ctx.message.attachments[0].read(use_cached=True)))
     elif user and isinstance(user, discord.Member):
-        image = Image.open(io.BytesIO(await user.avatar_url_as(format="png").read()))
+        try:
+            image = Image.open(io.BytesIO(await user.avatar_url_as(format="png").read()))
+        except discord.NotFound:
+            try:
+                image = Image.open(io.BytesIO((await ctx.bot.fetch_user(user.id)).avatar_url_as(format="png").read()))
+            except discord.NotFound:
+                image = CommandErrorMsg(f"{user}'s profile picture could not be fetched at this time. "
+                                        "Try attaching an image instead.")
+
     elif user and isinstance(user, str):
         if "?" in user:  # remove get tags for processing and potentially higher quality (no resolution get tags)
             user = user.split("?")[0]
@@ -39,6 +55,8 @@ async def getImage(ctx, user: Union[discord.Member, str, None] = None):
                     raise CommandErrorMsg(f'There was an issue getting the URL "{user}"!')
         else:
             raise CommandErrorMsg(f'"{user}" is not a valid user or image URL!')
+    if isinstance(image, CommandErrorMsg):
+        raise image
     return image
 
 
