@@ -26,7 +26,7 @@ def hierarchyCheck(author: discord.Member, target: discord.Member, mode="bool"):
 def highestRoleRole(user: discord.Member):
     """Function to find the highest role the member has with the Manage Roles permission."""
     for i in getReverseRoles(user):
-        if i.permissions.manage_roles:
+        if i.permissions.manage_roles or i.permissions.administrator:
             return i
 
 
@@ -149,8 +149,12 @@ class Moderation(commands.Cog):
 
     @commands.command(cooldown_after_parsing=True, aliases=["time_out", "timeout"])
     @commands.cooldown(1, 5, commands.BucketType.member)
-    @hasPermissions("manage_roles")  # TODO: Test this, make +unmute
+    @hasPermissions("manage_roles")
+    @hasPermissions("manage_messages")  # TODO: Test this, make +unmute
     async def mute(self, ctx, user: discord.Member, *, reason: str = "No reason specified."):
+        """Mutes the specified member by removing that person's roles, then applying the mute role.
+        Requires the Manage Roles and Manage Messages permissions, along with permission to moderate the target user
+        with the server mute role (Role Hierarchy)."""
         if await self.hasProfile(ctx.guild):
             muteRole = int((await self.getProfile(ctx.guild))["muteRole"])
             role = ctx.guild.get_role(muteRole)
@@ -162,34 +166,47 @@ class Moderation(commands.Cog):
                                           "You can use +initMute to automatically create a new one, or use "
                                           "+setMute to use another role.")
 
-            try:
-                parmesan = hierarchyCheck(ctx.author, user, mode="not bool")
-                if parmesan is False:
-                    raise CommandErrorMsg("You can't perform moderation actions on someone above your role level!")
-                elif parmesan is None:
-                    raise CommandErrorMsg("You can't perform moderation actions on someone at the same role level "
-                                          "as you!")
+            if role < ctx.guild.me.top_role:
+                if role < ctx.author.top_role:
+                    try:
+                        parmesan = hierarchyCheck(ctx.author, user, mode="not bool")
+                        if parmesan is False:
+                            raise CommandErrorMsg("You can't perform moderation actions on someone above your role level!")
+                        elif parmesan is None:
+                            raise CommandErrorMsg("You can't perform moderation actions on someone at the same role level "
+                                                  "as you!")
+                        else:
+                            if adminOhNo(ctx.author, user):
+                                print(*user.roles)
+                                # TODO, instead of *just* slicing off @everyone, also slice off any roles above your jurisdiction (maybe leave a boolean variable for line 193, the role warning)
+                                await user.remove_roles(*user.roles[1:], reason=f"Muted by {ctx.author} ({ctx.author.id}) with reason: "
+                                                                           f"{reason}", atomic=True)
+                                await user.add_roles(role, reason=f"Muted by {ctx.author} ({ctx.author.id}) with reason: "
+                                                                  f"{reason}",
+                                                     atomic=True)
+
+
+                                embed = discord.Embed(title=f"Successfully muted {str(user)}",
+                                                      description=f"{user.mention} ({str(user)}) has been muted with reason: "
+                                                                  f"'{reason}'",
+                                                      color=colors["success"])
+                                if user.top_role > highestRoleRole(ctx.guild.me):
+                                    # noinspection PyUnresolvedReferences,PyDunderSlots
+                                    embed.color = colors["warning"]
+                                    embed.set_footer(text=f"The mute may not work perfectly, as some of {str(user)}'s "
+                                                          f"roles are beyond my control.")
+                                await ctx.send(embed=embed)
+                            else:
+                                raise CommandErrorMsg(
+                                    "You can't perform moderation actions on a user with administrator permissions above yours!"
+                                )
+                    except discord.NotFound as e:
+                        raise e
+                        # raise CommandErrorMsg(f"The target user, {user}, could not be found.")
                 else:
-                    if adminOhNo(ctx.author, user):
-                        await user.add_roles(role, reason=f"Muted by {ctx.author} ({ctx.author.id}) with reason: "
-                                                          f"{reason}",
-                                             atomic=True)
-                        embed = discord.Embed(title=f"Successfully muted {str(user)}",
-                                              description=f"{user.mention} ({str(user)}) has been muted with reason: "
-                                                          f"'{reason}'",
-                                              color=colors["success"])
-                        if user.top_role > role:
-                            # noinspection PyUnresolvedReferences,PyDunderSlots
-                            embed.color = colors["warning"]
-                            embed.set_footer(text=f"The mute may not work perfectly, as {str(user)}'s roles are above "
-                                                  f"the @{role} role.")
-                        await ctx.send(embed=embed)
-                    else:
-                        raise CommandErrorMsg(
-                            "You can't perform moderation actions on a user with administrator permissions above yours!"
-                        )
-            except discord.NotFound:
-                raise CommandErrorMsg(f"The target user, {user}, could not be found.")
+                    raise CommandErrorMsg("You don't have permission to assign this role!")
+            else:
+                raise CommandErrorMsg("I no longer have permission to assign this role!")
         else:
             raise CommandErrorMsg("There is no configured mute role for this server. \n"
                                   "You can use +initMute to automatically create one, or use +setMute to use another "
@@ -197,7 +214,8 @@ class Moderation(commands.Cog):
 
     @commands.command(cooldown_after_parsing=True, aliases=["untime_out", "untimeout"])
     @commands.cooldown(1, 5, commands.BucketType.member)
-    @hasPermissions("manage_roles")  # TODO: make this work well
+    @hasPermissions("manage_roles")
+    @hasPermissions("manage_messages")  # TODO: make this work well
     async def unmute(self, ctx, user: discord.Member, *, reason: str = "No reason specified."):
         pass
 
@@ -205,11 +223,12 @@ class Moderation(commands.Cog):
                                                             "set_mute_role"])
     @commands.cooldown(1, 60, commands.BucketType.member)
     @hasPermissions("manage_roles")
+    @hasPermissions("manage_messages")
+    @hasPermissions("manage_channels")
     async def setMute(self, ctx, *, role: discord.Role):
         """Registers the provided role as the role to use in `+mute`."""
-        print(role.id)
         if not role.managed:
-            if not role > ctx.guild.me.top_role:
+            if role < ctx.guild.me.top_role:
                 muteData = {
                     "_id": str(ctx.guild.id),
                     "muteRole": str(role.id)
@@ -233,9 +252,10 @@ class Moderation(commands.Cog):
     @commands.command(cooldown_after_parsing=True, aliases=["init_mute", "muteSetup", "muteInit", "setup_mute",
                                                             "setupMute", "mute_Setup", "mute_Init"])
     @commands.cooldown(1, 60, commands.BucketType.member)
+    @hasPermissions("manage_messages")
     @hasPermissions("manage_roles")
     @hasPermissions("manage_channels")
-    async def initMute(self, ctx, *, role: Union[discord.Role, str] = None):
+    async def initMute(self, ctx, *, role: Union[discord.Role, str] = None):  # TODO: Fix
         """Initializes and registers a role for `+mute`. Creates a role if one isn't provided."""
         disclaimer = await ctx.send("Setting up a mute role with appropriate restrictions. Please be patient...")
         async with ctx.typing():
@@ -272,7 +292,6 @@ class Moderation(commands.Cog):
             role = await ctx.guild.create_role(name=role, reason="Mute role generated by Catlamp.")
             # make it as high as the bot can, which is -2 for some dumb reason
             await role.edit(position=highestRoleRole(ctx.guild.me).position - 2)
-            print(highestRoleRole(ctx.guild.me).position)
 
         # apply role permissions or something
         stupid = []
