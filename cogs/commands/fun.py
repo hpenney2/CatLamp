@@ -316,6 +316,27 @@ class Fun(commands.Cog):
         else:
             await ctx.send('This command is locked to <#712489826330345534>.')
 
+    @commands.command(name="8ball")
+    async def eightBall(self, ctx, *, question: str):
+        """Asks the Magic 8-Ball a question."""
+        positive = ["It is certain.", "It is decidedly so.", "Without a doubt.", "Yes – definitely.",
+                    "You may rely on it.", "As I see it, yes.", "Most likely.", "Outlook good.", "Yes.",
+                    "Signs point to yes."]
+        unsure = ["Reply hazy, try again.", "Ask again later.", "Better not tell you now.", "Cannot predict now.",
+                  "Concentrate and ask again."]
+        negative = ["Don't count on it.", "My reply is no.", "My sources say no.", "Outlook not so good.",
+                    "Very doubtful."]
+        option = random.randint(1, 3)
+        if option == 1:
+            response = random.choice(positive)
+            await ctx.send(f"🎱 The 8-ball has spoken. 🎱\nQuestion: {question}\nAnswer: 🟢 {response}")
+        elif option == 2:
+            response = random.choice(unsure)
+            await ctx.send(f"🎱 The 8-ball has spoken. 🎱\nQuestion: {question}\nAnswer: 🟡 {response}")
+        elif option == 3:
+            response = random.choice(negative)
+            await ctx.send(f"🎱 The 8-ball has spoken. 🎱\nQuestion: {question}\nAnswer: 🔴 {response}")
+
 
 def setup(bot):
     bot.add_cog(Fun(bot))
