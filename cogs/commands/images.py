@@ -37,8 +37,8 @@ async def getImage(ctx, user: Union[discord.Member, str, None] = None):
                                         "Try attaching an image instead.")
 
     elif user and isinstance(user, str):
-        if "?" in user:  # remove get tags for processing and potentially higher quality (no resolution get tags)
-            user = user.split("?")[0]
+        # if "?" in user:  # remove get tags for processing and potentially higher quality (no resolution get tags)
+        #     user = user.split("?")[0]
 
         matcher = regex.compile(
             r'^(?:http|ftp)s?://'  # http:// or https://

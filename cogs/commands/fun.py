@@ -47,8 +47,8 @@ def urlParse(url: str, embed: discord.Embed):
     footerNote = ''
     checkImage = False
 
-    if "?" in url:  # remove get tags for processing and potentially higher quality (no thumbnailing except discord's)
-        url = url.split("?")[0]
+    # if "?" in url:  # remove get tags for processing and potentially higher quality (no thumbnailing except discord's)
+    #     url = url.split("?")[0]
 
     if embed.description.startswith('https://preview.redd.it/'):  # do this before we make things NoneType again
         embed.description = None
