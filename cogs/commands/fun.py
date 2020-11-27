@@ -58,7 +58,7 @@ def urlParse(url: str, embed: discord.Embed):
         embed.description = f"[(Link)]({url})"
 
     # check for potential image sharing site
-    if regex.findall(r'img|image|gif|g.f|gf', url.lower()):
+    if regex.findall(r'img|image|g.f|gf', url.lower()):
         checkImage = True
 
     # coolio image
