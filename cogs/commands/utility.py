@@ -10,6 +10,7 @@ from typing import Union
 
 # pylint: disable=import-error
 from CatLampPY import isGuild, CommandErrorMsg
+from cogs.misc.timeParse import parseTime
 from tables import *
 
 colors = getColors()  # pylint: disable=undefined-variable
@@ -67,14 +68,9 @@ class Utility(commands.Cog):
         if await self.reminderExists(str(ctx.author.id)):
             await ctx.send("You already have a reminder set! Use `+cancelReminder` to cancel it.")
             return
-        if time <= 0:
-            time = 1
-        # Unit checking
+
         originalTime = time
-        if unit.lower() in times:
-            time = times[unit.lower()] * time
-        else:
-            raise CommandErrorMsg("Invalid time unit!")
+        time = parseTime(time, unit)
 
         if originalTime == 1 and unit.endswith('s'):
             unit = unit[:-1]

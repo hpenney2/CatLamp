@@ -156,7 +156,8 @@ class Moderation(commands.Cog):
         Requires the Manage Roles and Manage Messages permissions, along with permission to moderate the target user
         with the server mute role (Role Hierarchy)."""
         if await self.hasProfile(ctx.guild):
-            muteRole = int((await self.getProfile(ctx.guild))["muteRole"])
+            profile = await self.getProfile(ctx.guild)
+            muteRole = int(profile["muteRole"])
             role = ctx.guild.get_role(muteRole)
             if not role:
                 await ctx.guild.fetch_roles()  # just in case it was an intent fuckery
@@ -189,20 +190,21 @@ class Moderation(commands.Cog):
                                 else:
                                     targets.append(i)
 
-                            muteData = {  # TODO, figure out how to add this to the muted list without implosions
+                            # TODO: test this
+                            # figure out how to add this to the muted list without implosions
+
+                            muteData = {
                                 "_id": str(user.id),
+                                "muteRole": profile["muteRole"],
                                 "removedRoles": [],
                                 "mutedBy": str(ctx.author.id),
                                 "unmuteAt": None
                             }
-                            for i in ack:
+                            for i in targets:
                                 muteData["removedRoles"].append(str(i.id))
 
-                            if (await self.getProfile(ctx.guild))["muteRole"] != muteData["muteRole"]:
-                                try:
-                                    await self.bot.guildsDB.insert_one(muteData)
-                                except DuplicateKeyError:
-                                    await self.bot.guildsDB.replace_one({"_id": str(ctx.guild.id)}, muteData)
+                            profile["muted"].append(muteData)
+                            await self.editProfile(profile=profile, targetAttribute="muted", newValue=profile["muted"])
 
                             await user.remove_roles(*targets, reason=f"Muted by {ctx.author} ({ctx.author.id}) "
                                                                      f"with reason: {reason}", atomic=True)
@@ -384,7 +386,7 @@ class Moderation(commands.Cog):
             await db.insert_one(newProfile)
             return newProfile
 
-    async def editProfile(self, profile, targetAttribute: str, newValue):  # ported this over despite not needing it
+    async def editProfile(self, profile, targetAttribute: str, newValue):
         ID = await profile.get("_id")
         if ID:
             await self.bot.guildsDB.update_one({"_id": ID},
