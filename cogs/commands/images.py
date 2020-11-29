@@ -16,10 +16,11 @@ from CatLampPY import CommandErrorMsg
 
 async def getImage(ctx, user: Union[discord.Member, str, None] = None):
     try:
-        image = Image.open(io.BytesIO(((await ctx.author.avatar_url_as(format="png")).read())))
+        image = Image.open(io.BytesIO((await (ctx.author.avatar_url_as(format="png")).read())))
     except discord.NotFound:
         try:
-            image = Image.open(io.BytesIO((await ctx.bot.fetch_user(ctx.author.id)).avatar_url_as(format="png").read()))
+            image = Image.open(io.BytesIO(await ((await ctx.bot.fetch_user(ctx.author.id)).avatar_url_as(format="png"))
+                                          .read()))
         except discord.NotFound:
             image = CommandErrorMsg("Your profile picture could not be fetched at this time. "
                                     "Try attaching an image instead.")
@@ -28,10 +29,11 @@ async def getImage(ctx, user: Union[discord.Member, str, None] = None):
         image = Image.open(io.BytesIO(await ctx.message.attachments[0].read(use_cached=True)))
     elif user and isinstance(user, discord.Member):
         try:
-            image = Image.open(io.BytesIO((await user.avatar_url_as(format="png").read())))
+            image = Image.open(io.BytesIO(await (user.avatar_url_as(format="png").read())))
         except discord.NotFound:
             try:
-                image = Image.open(io.BytesIO((await ctx.bot.fetch_user(user.id)).avatar_url_as(format="png").read()))
+                image = Image.open(io.BytesIO(await ((await ctx.bot.fetch_user(user.id)).avatar_url_as(format="png"))
+                                              .read()))
             except discord.NotFound:
                 image = CommandErrorMsg(f"{user}'s profile picture could not be fetched at this time. "
                                         "Try attaching an image instead.")
