@@ -2,10 +2,15 @@ from discord.ext import commands
 import re as regex
 import datetime
 
+noPrefixBlacklist = [
+    264445053596991498,  # Discord Bot List
+    336642139381301249,  # discord.py
+]
+
 
 def isOk(msg):
     if msg.guild:
-        if msg.guild.id in [264445053596991498]:
+        if msg.guild.id in noPrefixBlacklist:
             return False
     return True
 
@@ -19,7 +24,7 @@ class Message(commands.Cog):
     async def on_message(self, msg):
         start = datetime.datetime.now()
         if isOk(msg):
-            if msg.author.id == self.bot.user.id or msg.author.bot or msg.content == "python" :
+            if msg.author.id == self.bot.user.id or msg.author.bot or msg.content == "python":
                 return
 
             if "do not the sex" in msg.content.lower():
