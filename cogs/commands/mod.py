@@ -60,7 +60,7 @@ class Moderation(commands.Cog):
         self.bot.cmds.append(self.kick)
         self.bot.cmds.append(self.ban)
         self.bot.cmds.append(self.unban)
-        self.defaultProfile = {"muteRole": '0', "muted": []}
+        self.defaultProfile = {"muteRole": '0', "muted": {}}
 
     async def gf_user(self, user_id: int):
         user = self.bot.get_user(user_id)
@@ -150,7 +150,7 @@ class Moderation(commands.Cog):
     @commands.command(cooldown_after_parsing=True, aliases=["time_out", "timeout"])
     @commands.cooldown(1, 5, commands.BucketType.member)
     @hasPermissions("manage_roles")
-    @hasPermissions("manage_messages")  # TODO: Test this, make +unmute
+    @hasPermissions("manage_messages")  # TODO: Test this, MAKE SURE NOTHING IMPLODES AGAIN
     async def mute(self, ctx, user: discord.Member, *, reason: str = "No reason specified."):
         """Mutes the specified member by removing that person's roles, then applying the mute role.
         Requires the Manage Roles and Manage Messages permissions, along with permission to moderate the target user
@@ -190,9 +190,6 @@ class Moderation(commands.Cog):
                                 else:
                                     targets.append(i)
 
-                            # TODO: test this
-                            # figure out how to add this to the muted list without implosions
-
                             muteData = {
                                 "_id": str(user.id),
                                 "muteRole": profile["muteRole"],
@@ -203,7 +200,7 @@ class Moderation(commands.Cog):
                             for i in targets:
                                 muteData["removedRoles"].append(str(i.id))
 
-                            profile["muted"].append(muteData)
+                            profile["muted"][str(user.id)] = muteData
                             await self.editProfile(profile=profile, targetAttribute="muted", newValue=profile["muted"])
 
                             await user.remove_roles(*targets, reason=f"Muted by {ctx.author} ({ctx.author.id}) "
@@ -250,9 +247,41 @@ class Moderation(commands.Cog):
     @commands.command(cooldown_after_parsing=True, aliases=["untime_out", "untimeout"])
     @commands.cooldown(1, 5, commands.BucketType.member)
     @hasPermissions("manage_roles")
-    @hasPermissions("manage_messages")  # TODO: make this work
+    @hasPermissions("manage_messages")
     async def unmute(self, ctx, user: discord.Member, *, reason: str = "No reason specified."):
-        pass
+        # TODO: add authority checks (compare to mutedBy) and make unmute function for auto unmute
+        if await self.hasProfile(ctx.guild):
+            profile = await self.getProfile(ctx.guild)
+            muteRole = int(profile["muteRole"])
+            muted = profile["muted"]
+            print(profile)
+            print(profile.keys())
+            print(muted)
+            if str(user.id) in muted:
+                muteData = muted[str(user.id)]  # according to linter this is a str. its a fat liar its a fucking dict
+                print(type(muteData))
+                print(muteData)
+                # noinspection PyTypeChecker
+                role = ctx.guild.get_role(muteData["muteRole"])
+                if role in user.roles:
+                    await user.remove_roles(role, reason=f"Unmuted by {ctx.author} ({ctx.author.id}) "
+                                                         f"with reason: {reason}", atomic=True)
+                roles = []
+                # noinspection PyTypeChecker
+                for i in muteData["removedRoles"]:
+                    roles.append(ctx.guild.get_role(int(i)))
+                await user.add_roles(*roles, reason=f"Unmuted by {ctx.author} ({ctx.author.id}) with reason: {reason}",
+                                     atomic=True)
+                del profile["muted"][str(user.id)]
+                await self.editProfile(profile=profile, targetAttribute="muted", newValue=profile["muted"])
+
+            else:
+                role = ctx.guild.get_role(muteRole)
+                if role in user.roles:
+                    await user.remove_roles(role, reason=f"Unmuted by {ctx.author} ({ctx.author.id}) "
+                                                         f"with reason: {reason}", atomic=True)
+        else:
+            raise CommandErrorMsg("There are no muted users.")
 
     @commands.command(cooldown_after_parsing=True, aliases=["set_mute", "configMute", "config_mute", "setMuteRole"
                                                             "set_mute_role"])
@@ -386,8 +415,8 @@ class Moderation(commands.Cog):
             await db.insert_one(newProfile)
             return newProfile
 
-    async def editProfile(self, profile, targetAttribute: str, newValue):
-        ID = await profile.get("_id")
+    async def editProfile(self, profile: dict, targetAttribute: str, newValue):
+        ID = profile.get("_id")
         if ID:
             await self.bot.guildsDB.update_one({"_id": ID},
                                                {

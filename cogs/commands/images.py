@@ -15,12 +15,33 @@ from CatLampPY import CommandErrorMsg
 
 
 async def getImage(ctx, user: Union[discord.Member, str, None] = None):
-    image = Image.open(io.BytesIO(await ctx.author.avatar_url_as(format="png").read()))
+    try:
+        image = Image.open(io.BytesIO((await (ctx.author.avatar_url_as(format="png")).read())))
+    except discord.NotFound:
+        try:
+            image = Image.open(io.BytesIO(await ((await ctx.bot.fetch_user(ctx.author.id)).avatar_url_as(format="png"))
+                                          .read()))
+        except discord.NotFound:
+            image = CommandErrorMsg("Your profile picture could not be fetched at this time. "
+                                    "Try attaching an image instead.")
+
     if len(ctx.message.attachments) > 0 and ctx.message.attachments[0].url[-4:] in ('.png', '.jpg', 'jpeg', '.gif'):
         image = Image.open(io.BytesIO(await ctx.message.attachments[0].read(use_cached=True)))
     elif user and isinstance(user, discord.Member):
-        image = Image.open(io.BytesIO(await user.avatar_url_as(format="png").read()))
+        try:
+            image = Image.open(io.BytesIO(await (user.avatar_url_as(format="png").read())))
+        except discord.NotFound:
+            try:
+                image = Image.open(io.BytesIO(await ((await ctx.bot.fetch_user(user.id)).avatar_url_as(format="png"))
+                                              .read()))
+            except discord.NotFound:
+                image = CommandErrorMsg(f"{user}'s profile picture could not be fetched at this time. "
+                                        "Try attaching an image instead.")
+
     elif user and isinstance(user, str):
+        # if "?" in user:  # remove get tags for processing and potentially higher quality (no resolution get tags)
+        #     user = user.split("?")[0]
+
         matcher = regex.compile(
             r'^(?:http|ftp)s?://'  # http:// or https://
             r'(?:(?:[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?\.)+(?:[A-Z]{2,6}\.?|[A-Z0-9-]{2,}\.?)|'  # domain...
@@ -36,6 +57,8 @@ async def getImage(ctx, user: Union[discord.Member, str, None] = None):
                     raise CommandErrorMsg(f'There was an issue getting the URL "{user}"!')
         else:
             raise CommandErrorMsg(f'"{user}" is not a valid user or image URL!')
+    if isinstance(image, CommandErrorMsg):
+        raise image
     return image
 
 
@@ -398,6 +421,9 @@ class Images(commands.Cog, name="Image Manipulation"):
             image = image.convert('RGBA')  # make it so transparency generates instead of black
 
             angleOffset = degrees % 90  # this is what we'll use instead of input
+            if angleOffset == 0:
+                if degrees % 180 == 90:  # plot twist, the angle was also 90
+                    angleOffset = 90
 
             diagonal = math.sqrt(image.width ** 2 + image.height ** 2)  # finding the length of the rectangle's diagonal
             

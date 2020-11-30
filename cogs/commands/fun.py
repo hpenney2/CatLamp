@@ -17,7 +17,7 @@ async def sendPost(ctx, post):
     embed = discord.Embed(title=randPost.title, description=randPost.selftext,
                           url=f"https://www.reddit.com{randPost.permalink}")
 
-    # remove problematic &#x200B; that fuck with link detection
+    # remove problematic &#x200B; that fucks with link detection
     if randPost.selftext.startswith("&#x200B;\n"):
         embed.description = randPost.selftext.replace("&#x200B;\n", "").strip('\n')
         fuckYouX200B = True
@@ -46,17 +46,31 @@ async def sendPost(ctx, post):
 def urlParse(url: str, embed: discord.Embed):
     footerNote = ''
     checkImage = False
-    expressions = []
-    for i in ['img', 'image', 'gif', 'g.f', 'gf']:
-        for ex in regex.findall(i, url):
-            expressions.append(ex)
-    if len(expressions) > 0:
-        checkImage = True
-    if url[-4:] in ('.gif', '.png', '.jpg', 'jpeg'):
+
+    # if "?" in url:  # remove get tags for processing and potentially higher quality (no thumbnailing except discord's)
+    #     url = url.split("?")[0]
+
+    if embed.description.startswith('https://preview.redd.it/'):  # do this before we make things NoneType again
+        embed.description = None
         embed.set_image(url=url)
+    else:
+        # placeholder embed description for the url parsing because yes
+        embed.description = f"[(Link)]({url})"
+
+    # check for potential image sharing site
+    if regex.findall(r'img|image|g.f|gf', url.lower()):
+        checkImage = True
+
+    # coolio image
+    if url[-4:] in ('.gif', '.png', '.jpg', 'jpeg') or regex.findall(r'\.png|\.jpg|\.jpeg|\.webp|\.gif', url):
+        embed.description = None
+        embed.set_image(url=url)
+
+    # not coolio video
     if url.startswith("https://v.redd.it/") or url[-4:] in ('gifv', '.mp4',
                                                             'webm', 'webp'):
-        embed.description = f"[(Video)]({url})"
+        embed.description = f"[(Video)]({url})"  # link to not coolio
+        embed.set_image(url=discord.Embed.Empty)  # in case it was a gifv that got picked up by image
         footerNote = 'This is a video, which is not supported in Discord bot embeds.'
         # Currently, it's impossible to add custom videos to embeds, so this is my solution for now.
     elif url.startswith("/r/"):
@@ -65,28 +79,25 @@ def urlParse(url: str, embed: discord.Embed):
         if checkImage:
             badSite = None
             for i in ["https://gfycat.com", "https://redgifs.com", "https://imgur.com"]:
-                if url.startswith(i):
+                if i[5:].split('.')[0] in url:
                     badSite = i
             if badSite:
-                embed.description = f"[(GIF)]({url})"
-                footerNote = f'This GIF is on {badSite}, which appears inconsistently in Discord bot embeds.'
+                footerNote = f'This media is on {badSite}, which appears inconsistently in Discord bot embeds.'
         if url.startswith('https://www.reddit.com/gallery/'):
             footerNote = 'This is a Reddit Gallery, which is impossible to format into one ' \
                          'embed.'
-        embed.description = f"[(Link)]({url})"
-    if embed.description.startswith('https://preview.redd.it/'):
-        embed.set_image(url=url)
-        embed.description = None
 
-    try:
-        if embed.description.startswith('http') and hasImage(embed):
-            # this is a link to image, so delete
-            embed.description = ''
-        elif not (embed.description.startswith('http') or not embed.description) and hasImage(embed):
-            # desc is not image link, delete image
-            embed.set_image(url=discord.Embed.Empty)
-    except AttributeError:  # ok there is no description, so just ignore lol
-        pass
+    # FIX THIS  # i fixed it by making it obsolete are you proud of me mom
+    # try:
+    #     if (embed.description.startswith('[(') and embed.description.endswith(")")) and hasImage(embed):
+    #         # this is a link to image, so delete
+    #         embed.description = None
+    #     # the description is a link already, but we have imag
+    #     elif (embed.description.startswith('[(Link)](') and embed.description.endswith(")")) and hasImage(embed):
+    #         # desc is not image link, delete image
+    #         embed.set_image(url=discord.Embed.Empty)
+    # except AttributeError:  # ok there is no description, so just ignore lol
+    #     pass
 
     return embed, footerNote
 
@@ -99,7 +110,7 @@ def hasImage(embed: discord.Embed):
 
 
 async def sendData(client, channel: discord.abc.Messageable):
-    embed = discord.Embed(title=f"Reddit data for {client.redditStats['Date'].isoformat()}")
+    embed = discord.Embed(title=f"Reddit data for {client.redditStats['Date']}")
     embed.timestamp = datetime.datetime.utcnow()
     if len(client.redditStats) > 1:
         if len(client.redditStats) <= 26:
@@ -192,6 +203,7 @@ class Fun(commands.Cog):
         elif subreddit_name.startswith('/r/'):
             subreddit_name = subreddit_name[3:]
         async with ctx.channel.typing():
+            randPost = None
             try:
                 subreddit = reddit.subreddit(subreddit_name)
                 try:
@@ -201,29 +213,15 @@ class Fun(commands.Cog):
                 if subreddit.over18:
                     if not await self.nsfwCheck(ctx, "subreddit"):
                         return
-                satisfied = False
-                errorMess = ''
-                tries = 0
-                while not satisfied:
-                    if tries >= 15:
-                        errorMess = "Failed to get a post."
-                        break
-                    randPost = subreddit.random()
-                    if (not randPost or randPost.distinguished or len(randPost.title) > 256 or
-                            len(randPost.selftext) > 2048) or \
-                            (randPost.over_18 and not await self.nsfwCheck(ctx, "post")):
-                        tries += 1
-                        del randPost
-                        continue
-                    if not (randPost.url or randPost.selftext):  # just because i'm a nervous idiot so i need to check
-                        tries += 1
-                        del randPost
-                        continue
-                    satisfied = True
+                randPost, errorMess = await self.redditMoment(ctx, subreddit.random)
+
             except prawcore.Forbidden:
                 errorMess = "Subreddit is private."
-            except(prawcore.BadRequest, prawcore.Redirect, prawcore.NotFound):
+            except(prawcore.BadRequest, prawcore.Redirect):
                 errorMess = "Subreddit not found."
+            except prawcore.NotFound:
+                randPost, errorMess = await self.redditMoment(ctx, method=lambda: random.choice(
+                    list(reddit.subreddit(subreddit_name).hot(limit=25))))
 
         if errorMess:
             await ctx.send(errorMess)
@@ -231,6 +229,33 @@ class Fun(commands.Cog):
             await sendPost(ctx, randPost)
         else:
             await ctx.send('oy something went wrong big oh no')
+
+    async def redditMoment(self, ctx: commands.Context, method):
+        satisfied = False
+        errorMess = ''
+        tries = 0
+        randPost = None
+        while not satisfied:
+            if tries >= 15:
+                errorMess = "Failed to get a post."
+                break
+            try:
+                randPost = method()
+            except prawcore.NotFound:
+                errorMess = "Subreddit not found."
+                break
+            if (not randPost or randPost.distinguished or len(randPost.title) > 256 or
+                len(randPost.selftext) > 2048) or \
+                    (randPost.over_18 and not await self.nsfwCheck(ctx, "post")):
+                tries += 1
+                randPost = None
+                continue
+            if not (randPost.url or randPost.selftext):  # just because i'm a nervous idiot so i need to check
+                tries += 1
+                randPost = None
+                continue
+            satisfied = True
+        return randPost, errorMess
 
     @commands.command(hidden=True)
     @commands.check(isAdmin)
@@ -256,7 +281,7 @@ class Fun(commands.Cog):
                 await ctx.send(note)
         return cool
 
-    async def check(self, ctx: commands.Context, unit: str):
+    async def check(self, ctx: commands.Context, unit: str):  # TODO: Replace this after merging `game` branch
         confirmMess = await ctx.send(f'This {unit} is NSFW. Are you over 18 and *sure* you want to view this content?')
         await confirmMess.add_reaction('✅')
         await confirmMess.add_reaction('❌')
@@ -290,6 +315,27 @@ class Fun(commands.Cog):
             await sendData(self.client, ctx)
         else:
             await ctx.send('This command is locked to <#712489826330345534>.')
+
+    @commands.command(name="8ball")
+    async def eightBall(self, ctx, *, question: str):
+        """Asks the Magic 8-Ball a question."""
+        positive = ["It is certain.", "It is decidedly so.", "Without a doubt.", "Yes – definitely.",
+                    "You may rely on it.", "As I see it, yes.", "Most likely.", "Outlook good.", "Yes.",
+                    "Signs point to yes."]
+        unsure = ["Reply hazy, try again.", "Ask again later.", "Better not tell you now.", "Cannot predict now.",
+                  "Concentrate and ask again."]
+        negative = ["Don't count on it.", "My reply is no.", "My sources say no.", "Outlook not so good.",
+                    "Very doubtful."]
+        option = random.randint(1, 3)
+        if option == 1:
+            response = random.choice(positive)
+            await ctx.send(f"🎱 The 8-ball has spoken. 🎱\nQuestion: {question}\nAnswer: 🟢 {response}")
+        elif option == 2:
+            response = random.choice(unsure)
+            await ctx.send(f"🎱 The 8-ball has spoken. 🎱\nQuestion: {question}\nAnswer: 🟡 {response}")
+        elif option == 3:
+            response = random.choice(negative)
+            await ctx.send(f"🎱 The 8-ball has spoken. 🎱\nQuestion: {question}\nAnswer: 🔴 {response}")
 
 
 def setup(bot):
