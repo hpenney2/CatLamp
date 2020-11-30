@@ -318,7 +318,12 @@ class Fun(commands.Cog):
 
     @commands.command(name="8ball")
     async def eightBall(self, ctx, *, question: str):
-        """Asks the Magic 8-Ball a question."""
+        """
+        Asks the Magic 8-Ball a question.
+
+
+        Disclaimer: The Magic 8-ball is not sentient and it does not represent the opinions of Catlamp or its creators.
+        """
         positive = ["It is certain.", "It is decidedly so.", "Without a doubt.", "Yes – definitely.",
                     "You may rely on it.", "As I see it, yes.", "Most likely.", "Outlook good.", "Yes.",
                     "Signs point to yes."]
