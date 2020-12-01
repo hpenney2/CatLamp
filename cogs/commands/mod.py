@@ -53,7 +53,7 @@ def getReverseRoles(member: discord.Member):
     return roles
 
 
-async def userAndRoleCheck(ctx, user: discord.Member, role: discord.Role):
+def userAndRoleCheck(ctx, user: discord.Member, role: discord.Role):
     """Returns True if all permissions are satisfied, raises appropriate CommandErrorMsg if a condition is not met."""
     if role < ctx.guild.me.top_role:
         if role < ctx.author.top_role:
@@ -271,8 +271,7 @@ class Moderation(commands.Cog):
                     # noinspection PyTypeChecker
                     role = ctx.guild.get_role(muteRole)
 
-                    if await userAndRoleCheck(ctx, user, role):
-
+                    if userAndRoleCheck(ctx, user, role):
                         if role in user.roles:
                             await user.remove_roles(role, reason=f"Unmuted by {ctx.author} ({ctx.author.id}) "
                                                                  f"with reason: {reason}", atomic=True)
