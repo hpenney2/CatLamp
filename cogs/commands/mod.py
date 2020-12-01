@@ -53,6 +53,34 @@ def getReverseRoles(member: discord.Member):
     return roles
 
 
+async def userAndRoleCheck(ctx, user: discord.Member, role: discord.Role):
+    """Returns True if all permissions are satisfied, raises appropriate CommandErrorMsg if a condition is not met."""
+    if role < ctx.guild.me.top_role:
+        if role < ctx.author.top_role:
+            parmesan = hierarchyCheck(ctx.author, user, mode="not bool")
+            if parmesan is False:
+                raise CommandErrorMsg("You can't perform moderation actions on someone above your role "
+                                      "level!")
+            elif parmesan is None:
+                raise CommandErrorMsg("You can't perform moderation actions on someone at the same role "
+                                      "level as you!")
+            else:
+                if adminOhNo(ctx.author, user):
+                    return True
+                else:
+                    raise CommandErrorMsg(
+                        "You can't perform moderation actions on a user with administrator permissions "
+                        "above yours!"
+                    )
+            # except discord.NotFound as e:
+            #     raise e
+            #     # raise CommandErrorMsg(f"The target user, {user}, could not be found.")
+        else:
+            raise CommandErrorMsg(f"You don't have permission to assign the @{role.name} role!")
+    else:
+        raise CommandErrorMsg(f"I no longer have permission to assign the @{role.name} role!")
+
+
 class Moderation(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
@@ -150,7 +178,7 @@ class Moderation(commands.Cog):
     @commands.command(cooldown_after_parsing=True, aliases=["time_out", "timeout"])
     @commands.cooldown(1, 5, commands.BucketType.member)
     @hasPermissions("manage_roles")
-    @hasPermissions("manage_messages")  # TODO: Test this, MAKE SURE NOTHING IMPLODES AGAIN
+    @hasPermissions("manage_messages")  # TODO: Test this, MAKE SURE NOTHING IMPLODES AGAIN, make +tempMute
     async def mute(self, ctx, user: discord.Member, *, reason: str = "No reason specified."):
         """Mutes the specified member by removing that person's roles, then applying the mute role.
         Requires the Manage Roles and Manage Messages permissions, along with permission to moderate the target user
@@ -166,83 +194,66 @@ class Moderation(commands.Cog):
                     raise CommandErrorMsg("The configured mute role for this server could not be found! \n"
                                           "You can use +initMute to automatically create a new one, or use "
                                           "+setMute to use another role.")
-
-            if role < ctx.guild.me.top_role:
-                if role < ctx.author.top_role:
-                    parmesan = hierarchyCheck(ctx.author, user, mode="not bool")
-                    if parmesan is False:
-                        raise CommandErrorMsg("You can't perform moderation actions on someone above your role level!")
-                    elif parmesan is None:
-                        raise CommandErrorMsg("You can't perform moderation actions on someone at the same role level "
-                                              "as you!")
-                    else:
-                        if adminOhNo(ctx.author, user):
-                            highRole = highestRoleRole(ctx.guild.me)
-                            targets = []
-                            ack = []
-                            for i in user.roles:
-                                if highRole < i:
-                                    ack.append(i)
-                                elif i.id == role.id:
-                                    raise CommandErrorMsg("That user already has the mute role!")
-                                elif i.name == '@everyone':
-                                    pass
-                                else:
-                                    targets.append(i)
-
-                            muteData = {
-                                "_id": str(user.id),
-                                "muteRole": profile["muteRole"],
-                                "removedRoles": [],
-                                "mutedBy": str(ctx.author.id),
-                                "unmuteAt": None
-                            }
-                            for i in targets:
-                                muteData["removedRoles"].append(str(i.id))
-
-                            profile["muted"][str(user.id)] = muteData
-                            await self.editProfile(profile=profile, targetAttribute="muted", newValue=profile["muted"])
-
-                            await user.remove_roles(*targets, reason=f"Muted by {ctx.author} ({ctx.author.id}) "
-                                                                     f"with reason: {reason}", atomic=True)
-                            await user.add_roles(role, reason=f"Muted by {ctx.author} ({ctx.author.id}) with "
-                                                              f"reason: {reason}", atomic=True)
-                            if not ack:
-                                embed = discord.Embed(title=f"Successfully muted {str(user)}",
-                                                      description=f"{user.mention} ({str(user)}) has been muted "
-                                                                  f"with reason: '{reason}'",
-                                                      color=colors["success"])
-                            else:
-                                embed = discord.Embed(title=f"Muted {str(user)}",
-                                                      description=f"{user.mention} ({str(user)}) has been muted "
-                                                                  f"with reason: '{reason}', but some of their "
-                                                                  f"roles could not be removed.",
-                                                      color=colors["warning"])
-
-                                problemo = ""
-                                for i in ack:
-                                    problemo += i.name + '\n'
-
-                                embed.add_field(name="Unremoved Roles", value=problemo)
-                                embed.set_footer(text=f"Because of the roles I was unable to remove, "
-                                                      f"the mute may not work perfectly.")
-                            await ctx.send(embed=embed)
+            async with ctx.typing():
+                if userAndRoleCheck(ctx, user, role):
+                    if str(user.id) in profile["muted"]:
+                        raise CommandErrorMsg("That user is already muted.")
+                    highRole = highestRoleRole(ctx.guild.me)
+                    targets = []
+                    ack = []
+                    for i in user.roles:
+                        if highRole < i:
+                            ack.append(i)
+                        elif i.id == role.id:
+                            raise CommandErrorMsg("That user already has the mute role!")
+                        elif i.name == '@everyone':
+                            pass
                         else:
-                            raise CommandErrorMsg(
-                                "You can't perform moderation actions on a user with administrator permissions "
-                                "above yours!"
-                            )
-                    # except discord.NotFound as e:
-                    #     raise e
-                    #     # raise CommandErrorMsg(f"The target user, {user}, could not be found.")
-                else:
-                    raise CommandErrorMsg("You don't have permission to assign this role!")
-            else:
-                raise CommandErrorMsg("I no longer have permission to assign this role!")
+                            targets.append(i)
+
+                    muteData = {
+                        "_id": str(user.id),
+                        "muteRole": profile["muteRole"],
+                        "removedRoles": [],
+                        "mutedBy": str(ctx.author.id),
+                        "unmuteAt": None
+                    }
+                    for i in targets:
+                        muteData["removedRoles"].append(str(i.id))
+
+                    profile["muted"][str(user.id)] = muteData
+                    await self.editProfile(profile=profile, targetAttribute="muted",
+                                           newValue=profile["muted"])
+
+                    await user.remove_roles(*targets, reason=f"Muted by {ctx.author} ({ctx.author.id}) "
+                                                             f"with reason: {reason}", atomic=True)
+                    await user.add_roles(role, reason=f"Muted by {ctx.author} ({ctx.author.id}) with "
+                                                      f"reason: {reason}", atomic=True)
+                    if not ack:
+                        embed = discord.Embed(title=f"Successfully muted {str(user)}",
+                                              description=f"{user.mention} ({str(user)}) has been muted "
+                                                          f"with reason: '{reason}'",
+                                              color=colors["success"])
+                    else:
+                        embed = discord.Embed(title=f"Muted {str(user)}",
+                                              description=f"{user.mention} ({str(user)}) has been muted "
+                                                          f"with reason: '{reason}', but some of their "
+                                                          f"roles could not be removed.",
+                                              color=colors["warning"])
+
+                        problemo = ""
+                        for i in ack:
+                            problemo += i.mention + '\n'
+
+                        embed.add_field(name="Unremoved Roles", value=problemo)
+                        embed.set_footer(text=f"Because of the roles I was unable to remove, "
+                                              f"the mute may not work perfectly.")
+                        # sending embed is out at the very end because everything else is raising errors
         else:
             raise CommandErrorMsg("There is no configured mute role for this server. \n"
                                   "You can use +initMute to automatically create one, or use +setMute to use another "
                                   "role.")
+        await ctx.send(embed=embed)  # lol i didnt think this scope would work
 
     @commands.command(cooldown_after_parsing=True, aliases=["untime_out", "untimeout"])
     @commands.cooldown(1, 5, commands.BucketType.member)
@@ -254,33 +265,51 @@ class Moderation(commands.Cog):
             profile = await self.getProfile(ctx.guild)
             muteRole = int(profile["muteRole"])
             muted = profile["muted"]
-            print(profile)
-            print(profile.keys())
-            print(muted)
             if str(user.id) in muted:
-                muteData = muted[str(user.id)]  # according to linter this is a str. its a fat liar its a fucking dict
-                print(type(muteData))
-                print(muteData)
-                # noinspection PyTypeChecker
-                role = ctx.guild.get_role(muteData["muteRole"])
-                if role in user.roles:
-                    await user.remove_roles(role, reason=f"Unmuted by {ctx.author} ({ctx.author.id}) "
-                                                         f"with reason: {reason}", atomic=True)
-                roles = []
-                # noinspection PyTypeChecker
-                for i in muteData["removedRoles"]:
-                    roles.append(ctx.guild.get_role(int(i)))
-                await user.add_roles(*roles, reason=f"Unmuted by {ctx.author} ({ctx.author.id}) with reason: {reason}",
-                                     atomic=True)
-                del profile["muted"][str(user.id)]
-                await self.editProfile(profile=profile, targetAttribute="muted", newValue=profile["muted"])
+                async with ctx.typing():
+                    muteData = muted[str(user.id)]  # according to lint this is a str. its a fat liar its a fucking dict
+                    # noinspection PyTypeChecker
+                    role = ctx.guild.get_role(muteRole)
 
+                    if await userAndRoleCheck(ctx, user, role):
+
+                        if role in user.roles:
+                            await user.remove_roles(role, reason=f"Unmuted by {ctx.author} ({ctx.author.id}) "
+                                                                 f"with reason: {reason}", atomic=True)
+                        roles = []
+                        # noinspection PyTypeChecker
+                        for i in muteData["removedRoles"]:
+                            roles.append(ctx.guild.get_role(int(i)))
+                        await user.add_roles(*roles, reason=f"Unmuted by {ctx.author} ({ctx.author.id}) with reason:"
+                                                            f" {reason}", atomic=True)
+                        del profile["muted"][str(user.id)]
+                        await self.editProfile(profile=profile, targetAttribute="muted", newValue=profile["muted"])
+                        embed = discord.Embed(title=f"Successfully unmuted {str(user)}",
+                                              description=f"{user.mention} ({str(user)}) has been unmuted with reason: "
+                                                          f"'{reason}'",
+                                              color=colors["success"])
+                        if roles:
+                            rolls = ""
+                            roles.reverse()
+                            for i in roles:
+                                rolls += i.mention + '\n'
+                            embed.add_field(name="Restored roles", value=rolls)
+                await ctx.send(embed=embed)
             else:
                 role = ctx.guild.get_role(muteRole)
                 if role in user.roles:
-                    await user.remove_roles(role, reason=f"Unmuted by {ctx.author} ({ctx.author.id}) "
-                                                         f"with reason: {reason}", atomic=True)
+                    async with ctx.typing():
+                        await user.remove_roles(role, reason=f"Unmuted by {ctx.author} ({ctx.author.id}) with reason: "
+                                                             f"{reason}", atomic=True)
+                    await ctx.send(embed=discord.Embed(title=f"Successfully unmuted {str(user)}",
+                                                       description=f"{user.mention} ({str(user)}) has been unmuted with"
+                                                                   f" reason: '{reason}'",
+                                                       color=colors["success"]))
+                else:
+                    raise CommandErrorMsg("That user is not muted!")
         else:
+            # hey what if you made a thing to detect this after first check
+            # nah too much work
             raise CommandErrorMsg("There are no muted users.")
 
     @commands.command(cooldown_after_parsing=True, aliases=["set_mute", "configMute", "config_mute", "setMuteRole"
