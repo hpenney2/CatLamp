@@ -178,7 +178,7 @@ class Moderation(commands.Cog):
     @commands.command(cooldown_after_parsing=True, aliases=["time_out", "timeout"])
     @commands.cooldown(1, 5, commands.BucketType.member)
     @hasPermissions("manage_roles")
-    @hasPermissions("manage_messages")  # TODO: Test this, MAKE SURE NOTHING IMPLODES AGAIN, make +tempMute
+    @hasPermissions("manage_messages")  # TODO: Test things, MAKE SURE NOTHING IMPLODES AGAIN, make +tempMute
     async def mute(self, ctx, user: discord.Member, *, reason: str = "No reason specified."):
         """Mutes the specified member by removing that person's roles, then applying the mute role.
         Requires the Manage Roles and Manage Messages permissions, along with permission to moderate the target user
@@ -260,7 +260,7 @@ class Moderation(commands.Cog):
     @hasPermissions("manage_roles")
     @hasPermissions("manage_messages")
     async def unmute(self, ctx, user: discord.Member, *, reason: str = "No reason specified."):
-        # TODO: add authority checks (compare to mutedBy) and make unmute function for auto unmute
+        # TODO: make unmute function for auto unmute
         if await self.hasProfile(ctx.guild):
             profile = await self.getProfile(ctx.guild)
             muteRole = int(profile["muteRole"])
