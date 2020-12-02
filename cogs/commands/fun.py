@@ -19,16 +19,18 @@ async def sendPost(ctx, post):
 
     # remove problematic &#x200B; that fucks with link detection
     if randPost.selftext.startswith("&#x200B;\n"):
-        embed.description = randPost.selftext.replace("&#x200B;\n", "").strip('\n')
-        fuckYouX200B = True
+        fuckingX200B = True
     else:
-        fuckYouX200B = False
+        fuckingX200B = False
+    # just run this anyways because whats the harm in overcompensating
+    #                                            - that asshole revving a motorcycle at 10:24 PM in brooklyn, new york
+    embed.description = randPost.selftext.replace("&#x200B;\n", "").strip('\n')
 
     footerNote = None
 
     if randPost.url and not randPost.is_self:
         embed, footerNote = urlParse(randPost.url, embed)
-    elif fuckYouX200B:
+    elif fuckingX200B:
         embed, footerNote = urlParse(embed.description, embed)
     try:
         embed.set_author(name=f"Posted by /u/{randPost.author.name}")
