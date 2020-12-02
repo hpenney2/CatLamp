@@ -111,6 +111,7 @@ client.helpEmbeds = []
 client.reminders = client.mongo["db"]["reminders"]
 client.guildsDB = client.mongo["db"]["guilds"]
 client.reminderTasks = {}
+client.unmuteTasks = {}
 client.redditStats = {'Date': datetime.date.today().isoformat()}  # initialize the statistics with the current day
 colors = tables.getColors()
 # noinspection PyUnboundLocalVariable
