@@ -12,16 +12,36 @@ import re as regex
 import aiohttp
 # pylint: disable=import-error
 from CatLampPY import CommandErrorMsg
-from cogs.misc.isAdmin import isAdmin
 
 
 async def getImage(ctx, user: Union[discord.Member, str, None] = None):
-    image = Image.open(io.BytesIO(await ctx.author.avatar_url_as(format="png").read()))
+    try:
+        image = Image.open(io.BytesIO((await (ctx.author.avatar_url_as(format="png")).read())))
+    except discord.NotFound:
+        try:
+            image = Image.open(io.BytesIO(await ((await ctx.bot.fetch_user(ctx.author.id)).avatar_url_as(format="png"))
+                                          .read()))
+        except discord.NotFound:
+            image = CommandErrorMsg("Your profile picture could not be fetched at this time. "
+                                    "Try attaching an image instead.")
+
     if len(ctx.message.attachments) > 0 and ctx.message.attachments[0].url[-4:] in ('.png', '.jpg', 'jpeg', '.gif'):
         image = Image.open(io.BytesIO(await ctx.message.attachments[0].read(use_cached=True)))
     elif user and isinstance(user, discord.Member):
-        image = Image.open(io.BytesIO(await user.avatar_url_as(format="png").read()))
+        try:
+            image = Image.open(io.BytesIO(await (user.avatar_url_as(format="png").read())))
+        except discord.NotFound:
+            try:
+                image = Image.open(io.BytesIO(await ((await ctx.bot.fetch_user(user.id)).avatar_url_as(format="png"))
+                                              .read()))
+            except discord.NotFound:
+                image = CommandErrorMsg(f"{user}'s profile picture could not be fetched at this time. "
+                                        "Try attaching an image instead.")
+
     elif user and isinstance(user, str):
+        # if "?" in user:  # remove get tags for processing and potentially higher quality (no resolution get tags)
+        #     user = user.split("?")[0]
+
         matcher = regex.compile(
             r'^(?:http|ftp)s?://'  # http:// or https://
             r'(?:(?:[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?\.)+(?:[A-Z]{2,6}\.?|[A-Z0-9-]{2,}\.?)|'  # domain...
@@ -30,13 +50,15 @@ async def getImage(ctx, user: Union[discord.Member, str, None] = None):
             r'(?::\d+)?'  # optional port
             r'(?:/?|[/?]\S+)$', regex.IGNORECASE)
         if regex.match(matcher, user) and user[-4:] in ('.png', '.jpg', 'jpeg', '.gif'):
-            async with aiohttp.ClientSession() as session, session.get(user) as res:
+            async with aiohttp.request('get', user) as res:
                 if res.status == 200:
                     image = Image.open(io.BytesIO(await res.read()))
                 else:
                     raise CommandErrorMsg(f'There was an issue getting the URL "{user}"!')
         else:
             raise CommandErrorMsg(f'"{user}" is not a valid user or image URL!')
+    if isinstance(image, CommandErrorMsg):
+        raise image
     return image
 
 
@@ -174,6 +196,30 @@ class Images(commands.Cog, name="Image Manipulation"):
             self.dioTemplate = Image.open('cogs/commands/images/dio.png', mode='r').convert('RGBA')
             self.flushedTemplate = Image.open('cogs/commands/images/flushed.png', mode='r').convert('RGBA')
             self.joyTemplate = Image.open('cogs/commands/images/joy.png', mode='r').convert('RGBA')
+
+    @commands.command(cooldown_after_parsing=True, aliases=["av", "pfp"])
+    @commands.cooldown(1, 5, commands.BucketType.user)
+    async def avatar(self, ctx, user: discord.Member = None):
+        """Displays yours/the mentioned user's avatar with download links."""
+        if user is None:
+            user = ctx.author
+        embed = discord.Embed(title=f"{user}'s Avatar", color=discord.Color.from_rgb(42, 141, 222))
+
+        if user.is_avatar_animated():
+            embed.set_author(name=str(user), icon_url=user.avatar_url, url=user.avatar_url_as(format="gif"))
+            embed.set_image(url=user.avatar_url_as(format="gif"))
+            embed.description = f'**Downloads** \n[gif]({user.avatar_url_as(format="gif")}) | ' \
+                                f'[png]({user.avatar_url_as(format="png")}) | ' \
+                                f'[jpg]({user.avatar_url_as(format="jpg")}) | ' \
+                                f'[webp]({user.avatar_url_as(format="webp")})'
+        else:
+            embed.set_author(name=str(user), icon_url=user.avatar_url)
+            embed.set_image(url=user.avatar_url)
+            embed.description = f'**Downloads** \n' \
+                                f'[png]({user.avatar_url_as(format="png")}) | ' \
+                                f'[jpg]({user.avatar_url_as(format="jpg")}) | ' \
+                                f'[webp]({user.avatar_url_as(format="webp")})'
+        await ctx.send(embed=embed)
 
     @commands.command(cooldown_after_parsing=True)
     @commands.cooldown(1, 5, commands.BucketType.user)
@@ -388,40 +434,53 @@ class Images(commands.Cog, name="Image Manipulation"):
 
             await sendImage(ctx, outImg, "upside_down.png")
 
-    @commands.command(cooldown_after_parsing=True, hidden=True)
-    @commands.check(isAdmin)
+    @commands.command(cooldown_after_parsing=True)
     @commands.cooldown(1, 5, commands.BucketType.user)
     async def rotate(self, ctx, degrees: float, *, user_or_url: Union[discord.Member, str, None] = None):
-        """Rotates the attached image or your/the mentioned user's avatar
-        clockwise by the specified number of degrees."""
+        """Rotates the attached image or your/the mentioned user's avatar clockwise by the specified number of degrees.
+        (Algorithms contributed by Blue#1287 (494615059474153483))"""
         async with ctx.channel.typing():
             image = await getImage(ctx, user_or_url)
 
             image = image.convert('RGBA')  # make it so transparency generates instead of black
 
-            mode = None
-            offsetFactor = (degrees / abs(degrees))
-            originalHeight = image.height
-            originalWidth = image.width
-            if abs(degrees % 180) == 90:  # handling for rotating by multiples 90 that aren't multiples of 180
-                image, mode = simpSquare(image)
+            angleOffset = degrees % 90  # this is what we'll use instead of input
+            if angleOffset == 0:
+                if degrees % 180 == 90:  # plot twist, the angle was also 90
+                    angleOffset = 90
+
+            diagonal = math.sqrt(image.width ** 2 + image.height ** 2)  # finding the length of the rectangle's diagonal
+            
+            # this very well might return radians instead of degrees so we gotta convert
+            b = math.degrees(math.atan(image.width / image.height))
+
+            # finding angle of the diagonal of the rectangle to the uhhhh global 90 degree line uhhhhh
+            a = 90 - (angleOffset + b)
+
+            rotatedWidth = diagonal * math.cos(math.radians(a))  # this requires radians and not degrees
+            
+            b = math.degrees(math.atan(image.height / image.width))
+            
+            # finding angle of the diagonal of the rectangle to the uhhhh global 90 degree line uhhhhh
+            a = 90 - (angleOffset + b)
+
+            rotatedHeight = diagonal * math.cos(math.radians(a))  # this requires radians and not degrees
+
+            if rotatedWidth > rotatedHeight:
+                biggest = math.floor(rotatedWidth)
             else:
-                # why did i sin()?
-                # cos() i'm bad at math hahaha help me
-                # thank you very much https://stackoverflow.com/questions/3231176/how-to-get-size-of-a-rotated-rectangle
-                angle = abs(degrees % 180)
-                a = math.ceil(abs(image.width * math.sin(angle)) + abs(image.height * math.cos(angle)))
-                b = math.ceil(abs(image.width * math.cos(angle)) + abs(image.height * math.sin(angle)))
-                result = Image.new(image.mode, (a, b), (0, 0, 0, 0))
-                result.paste(image, ((result.height // 2) - image.height // 2, (result.width // 2) - image.width // 2))
-                image = result
+                biggest = math.floor(rotatedHeight)
+            result = Image.new(image.mode, (biggest, biggest), (0, 0, 0, 0))  # big image to prevent cutting off stuff
+            # paste the image on in a centered position
+            result.paste(image, ((result.width // 2) - (image.width // 2), (result.height // 2) - image.height // 2))
 
-            outImg = image.rotate(angle=-degrees)  # for some cursed reason, rotate() defaults to counterclockwise
+            outImg = result.rotate(angle=-degrees)  # for some cursed reason, rotate() defaults to counterclockwise
 
-            if mode == 'Y':  # trim off the extra width
-                outImg = outImg.crop(((outImg.width - offsetFactor * originalHeight), 0, outImg.width, outImg.height))
-            elif mode == 'X':  # trim off the extra height
-                outImg = outImg.crop((0, 0, outImg.width, (offsetFactor * originalWidth)))
+            # do some centering math stuff to find the coordinates of the actual content
+            outImg = outImg.crop((round(outImg.width / 2 - rotatedWidth / 2),
+                                  round(outImg.height / 2 - rotatedHeight / 2),
+                                  round(outImg.width / 2 + rotatedWidth / 2),
+                                  round(outImg.height / 2 + rotatedHeight / 2)))
 
             await sendImage(ctx, outImg, "rotate.png")
 

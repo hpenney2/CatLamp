@@ -75,9 +75,33 @@ class Info(commands.Cog, name="Bot Info"):
         helpMess = await ctx.send(embed=discord.Embed.from_dict(self.client.helpEmbeds[page]))
         await self.pagination.paginate(helpMess, self.client.helpEmbeds, page, 300, True)
 
+    @commands.command(aliases=["about"])
+    async def info(self, ctx):
+        """Sends information about CatLamp and its developers."""
+        embed = discord.Embed(title="About CatLamp", color=colors["message"])
+        embed.add_field(name="Information",
+                        value="CatLamp is designed as an \"all-in-one\" bot, trying to provide as many good features "
+                              "as possible in a single bot. CatLamp is built in Python using the discord.py library.",
+                        inline=False)
+        embed.add_field(name="Origin",
+                        value="CatLamp was originally created in May of 2020 using the C# language and the "
+                              "Discord.Net library. It wasn't great and never became public, soon to be forgotten. "
+                              "However, the project was revived in August of 2020 with a new Python rewrite as well as "
+                              "TheEgghead27 joining the development team. Ever since, the project has been only "
+                              "growing.\nThe name and logo of CatLamp is based off a real cat lamp that hpenney2 owns.",
+                        inline=False)
+        embed.add_field(name="Developers",
+                        value="**hp(enney2)** - Developer, creator\n"
+                              "**TheEgghead27** - Developer\n"
+                              "*If you need to contact a developer, please join our support server (+server).*",
+                        inline=False)
+        embed.set_thumbnail(url="https://cdn.discordapp.com/attachments/775506680926306306/775506867044089887"
+                                "/catlamp_avatar-small.png")
+        await ctx.send(embed=embed)
+
     @commands.command()
     async def invite(self, ctx):
-        """Sends CatLamp's invite link."""
+        """Sends CatLamp's invite link. If you wanted to join the CatLamp support server, use `+server` instad."""
         msg = await ctx.send("You can add CatLamp to your server using the link below.\n"
                              "https://top.gg/bot/712394747548794950")
         try:
@@ -85,7 +109,6 @@ class Info(commands.Cog, name="Bot Info"):
         except discord.Forbidden:
             pass
 
-    
     @commands.command()
     async def vote(self, ctx):
         """Sends CatLamp's invite link."""
@@ -95,7 +118,6 @@ class Info(commands.Cog, name="Bot Info"):
             await msg.edit(suppress=True)
         except discord.Forbidden:
             pass
-
 
     @commands.command()
     async def server(self, ctx):

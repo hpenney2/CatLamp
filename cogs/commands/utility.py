@@ -81,7 +81,7 @@ class Utility(commands.Cog):
         elif originalTime > 1 and not unit.endswith('s'):
             unit += "s"
         if reminder_note.strip():  # If not empty or whitespace
-            reminder_note = f" Note: `{reminder_note}`"
+            reminder_note = f' Note: "{reminder_note}"'
 
         if str(originalTime).endswith('.0'):  # definitely best wait to remove trailing ".0" in integer floats
             originalTime = str(originalTime)[:-2]
