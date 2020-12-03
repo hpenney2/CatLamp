@@ -131,6 +131,7 @@ async def sendData(client, channel: discord.abc.Messageable):
             payload = f'Reddit data for {client.redditStats["Date"]}\n{content}'
             await channel.send(f'There was too much data, so it was uploaded to Hastebin:\n'
                                f'https://hastebin.com/{get_key(payload)}')
+            return
     else:
         embed.add_field(name=":(", value="There is no data to send!")
     await channel.send(embed=embed)
