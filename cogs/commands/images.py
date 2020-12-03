@@ -197,6 +197,30 @@ class Images(commands.Cog, name="Image Manipulation"):
             self.flushedTemplate = Image.open('cogs/commands/images/flushed.png', mode='r').convert('RGBA')
             self.joyTemplate = Image.open('cogs/commands/images/joy.png', mode='r').convert('RGBA')
 
+    @commands.command(cooldown_after_parsing=True, aliases=["av", "pfp"])
+    @commands.cooldown(1, 5, commands.BucketType.user)
+    async def avatar(self, ctx, user: discord.Member = None):
+        """Displays yours/the mentioned user's avatar with download links."""
+        if user is None:
+            user = ctx.author
+        embed = discord.Embed(title=f"{user}'s Avatar", color=discord.Color.from_rgb(42, 141, 222))
+
+        if user.is_avatar_animated():
+            embed.set_author(name=str(user), icon_url=user.avatar_url, url=user.avatar_url_as(format="gif"))
+            embed.set_image(url=user.avatar_url_as(format="gif"))
+            embed.description = f'**Downloads** \n[gif]({user.avatar_url_as(format="gif")}) | ' \
+                                f'[png]({user.avatar_url_as(format="png")}) | ' \
+                                f'[jpg]({user.avatar_url_as(format="jpg")}) | ' \
+                                f'[webp]({user.avatar_url_as(format="webp")})'
+        else:
+            embed.set_author(name=str(user), icon_url=user.avatar_url)
+            embed.set_image(url=user.avatar_url)
+            embed.description = f'**Downloads** \n' \
+                                f'[png]({user.avatar_url_as(format="png")}) | ' \
+                                f'[jpg]({user.avatar_url_as(format="jpg")}) | ' \
+                                f'[webp]({user.avatar_url_as(format="webp")})'
+        await ctx.send(embed=embed)
+
     @commands.command(cooldown_after_parsing=True)
     @commands.cooldown(1, 5, commands.BucketType.user)
     async def deepfry(self, ctx, *, user_or_url: Union[discord.Member, str, None] = None):
