@@ -128,7 +128,7 @@ async def sendData(client, channel: discord.abc.Messageable):
 
         if not embed:
             # noinspection PyUnboundLocalVariable
-            payload = f'Reddit data for {client.redditStats["Date"].isoformat()}\n{content}'
+            payload = f'Reddit data for {client.redditStats["Date"]}\n{content}'
             await channel.send(f'There was too much data, so it was uploaded to Hastebin:\n'
                                f'https://hastebin.com/{get_key(payload)}')
     else:
