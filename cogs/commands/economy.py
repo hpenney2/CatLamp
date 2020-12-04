@@ -1,15 +1,33 @@
 import datetime
+import math
+
 import discord
 from discord.ext import commands
 from discord.ext.commands import BucketType
 import random
 import copy
 import asyncio
+from typing import Callable
 
 from CatLampPY import colors, CommandErrorMsg
 from cogs.commands.games.tictacdiscord import discordTicTac
 from cogs.misc.isAdmin import isAdmin
 from cogs.misc.confirm import confirm
+
+
+class Item:
+    def __init__(self, name: str, desc: str, useFunction: Callable = None, sellable: bool = False, price: int = 0):
+        self.name = name
+        self.desc = desc
+        self.useFunction = useFunction
+        self.sellable = sellable
+        self.price = price
+
+    async def use(self, ctx: commands.Context):
+        if self.useFunction:
+            return await self.useFunction(ctx)
+        else:
+            return await ctx.send("That item can't be used.")
 
 
 async def hasProfile(db, user: discord.User):
@@ -18,7 +36,8 @@ async def hasProfile(db, user: discord.User):
 
 defaultProfile = {
     "balance": 50.00,
-    "dailyLastCollected": datetime.datetime(2000, 1, 1)
+    "dailyLastCollected": datetime.datetime(2000, 1, 1),
+    "items": {}
 }
 
 
@@ -95,6 +114,9 @@ class Economy(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.econ = bot.profiles
+        self.allItems = {
+            "catLamp": Item(name="Cat Lamp", desc="Thank you for being a CatLamp developer!")
+        }
 
     # Removed due to changing the daily checking method. Commented out just in case, but may be removed.
     # async def resetDaily(self):
@@ -180,6 +202,25 @@ class Economy(commands.Cog):
     #         await ctx.send(f"Game cancelled by {user2.mention}.", allowed_mentions=discord.AllowedMentions.none())
     #         return False
 
+    async def giveItem(self, user: discord.User, itemName: str, amount: int = 1) -> int:
+        itemToAdd = self.allItems.get(itemName, None)
+        if not itemToAdd:
+            raise ValueError(f'Item "{itemName}" does not exist.')
+
+        profile = await getProfile(self.econ, user)
+        items = profile.get("items", {})
+
+        currentCount = items.get(itemName, 0)
+        newCount = currentCount + amount
+        items[itemName] = currentCount + amount
+        if newCount <= 0:
+            del items[itemName]
+            newCount = 0
+
+        await self.econ.update_one({"_id": str(user.id)},
+                                   {"$set": {"items": items}})
+        return newCount
+
     @commands.command()
     async def daily(self, ctx):
         """Collects your daily currency. You can collect 25 coins every 24 hours."""
@@ -224,7 +265,6 @@ class Economy(commands.Cog):
     # Games
 
     @commands.command(hidden=True, aliases=['tttB', "tic_tac_toe_beta"])
-    @commands.check(isAdmin)
     async def tictactoeBeta(self, ctx, victim: discord.Member, bet: float):
         """Beta tic tac toe thing"""
         if not victim.bot:
@@ -241,6 +281,57 @@ class Economy(commands.Cog):
                 raise CommandErrorMsg("You can't play against yourself!")
         else:
             raise CommandErrorMsg("You can't play against a bot!")
+
+    # Items
+
+    @commands.command(aliases=["inv"])
+    async def inventory(self, ctx, page: int = 1, user: discord.Member = None):
+        """Displays a user's inventory."""
+        user = user or ctx.author
+        profile = await getProfile(self.econ, ctx.author)
+        inv = profile.get("items", {})
+
+        maxPages = round(math.ceil(len(inv) / 10))
+        page -= 1
+        # underflow bad
+        if page < 0:
+            page = 0
+        # overflow bad
+        elif page > maxPages - 1:
+            page = maxPages - 1
+
+        pageIndex = page * 10
+
+        embed = discord.Embed(title=f"{user.name}'s inventory",
+                              color=discord.Color.from_rgb(random.randint(0, 255), random.randint(0, 255),
+                                                           random.randint(0, 255)))
+        if maxPages <= 0:
+            embed.description = "*This user doesn't have any items.*"
+            embed.set_footer(text="Page 1/1")
+        else:
+            userItems = list(inv.items())
+            for i in range(len(userItems)):
+                if i + pageIndex >= len(userItems):
+                    break
+
+                itemTuple = userItems[i + pageIndex]
+                item = self.allItems.get(itemTuple[0], Item("Invalid Item", "Something went wrong!"))
+                itemCount = itemTuple[1]
+
+                if not len(embed.fields) >= 10:
+                    embed.add_field(name=f"{item.name} ({itemCount})",
+                                    value=item.desc)
+
+                embed.set_footer(text=f"Page {page + 1}/{maxPages}")
+
+        await ctx.send(embed=embed)
+
+    @commands.command(name="giveItem")
+    @commands.check(isAdmin)
+    async def giveItemCommand(self, ctx, user: discord.User, item: str, amount: int = 1):
+        """Gives a user an item. CatLamp admin only."""
+        newCount = await self.giveItem(user, item, amount)
+        await ctx.send(f"Successfully gave `{user}` {amount} of `{item}`. They now have {newCount} of that item.")
 
     # @commands.command(aliases=['ttt', "tic_tac_toe"], brief='{@user}')
     # async def ticTacToe(self, ctx, victim: discord.User):
