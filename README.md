@@ -4,8 +4,7 @@
 ## Getting the bot running
  1. Preferably, but not necessary, be running an Ubuntu system.
  2. Run `python3 -m pip install -r requirements.txt`.
- 3. (Only if on an Ubuntu server) Run `sudo apt update`, then `sudo apt install libgl1-mesa-glx`.
- 4. (Only if on an Ubuntu server) Run `sudo apt-get install gcc python3-dev` (C compiler, needed for some PyPi packages like statcord.py)
+ 4. (Only if on an Ubuntu server) Run `sudo apt-get install libgl1-mesa-glx gcc python3-dev opus-tools` (C compiler [for some packages], Python 3, and libopus [for voice])
  5. Set up a `config.json` file in the repository root with the format below ~~or run `gen_config.py`~~.
  6. Follow the *Setting up MongoDB* guide below.
  7. Start the bot with `python3 CatLampPY.py.`

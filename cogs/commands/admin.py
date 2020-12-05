@@ -22,7 +22,7 @@ class Administration(commands.Cog):
 
     ### Admin-only Commands ###
     # Commands here should NOT be added to cmds.
-    @commands.command(hidden=True, aliases=["stop"])
+    @commands.command(hidden=True)
     @commands.check(isAdmin)
     async def restart(self, ctx):
         """Restarts the bot. Only runnable by admins."""
