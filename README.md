@@ -1,4 +1,4 @@
-# CatLamp [![Codacy Badge](https://app.codacy.com/project/badge/Grade/3f06c8cbb6fd49eebd345e057de3614d)](https://www.codacy.com?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=hpenney2/CatLamp&amp;utm_campaign=Badge_Grade)
+# CatLamp
  CatLamp, the all-in-one Discord bot.
 
 ## Getting the bot running
