@@ -179,23 +179,23 @@ class Fun(commands.Cog):
             try:
                 Guess = await self.client.wait_for("message", check=check, timeout=15.0)
             except asyncio.TimeoutError:
-                await ctx.send(f"You took too long, the correct number was {num}.")
+                await ctx.reply(f"You took too long, the correct number was {num}.")
                 self.inGame.remove(ctx.author.id)
                 return
 
             if int(Guess.content) == num:
-                await ctx.send(f"Correct! The number was {num}.")
+                await Guess.reply(f"Correct! The number was {num}.")
                 self.inGame.remove(ctx.author.id)
                 return
             else:
                 guesses += -1
                 msg = "Incorrect!"
                 if guesses > 0:
-                    msg += f"\n{ctx.author.mention} Guess a number between 1 and 10. You have {guesses} guesses left."
+                    msg += f"\nGuess a number between 1 and 10. You have {guesses} guesses left."
                 else:
                     msg += f"\nYou're out of guesses! The correct number was {num}."
                     self.inGame.remove(ctx.author.id)
-                await ctx.send(msg, allowed_mentions=discord.AllowedMentions(users=False))
+                await Guess.reply(msg, allowed_mentions=discord.AllowedMentions.none())
 
     @commands.command(name='reddit', aliases=['randomReddit', 'redditRandom', 'randomPost'])
     async def redditRandom(self, ctx, subreddit_name: str):
