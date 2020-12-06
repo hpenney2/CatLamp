@@ -50,7 +50,7 @@ class Info(commands.Cog, name="Bot Info"):
             for i in range(len(self.client.cmds)):
                 # don't overflow, dumb
                 if i >= (Page * 10):
-                    self.client.helpEmbeds.append(embed.to_dict())
+                    self.client.helpEmbeds.append(embed)
                     Page += 1
                     embed = discord.Embed(title="Commands", color=colors["message"])
                     embed.set_footer(text=f"Page {Page}/{maxPages}")
@@ -70,10 +70,11 @@ class Info(commands.Cog, name="Bot Info"):
                             desc += "\nAliases: "
                             desc += ", ".join(command.aliases)
                         embed.add_field(name=name, value=desc, inline=False)
-            self.client.helpEmbeds.append(embed.to_dict())
+            self.client.helpEmbeds.append(embed)
         # send the embed lol
-        helpMess = await ctx.send(embed=discord.Embed.from_dict(self.client.helpEmbeds[page]))
-        await self.pagination.paginate(helpMess, self.client.helpEmbeds, page, 300, True)
+        helpMess = await ctx.send(embed=self.client.helpEmbeds[page])
+        await self.pagination.paginate(message=helpMess, embeds=self.client.helpEmbeds, indexNumber=page, endTime=300,
+                                       userId=ctx.author.id)
 
     @commands.command(aliases=["about"])
     async def info(self, ctx):
