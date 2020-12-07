@@ -103,22 +103,14 @@ class Info(commands.Cog, name="Bot Info"):
     @commands.command()
     async def invite(self, ctx):
         """Sends CatLamp's invite link. If you wanted to join the CatLamp support server, use `+server` instad."""
-        msg = await ctx.send("You can add CatLamp to your server using the link below.\n"
-                             "https://top.gg/bot/712394747548794950")
-        try:
-            await msg.edit(suppress=True)
-        except discord.Forbidden:
-            pass
+        await ctx.send("You can add CatLamp to your server using the link below.\n"
+                       "https://top.gg/bot/712394747548794950")
 
     @commands.command()
     async def vote(self, ctx):
-        """Sends CatLamp's invite link."""
-        msg = await ctx.send("Want to support CatLamp? Vote for us on Discord Bot List below!\n"
-                             "https://top.gg/bot/712394747548794950/vote")
-        try:
-            await msg.edit(suppress=True)
-        except discord.Forbidden:
-            pass
+        """Sends CatLamp's top.gg voting link."""
+        await ctx.send("Want to support CatLamp? Vote for us on Discord Bot List below!\n"
+                       "https://top.gg/bot/712394747548794950/vote")
 
     @commands.command()
     async def server(self, ctx):
