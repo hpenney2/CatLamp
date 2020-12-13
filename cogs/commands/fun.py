@@ -38,7 +38,7 @@ async def sendPost(ctx, post):
         embed.set_author(name=f"Posted by /u/[deleted]")
     footer = f"{str(round(randPost.upvote_ratio * 100))}% upvoted"
     if footerNote:
-        footer += f" || {footerNote}"
+        footer += f" • {footerNote}"
     embed.set_footer(text=footer)
     embed.timestamp = datetime.datetime.fromtimestamp(randPost.created_utc)
 
