@@ -29,7 +29,7 @@ def requirementsInstall():
 try:
 
     if __name__ == '__main__':
-        turnModuleInstallOffForEgghead = False
+        turnModuleInstallOffForEgghead = True
         if not turnModuleInstallOffForEgghead:
             requirementsInstall()
 
