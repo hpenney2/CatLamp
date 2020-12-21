@@ -25,7 +25,8 @@ async def getImage(ctx, user: Union[discord.Member, str, None] = None):
             image = CommandErrorMsg("Your profile picture could not be fetched at this time. "
                                     "Try attaching an image instead.")
 
-    if len(ctx.message.attachments) > 0 and ctx.message.attachments[0].url[-4:] in ('.png', '.jpg', 'jpeg', '.gif'):
+    if len(ctx.message.attachments) > 0 and \
+            ctx.message.attachments[0].url[-4:] in ('.png', '.jpg', 'jpeg', '.gif', 'webp'):
         image = Image.open(io.BytesIO(await ctx.message.attachments[0].read(use_cached=True)))
     elif user and isinstance(user, discord.Member):
         try:
