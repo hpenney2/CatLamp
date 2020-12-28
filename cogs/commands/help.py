@@ -40,7 +40,8 @@ class EmbedHelpCommand(commands.HelpCommand):
 
     async def send_bot_help(self, mapping):
         embed = discord.Embed(title='Bot Commands', colour=self.COLOUR)
-        description = "`[option]` = Optional argument\n`<option>` = Required argument"
+        description = "**CatLamp will be shutting down on January 1st. Thank you for your support.**\n" \
+                      "`[option]` = Optional argument\n`<option>` = Required argument"
         if description:
             embed.description = description
 
