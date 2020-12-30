@@ -1,0 +1,55 @@
+Command Category Idea:
+Package +reddit into cogs.misc.reddit
+customFooter = str
+if footer, force embedded image
+Also make commands 
+(
+obligatory
+		  +aww
+		  +dog
+		  +meme
+		  +nsfw things of course
+)
+
+Instead of +miscReload, use cog getting to screw with a boolean that'll tellreddit to reload itself with it's time.
+If problems in auto-unmute, DM original muter
+	(also log it in #bot-logs)
+Separate user & role checks
+- User check
+- Role check
+def userAndRole(you know what belongs here lmao):
+	return userCheck() and roleCheck()
+
++ tempban
+import +remind time thing (move it to cogs.misc)
+
+admin check on mute targetauto unmutestore unmute data (start, end, mute role id) in db
+
+
+also +unmute check should be on the muted by and not target lmao
+
+Something something API interactor thing with a cache maybe
+cache: dict by id
+str: url to get
+User object: User object
+magik queue
+	Loop with 1 second delay 
+	Iterates through queue list to do the get then the cache and return
+	
+	loop:
+		if depis[0]
+		request things
+		request.result = request result
+		del depis[0]
+	
+	class request(method = "get", url: str,)
+		queue.append[method, url, depis]
+	
+ensure_future(cache())
+async def Cache(until: int, resource (url): str, data: dict (json)):
+	self.cache[resource] = data
+	await sleep(until)
+	del cache(resource)
+
+if get and URL in self.cache:
+	return cache[URL]
