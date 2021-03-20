@@ -1,3 +1,6 @@
+CatLamp has been discontinued, there will no longer be regular development.
+-----
+
 # CatLamp
  CatLamp, the all-in-one Discord bot.
 
