@@ -146,6 +146,14 @@ class Fun(commands.Cog):
         self.degenerates = []
         self.inGame = []
 
+        self.positive = ["It is certain.", "It is decidedly so.", "Without a doubt.", "Yes – definitely.",
+                    "You may rely on it.", "As I see it, yes.", "Most likely.", "Outlook good.", "Yes.",
+                    "Signs point to yes."]
+        self.unsure = ["Reply hazy, try again.", "Ask again later.", "Better not tell you now.", "Cannot predict now.",
+                  "Concentrate and ask again."]
+        self.negative = ["Don't count on it.", "My reply is no.", "My sources say no.", "Outlook not so good.",
+                    "Very doubtful."]
+
     @commands.command(aliases=["coinToss"])
     async def coinFlip(self, ctx):
         """Flips a coin."""
@@ -327,23 +335,15 @@ class Fun(commands.Cog):
 
         Disclaimer: The Magic 8-ball is not sentient and it does not represent the opinions of Catlamp or its creators.
         """
-        positive = ["It is certain.", "It is decidedly so.", "Without a doubt.", "Yes – definitely.",
-                    "You may rely on it.", "As I see it, yes.", "Most likely.", "Outlook good.", "Yes.",
-                    "Signs point to yes."]
-        unsure = ["Reply hazy, try again.", "Ask again later.", "Better not tell you now.", "Cannot predict now.",
-                  "Concentrate and ask again."]
-        negative = ["Don't count on it.", "My reply is no.", "My sources say no.", "Outlook not so good.",
-                    "Very doubtful."]
         option = random.randint(1, 3)
+        response = ""
         if option == 1:
-            response = random.choice(positive)
-            await ctx.send(f"🎱 The 8-ball has spoken. 🎱\nQuestion: {question}\nAnswer: 🟢 {response}")
+            response = "🟢 " + choice(self.positive)
         elif option == 2:
-            response = random.choice(unsure)
-            await ctx.send(f"🎱 The 8-ball has spoken. 🎱\nQuestion: {question}\nAnswer: 🟡 {response}")
+            response = "🟡 " + choice(self.unsure)
         elif option == 3:
-            response = random.choice(negative)
-            await ctx.send(f"🎱 The 8-ball has spoken. 🎱\nQuestion: {question}\nAnswer: 🔴 {response}")
+            response = "🔴 " + choice(self.negative)
+        await ctx.send(f"🎱 The 8-ball has spoken. 🎱\nQuestion: {question}\nAnswer: {response}")
 
 
 def setup(bot):
