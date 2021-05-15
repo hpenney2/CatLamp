@@ -323,7 +323,7 @@ class Images(commands.Cog, name="Image Manipulation"):
 
             image = image.convert(mode=overlay.mode)
 
-            # combine dio with image
+            # combine flushy with image
             outImg = Image.alpha_composite(image, overlay)
 
             # final prep and stuff for sending to the *internet*
