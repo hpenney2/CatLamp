@@ -3,6 +3,7 @@ from discord.ext import commands
 # pylint: disable=import-error
 from CatLampPY import colors
 from cogs.misc.isAdmin import isAdmin
+from cogs.misc.nsfw import canNSFW
 
 
 class Exceptions(commands.Cog):
@@ -15,7 +16,8 @@ class Exceptions(commands.Cog):
     async def on_command_error(self, ctx, error):
         commandName = ctx.message.content.split(' ')[0]
         if not isinstance(error, commands.CommandNotFound):
-            if ctx.command.hidden and not isAdmin(ctx):
+            if (ctx.command.hidden and not isAdmin(ctx)) or \
+                    ((canNSFW in ctx.command.checks) and isinstance(error, commands.CheckFailure)):
                 return
             # Exception-specific error handling, more may be added later.
             errorStr = None

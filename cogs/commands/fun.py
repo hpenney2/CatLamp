@@ -8,6 +8,8 @@ import re as regex
 from CatLampPY import reddit
 from cogs.misc.isAdmin import isAdmin
 import datetime
+
+from cogs.misc.nsfw import nsfwCheck
 from hastebin import get_key
 
 
@@ -137,6 +139,34 @@ async def sendData(client, channel: discord.abc.Messageable):
     await channel.send(embed=embed)
 
 
+async def redditMoment(ctx: commands.Context, method):
+    satisfied = False
+    errorMess = ''
+    tries = 0
+    randPost = None
+    while not satisfied:
+        if tries >= 15:
+            errorMess = "Failed to get a post."
+            break
+        try:
+            randPost = method()
+        except prawcore.NotFound:
+            errorMess = "Subreddit not found."
+            break
+        if (not randPost or randPost.distinguished or len(randPost.title) > 256 or
+            len(randPost.selftext) > 2048) or \
+                (randPost.over_18 and not await nsfwCheck(ctx, "post")):
+            tries += 1
+            randPost = None
+            continue
+        if not (randPost.url or randPost.selftext):  # just because i'm a nervous idiot so i need to check
+            tries += 1
+            randPost = None
+            continue
+        satisfied = True
+    return randPost, errorMess
+
+
 class Fun(commands.Cog):
     def __init__(self, bot):
         self.client = bot
@@ -214,16 +244,16 @@ class Fun(commands.Cog):
                 except KeyError:
                     self.client.redditStats[subreddit.display_name.lower()] = 1
                 if subreddit.over18:
-                    if not await self.nsfwCheck(ctx, "subreddit"):
+                    if not await nsfwCheck(ctx, "subreddit"):
                         return
-                randPost, errorMess = await self.redditMoment(ctx, subreddit.random)
+                randPost, errorMess = await redditMoment(ctx, subreddit.random)
 
             except prawcore.Forbidden:
                 errorMess = "Subreddit is private."
             except(prawcore.BadRequest, prawcore.Redirect):
                 errorMess = "Subreddit not found."
             except prawcore.NotFound:
-                randPost, errorMess = await self.redditMoment(ctx, method=lambda: random.choice(
+                randPost, errorMess = await redditMoment(ctx, method=lambda: random.choice(
                     list(reddit.subreddit(subreddit_name).hot(limit=25))))
 
         if errorMess:
@@ -233,83 +263,10 @@ class Fun(commands.Cog):
         else:
             await ctx.send('oy something went wrong big oh no')
 
-    async def redditMoment(self, ctx: commands.Context, method):
-        satisfied = False
-        errorMess = ''
-        tries = 0
-        randPost = None
-        while not satisfied:
-            if tries >= 15:
-                errorMess = "Failed to get a post."
-                break
-            try:
-                randPost = method()
-            except prawcore.NotFound:
-                errorMess = "Subreddit not found."
-                break
-            if (not randPost or randPost.distinguished or len(randPost.title) > 256 or
-                len(randPost.selftext) > 2048) or \
-                    (randPost.over_18 and not await self.nsfwCheck(ctx, "post")):
-                tries += 1
-                randPost = None
-                continue
-            if not (randPost.url or randPost.selftext):  # just because i'm a nervous idiot so i need to check
-                tries += 1
-                randPost = None
-                continue
-            satisfied = True
-        return randPost, errorMess
-
     @commands.command(hidden=True)
     @commands.check(isAdmin)
     async def testPost(self, ctx, postID):
         await sendPost(ctx, reddit.submission(id=postID))
-
-    async def nsfwCheck(self, ctx: commands.Context, unit: str):
-        note = ''
-        if ctx.channel.type == discord.ChannelType.text:  # server/text-channel
-            if not ctx.message.channel.is_nsfw():
-                note = f"This {unit} is marked as NSFW. Please move to an NSFW channel."
-            cool = ctx.message.channel.is_nsfw()
-        else:
-            if ctx.author.id in self.degenerates:
-                cool = True
-            else:
-                cool = await self.check(ctx, unit)
-                if cool:
-                    self.degenerates.append(ctx.author.id)
-
-        if unit != 'post':
-            if note:
-                await ctx.send(note)
-        return cool
-
-    async def check(self, ctx: commands.Context, unit: str):  # TODO: Replace this after merging `game` branch
-        confirmMess = await ctx.send(f'This {unit} is NSFW. Are you over 18 and *sure* you want to view this content?')
-        await confirmMess.add_reaction('✅')
-        await confirmMess.add_reaction('❌')
-
-        # wait_for stolen from docs example
-        def confirm(react, reactor):
-            return reactor == ctx.author and str(react.emoji) in ('✅', '❌') and confirmMess.id == react.message.id
-
-        try:
-            reaction, user = await self.client.wait_for('reaction_add', timeout=30, check=confirm)
-        except asyncio.TimeoutError:  # timeout cancel
-            await confirmMess.edit(text='`+reddit` timed-out.')
-        else:
-            if reaction.emoji == '✅':
-                await confirmMess.delete()
-                return True
-
-            else:  # ❌ react cancel
-                await confirmMess.remove_reaction('✅', self.client.user)
-                await confirmMess.remove_reaction('❌', self.client.user)
-            try:
-                await confirmMess.remove_reaction('❌', user)
-            except (discord.Forbidden, discord.NotFound):
-                pass
-            await confirmMess.edit(content='`+reddit` was cancelled.')
 
     @commands.command(hidden=True, aliases=['redditAnal', 'redAnal'])
     @commands.check(isAdmin)

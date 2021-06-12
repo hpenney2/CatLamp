@@ -3,6 +3,7 @@ from discord.ext import commands
 import discord
 
 import tables
+from cogs.misc.nsfw import canNSFW
 from cogs.misc.isAdmin import isAdmin
 
 colors = tables.getColors()
@@ -53,6 +54,8 @@ class EmbedHelpCommand(commands.HelpCommand):
             new = []
             for c in Commands:
                 if not c.hidden:
+                    if (canNSFW in c.checks) and not self.get_destination().is_nsfw():
+                        continue
                     new.append(c.name)
             new.sort()
             Commands = new

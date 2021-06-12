@@ -29,7 +29,7 @@ def requirementsInstall():
 try:
 
     if __name__ == '__main__':
-        requirementsInstall()
+        # requirementsInstall()
 
         print("Checking if all required modules are installed...")
         from pkgutil import find_loader
@@ -105,6 +105,7 @@ client.mongo = motor.motor_asyncio.AsyncIOMotorClient("mongodb://localhost:27017
 # client.mongo["db"]["settings"]
 # etc.
 client.cmds = []
+client.degenerates = []
 client.helpEmbeds = []
 client.reminders = client.mongo["db"]["reminders"]
 client.reminderTasks = {}
