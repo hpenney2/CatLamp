@@ -50,10 +50,7 @@ class EmbedHelpCommand(commands.HelpCommand):
             filtered = await self.filter_commands(Commands, sort=True)
 
             # override processing
-            new = []
-            for c in Commands:
-                if not c.hidden:
-                    new.append(c.name)
+            new = [c.name for c in Commands if not c.hidden]
             new.sort()
             Commands = new
             del new
@@ -118,15 +115,12 @@ class EmbedHelpCommand(commands.HelpCommand):
             elif Command.help:
                 embed.description = Command.help
             if Command.aliases:
-                value = ''
-                for a in Command.aliases:
-                    if a != "help":
-                        value += f'`{a}`, '
+                value = ''.join(f'`{a}`, ' for a in Command.aliases if a != "help")
                 value = value.rstrip(", ")
                 embed.add_field(name='Aliases', value=value)
 
             embed.set_footer(text=self.get_ending_note())
             await self.get_destination().send(embed=embed)
         else:
-            
+
             await self.context.send(f'No command called "{self.context.message.content.split()[1]}" found.')

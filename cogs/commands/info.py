@@ -25,8 +25,6 @@ class Info(commands.Cog, name="Bot Info"):
 
     @commands.command(hidden=True)
     @commands.check(isAdmin)
-    # fuck "Function shadows built-in method help()"
-    # all my homies hate "Function shadows built-in method help()"
     async def documentation(self, ctx, page: int = 1):
         """Displays the old version of this message."""
         # 10 per page, can't just have half a page of commands go bye-bye
@@ -54,22 +52,20 @@ class Info(commands.Cog, name="Bot Info"):
                     Page += 1
                     embed = discord.Embed(title="Commands", color=colors["message"])
                     embed.set_footer(text=f"Page {Page}/{maxPages}")
-                else:
+                elif len(embed.fields) < 10:
                     # get command from index
                     command = self.client.cmds[i]
 
-                    # generate help field for command
-                    if not len(embed.fields) >= 10:
-                        name = "+" + command.name
-                        Params = command.clean_params
-                        for param in Params:
-                            param = param.replace('_', ' ')
-                            name += f" <{param}>"
-                        desc = command.short_doc or "No description."
-                        if command.aliases:
-                            desc += "\nAliases: "
-                            desc += ", ".join(command.aliases)
-                        embed.add_field(name=name, value=desc, inline=False)
+                    name = "+" + command.name
+                    Params = command.clean_params
+                    for param in Params:
+                        param = param.replace('_', ' ')
+                        name += f" <{param}>"
+                    desc = command.short_doc or "No description."
+                    if command.aliases:
+                        desc += "\nAliases: "
+                        desc += ", ".join(command.aliases)
+                    embed.add_field(name=name, value=desc, inline=False)
             self.client.helpEmbeds.append(embed)
         # send the embed lol
         helpMess = await ctx.send(embed=self.client.helpEmbeds[page])

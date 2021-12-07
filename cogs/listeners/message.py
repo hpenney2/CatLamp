@@ -9,10 +9,7 @@ noPrefixBlacklist = [
 
 
 def isOk(msg):
-    if msg.guild:
-        if msg.guild.id in noPrefixBlacklist:
-            return False
-    return True
+    return not msg.guild or msg.guild.id not in noPrefixBlacklist
 
 
 class Message(commands.Cog):
@@ -33,14 +30,9 @@ class Message(commands.Cog):
                 await msg.channel.send("do **not** the sex")
             if "psps" in msg.content.lower():
                 # piss counter
-                piss = 0
-                for _ in regex.findall("ps", msg.content.lower()):
-                    piss += 1
-
+                piss = sum(1 for _ in regex.findall("ps", msg.content.lower()))
                 # full piss counter
-                capitals = 0
-                for _ in regex.findall("PS", msg.content):
-                    capitals += 2
+                capitals = sum(2 for _ in regex.findall("PS", msg.content))
                 if capitals / 2 == piss:  # if it's all PS, let it w i d e
                     print('piss')
                     piss = 3

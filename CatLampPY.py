@@ -4,10 +4,10 @@ import sys
 
 
 def checkKeys(configList: list, reqKeys: list):
-    reqKeysInConfig = []
-    for configItem in configList:
-        if configItem in reqKeys:
-            reqKeysInConfig.append(configItem)
+    reqKeysInConfig = [
+        configItem for configItem in configList if configItem in reqKeys
+    ]
+
     reqKeys.sort()
     reqKeysInConfig.sort()
     return reqKeysInConfig == reqKeys
@@ -197,9 +197,12 @@ def insert_returns(body):
 @client.event
 async def on_error(event, *args, **kwargs):
     if event != ('on_command_error' or (sys.exc_info()[0] == discord.Forbidden)):
-        embed = discord.Embed(title=f"Error occurred in event '{event}'",
-                              description=f"```{str(sys.exc_info()[1])}```",
-                              color=colors["error"])
+        embed = discord.Embed(
+            title=f"Error occurred in event '{event}'",
+            description=f'```{sys.exc_info()[1]}```',
+            color=colors["error"],
+        )
+
         embed.timestamp = datetime.datetime.utcnow()
         await client.get_channel(712489826330345534).send(embed=embed)
     raise sys.exc_info()[1]

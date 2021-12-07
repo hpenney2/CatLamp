@@ -27,9 +27,7 @@ def uh():
     embed = discord.Embed(title='Sample')
     field_title = None
     values = []
-    for i in b:
-        # Made this so things are "readable" and i don't have to do the string slicing anymore
-        compare = b[i]
+    for i, compare in b.items():
         if compare == 1:
             embed = discord.Embed(title=i)
         elif compare == 2:
@@ -54,10 +52,7 @@ def uh():
 
 
 def valueProcess(values):
-    value = ''
-    for i in values:
-        value += i
-    return value
+    return ''.join(values)
 
 
 if __name__ == "__main__":
