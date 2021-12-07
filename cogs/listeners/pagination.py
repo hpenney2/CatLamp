@@ -52,36 +52,35 @@ class Pagination(commands.Cog):
 
     @commands.Cog.listener()
     async def on_reaction_add(self, reaction, user):
-        if reaction.message.id in self.bot.paginated:
-            if user.id != self.bot.user.id:
-                data = self.bot.paginated[reaction.message.id]
-                if data.userId:
-                    if user.id != data.userId:  # optional user ID check
-                        return
-                if data.onCoolDown:  # data[4] is on coolDown, data[5] is queued
-                    if data.queued:
-                        return
-                    else:
-                        data.queued = True
-                        await asyncio.sleep(data.timeOut)
-                        data.queued = False
-                try:
-                    await reaction.remove(user)
-                except (discord.Forbidden, discord.NotFound):
-                    pass
-                embeds = data.embeds
-                if reaction.emoji == data.left:
-                    data.indexNumber -= 1
-                    if data.indexNumber < 0:
-                        data.indexNumber = len(embeds) - 1
-                elif reaction.emoji == '▶':
-                    data.indexNumber += 1
-                    if data.indexNumber >= len(embeds):
-                        data.indexNumber = 0
-                await data.message.edit(embed=embeds[data.indexNumber])  # apparently the old ones stored as dict, uh-oh
-                data.onCoolDown = True
-                await asyncio.sleep(data.coolDown)
-                data.onCoolDown = False
+        if reaction.message.id not in self.bot.paginated:
+            return
+        if user.id != self.bot.user.id:
+            data = self.bot.paginated[reaction.message.id]
+            if data.userId and user.id != data.userId:  # optional user ID check
+                return
+            if data.onCoolDown:  # data[4] is on coolDown, data[5] is queued
+                if data.queued:
+                    return
+                data.queued = True
+                await asyncio.sleep(data.timeOut)
+                data.queued = False
+            try:
+                await reaction.remove(user)
+            except (discord.Forbidden, discord.NotFound):
+                pass
+            embeds = data.embeds
+            if reaction.emoji == data.left:
+                data.indexNumber -= 1
+                if data.indexNumber < 0:
+                    data.indexNumber = len(embeds) - 1
+            elif reaction.emoji == '▶':
+                data.indexNumber += 1
+                if data.indexNumber >= len(embeds):
+                    data.indexNumber = 0
+            await data.message.edit(embed=embeds[data.indexNumber])  # apparently the old ones stored as dict, uh-oh
+            data.onCoolDown = True
+            await asyncio.sleep(data.coolDown)
+            data.onCoolDown = False
 
     async def paginate(self, message: discord.Message, embeds: List[discord.Embed], indexNumber: int = 0,
                        endTime: float = 60, coolDown: float = 1.5, timeOut: float = 1,

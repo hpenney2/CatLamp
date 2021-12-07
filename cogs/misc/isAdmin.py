@@ -10,7 +10,4 @@ admins = [
 
 def isAdmin(ctx: commands.Context):
     """Checks if the context author is a bot admin or not. Returns True or False respectively."""
-    if ctx.author.id in admins:
-        return True
-    else:
-        return False
+    return ctx.author.id in admins

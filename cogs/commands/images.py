@@ -49,14 +49,18 @@ async def getImage(ctx, user: Union[discord.Member, str, None] = None):
             r'\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})'  # ...or ip
             r'(?::\d+)?'  # optional port
             r'(?:/?|[/?]\S+)$', regex.IGNORECASE)
-        if regex.match(matcher, user) and user[-4:] in ('.png', '.jpg', 'jpeg', '.gif'):
-            async with aiohttp.request('get', user) as res:
-                if res.status == 200:
-                    image = Image.open(io.BytesIO(await res.read()))
-                else:
-                    raise CommandErrorMsg(f'There was an issue getting the URL "{user}"!')
-        else:
+        if not regex.match(matcher, user) or user[-4:] not in (
+            '.png',
+            '.jpg',
+            'jpeg',
+            '.gif',
+        ):
             raise CommandErrorMsg(f'"{user}" is not a valid user or image URL!')
+        async with aiohttp.request('get', user) as res:
+            if res.status == 200:
+                image = Image.open(io.BytesIO(await res.read()))
+            else:
+                raise CommandErrorMsg(f'There was an issue getting the URL "{user}"!')
     if isinstance(image, CommandErrorMsg):
         raise image
     return image
@@ -136,14 +140,13 @@ def findMonoAlphaTarget(image: Image.Image):
             random.seed()
             fuck = 0
 
-        if potentialTarget not in blacklist:
-            if potentialTarget in image.getdata():
-                blacklist.append(potentialTarget)
-            else:
-                satisfied = True
-        else:
+        if potentialTarget in blacklist:
             fuck += 1
 
+        elif potentialTarget in image.getdata():
+            blacklist.append(potentialTarget)
+        else:
+            satisfied = True
         # randomize target
         potentialTarget = (random.randrange(0, 256), random.randrange(0, 256), random.randrange(0, 256), 255)
 
@@ -161,14 +164,13 @@ def findDualAlphaTarget(image1: Image.Image, image2: Image.Image):
             random.seed()
             fuck = 0
 
-        if potentialTarget not in blacklist:
-            if potentialTarget in image1.getdata() or potentialTarget in image2.getdata():
-                blacklist.append(potentialTarget)
-            else:
-                satisfied = True
-        else:
+        if potentialTarget in blacklist:
             fuck += 1
 
+        elif potentialTarget in image1.getdata() or potentialTarget in image2.getdata():
+            blacklist.append(potentialTarget)
+        else:
+            satisfied = True
         # randomize target
         potentialTarget = (random.randrange(0, 256), random.randrange(0, 256), random.randrange(0, 256), 255)
 
@@ -445,12 +447,11 @@ class Images(commands.Cog, name="Image Manipulation"):
             image = image.convert('RGBA')  # make it so transparency generates instead of black
 
             angleOffset = degrees % 90  # this is what we'll use instead of input
-            if angleOffset == 0:
-                if degrees % 180 == 90:  # plot twist, the angle was also 90
-                    angleOffset = 90
+            if angleOffset == 0 and degrees % 180 == 90:  # plot twist, the angle was also 90
+                angleOffset = 90
 
             diagonal = math.sqrt(image.width ** 2 + image.height ** 2)  # finding the length of the rectangle's diagonal
-            
+
             # this very well might return radians instead of degrees so we gotta convert
             b = math.degrees(math.atan(image.width / image.height))
 
@@ -458,9 +459,9 @@ class Images(commands.Cog, name="Image Manipulation"):
             a = 90 - (angleOffset + b)
 
             rotatedWidth = diagonal * math.cos(math.radians(a))  # this requires radians and not degrees
-            
+
             b = math.degrees(math.atan(image.height / image.width))
-            
+
             # finding angle of the diagonal of the rectangle to the uhhhh global 90 degree line uhhhhh
             a = 90 - (angleOffset + b)
 

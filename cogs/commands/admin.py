@@ -30,8 +30,7 @@ class Administration(commands.Cog):
         embed = discord.Embed(title="Restarting...",
                               description="CatLamp will restart shortly. Check the bot's status for updates.",
                               color=colors["success"])
-        embed.set_footer(
-            text=f"Restart initiated by {str(ctx.author)} ({ctx.author.id})")
+        embed.set_footer(text=f'Restart initiated by {ctx.author} ({ctx.author.id})')
         await ctx.send(embed=embed)
         await self.client.change_presence(activity=discord.Game("Restarting..."))
         # self.saveReminders()
@@ -47,11 +46,11 @@ class Administration(commands.Cog):
     @commands.check(isAdmin)
     async def reload(self, ctx):
         """Reloads the bot commands and listeners. Only runnable by admins."""
-        print(f"Reload initiated by {str(ctx.author)} ({ctx.author.id})")
+        print(f'Reload initiated by {ctx.author} ({ctx.author.id})')
         embed = discord.Embed(title="Reloading...",
                               description="CatLamp is reloading. Watch this message for updates.",
                               color=colors["warning"])
-        embed.set_footer(text=f"Reload initiated by {str(ctx.author)} ({ctx.author.id})")
+        embed.set_footer(text=f'Reload initiated by {ctx.author} ({ctx.author.id})')
         msg = await ctx.send(embed=embed)
         await self.client.change_presence(activity=discord.Game("Reloading..."))
         print("Reloading...")
@@ -101,13 +100,13 @@ class Administration(commands.Cog):
             embed.color = colors["error"]
             embed.title = "Reloaded with errors"
             embed.description = f"Errors occurred while reloading.\n```{errorInfo[:-2]}```"
-            await msg.edit(embed=embed)
         else:
             print("Reloaded successfully!")
             embed.color = colors["success"]
             embed.title = "Reloaded"
-            embed.description = f"Reloaded successfully without errors!"
-            await msg.edit(embed=embed)
+            embed.description = 'Reloaded successfully without errors!'
+
+        await msg.edit(embed=embed)
 
     def getClientVar(self, varName: str):
         """Function to get a bot var. Why? because dynamic string shenanigans)"""
@@ -124,7 +123,7 @@ class Administration(commands.Cog):
         embed = discord.Embed(title="Reloading...",
                               description="CatLamp is reloading miscellaneous cogs. Watch this message for updates.",
                               color=colors["warning"])
-        embed.set_footer(text=f"Reload initiated by {str(ctx.author)} ({ctx.author.id})")
+        embed.set_footer(text=f'Reload initiated by {ctx.author} ({ctx.author.id})')
         msg = await ctx.send(embed=embed)
         await self.client.change_presence(activity=discord.Game("Partially reloading..."))
         print("Reloading...")
@@ -148,50 +147,50 @@ class Administration(commands.Cog):
             embed.color = colors["error"]
             embed.title = "Reloaded with errors"
             embed.description = f"Errors occurred while reloading.\n```{errorInfo[:-2]}```"
-            await msg.edit(embed=embed)
         else:
             print("Reloaded successfully!")
             embed.color = colors["success"]
             embed.title = "Reloaded"
-            embed.description = f"Reloaded successfully without errors!"
-            await msg.edit(embed=embed)
+            embed.description = 'Reloaded successfully without errors!'
+
+        await msg.edit(embed=embed)
 
     @commands.command(hidden=True, aliases=["forceStop"])
     @commands.check(isAdmin)
     async def forceRestart(self, ctx):
         """Force restarts the bot. Only runnable by admins."""
-        if await self.check(ctx, "force restart", "Force restart"):
-            print(f"Restart initiated by {str(ctx.author)} ({ctx.author.id})")
-            try:
-                embed = discord.Embed(title="Force Restarting...",
-                                      description="CatLamp will restart shortly. Check the bot's status for updates.",
-                                      color=colors["success"])
-                embed.set_footer(
-                    text=f"Restart initiated by {str(ctx.author)} ({ctx.author.id})")
-                await ctx.send(embed=embed)
-            except Exception as e:
-                print(f'Sending embed failed with exception {e}')
-            try:
-                await self.client.change_presence(activity=discord.Game("Restarting..."))
-            except Exception as e:
-                print(f'Presence change failed with exception {e}')
-            # try:
-            #     self.saveReminders()
-            # except Exception as e:
-            #     print(f'Reminder saving failed with exception {e}')
-            try:
-                await self.client.logout()
-                print("Bot connection closed.")
-            except Exception as e:
-                print(f"Bot logout failed with exception {e}")
-            print("Force restarting...")
-            try:
-                os.execv(sys.executable, ['python3'] + sys.argv)
-            except FileNotFoundError:
-                os.execv(sys.executable, ['python'] + sys.argv)
-            except Exception as e:
-                print('fuck we\'re fucked')
-                raise e
+        if not await self.check(ctx, "force restart", "Force restart"):
+            return
+        print(f'Restart initiated by {ctx.author} ({ctx.author.id})')
+        try:
+            embed = discord.Embed(title="Force Restarting...",
+                                  description="CatLamp will restart shortly. Check the bot's status for updates.",
+                                  color=colors["success"])
+            embed.set_footer(text=f'Restart initiated by {ctx.author} ({ctx.author.id})')
+            await ctx.send(embed=embed)
+        except Exception as e:
+            print(f'Sending embed failed with exception {e}')
+        try:
+            await self.client.change_presence(activity=discord.Game("Restarting..."))
+        except Exception as e:
+            print(f'Presence change failed with exception {e}')
+        # try:
+        #     self.saveReminders()
+        # except Exception as e:
+        #     print(f'Reminder saving failed with exception {e}')
+        try:
+            await self.client.logout()
+            print("Bot connection closed.")
+        except Exception as e:
+            print(f"Bot logout failed with exception {e}")
+        print("Force restarting...")
+        try:
+            os.execv(sys.executable, ['python3'] + sys.argv)
+        except FileNotFoundError:
+            os.execv(sys.executable, ['python'] + sys.argv)
+        except Exception as e:
+            print('fuck we\'re fucked')
+            raise e
 
     # Deprecated: Reminder saving has been replaced by MongoDB and now edits the DB at runtime.
     # Using saveReminders() WILL cause an exception as it was designed for a dictionary, not a MongoDB collection.
@@ -200,10 +199,12 @@ class Administration(commands.Cog):
             print("Saving current reminders...")
             temp = {}
             for i in self.client.reminders:
-                tab = {}
-                for i2 in self.client.reminders[i]:
-                    if i2 != "task":
-                        tab[i2] = self.client.reminders[i][i2]
+                tab = {
+                    i2: self.client.reminders[i][i2]
+                    for i2 in self.client.reminders[i]
+                    if i2 != "task"
+                }
+
                 temp[tab["userId"]] = tab
             with open("reminders.json", "w") as file:
                 dump(temp, file)
@@ -246,8 +247,12 @@ class Administration(commands.Cog):
 
         if code > 0:
             await ctx.send(
-                embed=await self.exceptions.errorEmbed(ctx.message.content, f"Error while attempting a git pull: "
-                                                                            f"{str(err)}"))
+                embed=await self.exceptions.errorEmbed(
+                    ctx.message.content,
+                    f'Error while attempting a git pull: {err}',
+                )
+            )
+
             return
         else:
             embed = discord.Embed(title="Pull successful",
@@ -299,24 +304,29 @@ class Administration(commands.Cog):
                                       description=f"The result was too long, so it was uploaded to Hastebin.\n"
                                                   f"https://hastebin.com/{get_key(result)}",
                                       color=colors["success"])
-                embed.set_footer(text="Executed successfully.")
-                await ctx.send(embed=embed)
             else:
-                embed = discord.Embed(description=f"```python\n{str(result)}\n```", color=colors["success"])
-                embed.set_footer(text="Executed successfully.")
-                await ctx.send(embed=embed)
+                embed = discord.Embed(
+                    description=f'```python\n{result}\n```',
+                    color=colors["success"],
+                )
+
+            embed.set_footer(text="Executed successfully.")
+            await ctx.send(embed=embed)
         except Exception as exception:
             if len(str(exception)) >= 2048:  # I doubt this is needed, but just in case
                 embed = discord.Embed(title="Error too long",
                                       description=f"The error was too long, so it was uploaded to Hastebin.\n"
                                                   f"https://hastebin.com/{get_key(str(exception))}",
                                       color=colors["error"])
-                embed.set_footer(text="Error occurred while executing.")
-                await ctx.send(embed=embed)
             else:
-                embed = discord.Embed(description=f"```python\n{str(exception)}\n```", color=colors["error"])
-                embed.set_footer(text="Error occurred while executing.")
-                await ctx.send(embed=embed)
+                embed = discord.Embed(
+                    description=f'```python\n{exception}\n```',
+                    color=colors["error"],
+                )
+
+
+            embed.set_footer(text="Error occurred while executing.")
+            await ctx.send(embed=embed)
 
 
 def setup(bot):

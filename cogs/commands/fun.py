@@ -18,10 +18,7 @@ async def sendPost(ctx, post):
                           url=f"https://www.reddit.com{randPost.permalink}")
 
     # remove problematic &#x200B; that fucks with link detection
-    if randPost.selftext.startswith("&#x200B;\n"):
-        fuckingX200B = True
-    else:
-        fuckingX200B = False
+    fuckingX200B = bool(randPost.selftext.startswith("&#x200B;\n"))
     # just run this anyways because whats the harm in overcompensating
     #                                            - that asshole revving a motorcycle at 10:24 PM in brooklyn, new york
     embed.description = randPost.selftext.replace("&#x200B;\n", "").strip('\n')
@@ -35,8 +32,8 @@ async def sendPost(ctx, post):
     try:
         embed.set_author(name=f"Posted by /u/{randPost.author.name}")
     except AttributeError:
-        embed.set_author(name=f"Posted by /u/[deleted]")
-    footer = f"{str(round(randPost.upvote_ratio * 100))}% upvoted"
+        embed.set_author(name='Posted by /u/[deleted]')
+    footer = f'{round(randPost.upvote_ratio * 100)}% upvoted'
     if footerNote:
         footer += f" • {footerNote}"
     embed.set_footer(text=footer)
@@ -47,8 +44,6 @@ async def sendPost(ctx, post):
 
 def urlParse(url: str, embed: discord.Embed):
     footerNote = ''
-    checkImage = False
-
     # if "?" in url:  # remove get tags for processing and potentially higher quality (no thumbnailing except discord's)
     #     url = url.split("?")[0]
 
@@ -60,9 +55,7 @@ def urlParse(url: str, embed: discord.Embed):
         embed.description = f"[(Link)]({url})"
 
     # check for potential image sharing site
-    if regex.findall(r'img|image|g.f|gf', url.lower()):
-        checkImage = True
-
+    checkImage = bool(regex.findall(r'img|image|g.f|gf', url.lower()))
     # coolio image
     if url[-4:] in ('.gif', '.png', '.jpg', 'jpeg') or regex.findall(r'\.png|\.jpg|\.jpeg|\.webp|\.gif', url):
         embed.description = None
@@ -105,10 +98,7 @@ def urlParse(url: str, embed: discord.Embed):
 
 
 def hasImage(embed: discord.Embed):
-    if embed.image:
-        return True
-    else:
-        return False
+    return bool(embed.image)
 
 
 async def sendData(client, channel: discord.abc.Messageable):
@@ -121,10 +111,11 @@ async def sendData(client, channel: discord.abc.Messageable):
                     embed.add_field(name=f'r/{i}', value=client.redditStats[i])
         else:  # stringify it because
             embed = None
-            content = ''
-            for i in client.redditStats:
-                if i != 'Date':
-                    content += f'\nr/{i}:\n{client.redditStats[i]}'
+            content = ''.join(
+                f'\nr/{i}:\n{client.redditStats[i]}'
+                for i in client.redditStats
+                if i != 'Date'
+            )
 
         if not embed:
             # noinspection PyUnboundLocalVariable
@@ -221,9 +212,8 @@ class Fun(commands.Cog):
                     self.client.redditStats[subreddit.display_name.lower()] += 1
                 except KeyError:
                     self.client.redditStats[subreddit.display_name.lower()] = 1
-                if subreddit.over18:
-                    if not await self.nsfwCheck(ctx, "subreddit"):
-                        return
+                if subreddit.over18 and not await self.nsfwCheck(ctx, "subreddit"):
+                    return
                 randPost, errorMess = await self.redditMoment(ctx, subreddit.random)
 
             except prawcore.Forbidden:
@@ -279,17 +269,15 @@ class Fun(commands.Cog):
             if not ctx.message.channel.is_nsfw():
                 note = f"This {unit} is marked as NSFW. Please move to an NSFW channel."
             cool = ctx.message.channel.is_nsfw()
+        elif ctx.author.id in self.degenerates:
+            cool = True
         else:
-            if ctx.author.id in self.degenerates:
-                cool = True
-            else:
-                cool = await self.check(ctx, unit)
-                if cool:
-                    self.degenerates.append(ctx.author.id)
+            cool = await self.check(ctx, unit)
+            if cool:
+                self.degenerates.append(ctx.author.id)
 
-        if unit != 'post':
-            if note:
-                await ctx.send(note)
+        if unit != 'post' and note:
+            await ctx.send(note)
         return cool
 
     async def check(self, ctx: commands.Context, unit: str):  # TODO: Replace this after merging `game` branch

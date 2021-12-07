@@ -18,7 +18,7 @@ class Moderation(commands.Cog):
             try:
                 user = await self.bot.fetch_user(user_id)
             except discord.NotFound:
-                raise CommandErrorMsg(f"No user with the ID {str(user_id)} was found!")
+                raise CommandErrorMsg(f'No user with the ID {user_id} was found!')
         return user
 
     @commands.command(aliases=["bulkDelete"])
@@ -92,8 +92,11 @@ class Moderation(commands.Cog):
             # This is to check if the user is actually banned.
             # If the user is not banned, fetch_ban will raise NotFound.
             await ctx.guild.fetch_ban(user)
-            await ctx.guild.unban(user, reason=f"Unbanned by {str(ctx.author)} ({ctx.author.id})")
-            await ctx.send(f"{user.mention} ({str(user)}) has been unbanned from the server.")
+            await ctx.guild.unban(
+                user, reason=f'Unbanned by {ctx.author} ({ctx.author.id})'
+            )
+
+            await ctx.send(f'{user.mention} ({user}) has been unbanned from the server.')
         except discord.NotFound:
             raise CommandErrorMsg("That user is not banned!")
 

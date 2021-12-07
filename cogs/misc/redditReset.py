@@ -14,10 +14,12 @@ class Name(commands.Cog):
     def cog_unload(self):
         if len(self.client.redditStats) > 1:
             print(f"Reddit data for {self.client.redditStats['Date']}")
-            content = ''
-            for i in self.client.redditStats:
-                if i != 'Date':
-                    content += f'\nr/{i}:\n{self.client.redditStats[i]}'
+            content = ''.join(
+                f'\nr/{i}:\n{self.client.redditStats[i]}'
+                for i in self.client.redditStats
+                if i != 'Date'
+            )
+
             print(content)
 
     @tasks.loop(hours=24)
@@ -29,10 +31,12 @@ class Name(commands.Cog):
     async def on_daily_cancel(self):
         if self.statReset.is_being_cancelled():
             print(f"Reddit data for {self.client.redditStats['Date']}")
-            content = ''
-            for i in self.client.redditStats:
-                if i != 'Date':
-                    content += f'\nr/{i}:\n{self.client.redditStats[i]}'
+            content = ''.join(
+                f'\nr/{i}:\n{self.client.redditStats[i]}'
+                for i in self.client.redditStats
+                if i != 'Date'
+            )
+
             print(content)
 
     @statReset.before_loop

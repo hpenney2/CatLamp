@@ -31,17 +31,18 @@ class Exceptions(commands.Cog):
                 return
             elif isinstance(error, commands.BadUnionArgument) and \
                     str(error).startswith('Could not convert "user" into User or int.'):
-                errorStr = f"User not found!"
+                errorStr = 'User not found!'
             embed = discord.Embed(title="Error",
                                   description=f"An error occurred while trying to run `{commandName}`!\n"
                                               f"```{errorStr or str(error)}```",
                                   color=colors["error"])
             embed.set_footer(
-                text=f"If you think this shouldn't happen, contact a developer for help "
-                     f"in the CatLamp server. (+server)")
+                text="If you think this shouldn't happen, contact a developer for help in the CatLamp server. (+server)"
+            )
+
             await ctx.send(embed=embed)
             print(f"An error occurred while trying to run '{ctx.message.content}'!")
-            if not type(error) is str:
+            if type(error) is not str:
                 raise error
 
     async def errorEmbed(self, cmd, error):
